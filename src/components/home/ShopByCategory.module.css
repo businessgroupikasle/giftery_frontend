@@ -1,0 +1,245 @@
+/* ── Explore Our Gift Collections / Shop By Category ── */
+.collectionsSection {
+  background-color: #f7f8fa;
+  padding: 5.5rem 0;
+}
+
+.collectionsContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.collectionsHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 3rem;
+}
+
+.collectionsSubheading {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #c58b29;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.collectionsTitle {
+  font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.collectionsTitleGold {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  color: #c58b29;
+}
+
+.viewAllBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.65rem 1.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+}
+
+.viewAllBtn:hover {
+  background: #111827;
+  color: #ffffff;
+  border-color: #111827;
+}
+
+/* Collections Grid & Cards */
+.collectionsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.25rem;
+}
+
+.collectionCard {
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+}
+
+.collectionCard:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+.cardImageWrapper {
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  position: relative;
+  background: #eaedf2;
+}
+
+.cardImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.collectionCard:hover .cardImg {
+  transform: scale(1.05);
+}
+
+.cardBadge {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  margin: -26px auto 0.75rem auto;
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cardContent {
+  padding: 0 1.25rem 1.75rem 1.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.cardTitle {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+  line-height: 1.3;
+}
+
+.cardSubtitle {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  margin-bottom: 1.25rem;
+  min-height: 2.5rem;
+}
+
+.cardCta {
+  margin-top: auto;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.cardCta:hover {
+  opacity: 0.8;
+}
+
+/* Theme 1: Dark Card (Corporate Gifts) */
+.cardTheme_dark {
+  background: #111217;
+  color: #ffffff;
+}
+
+.cardTheme_dark .cardBadge {
+  background: #111217;
+  border: 2px solid #e5c158;
+}
+
+.cardTheme_dark .cardTitle {
+  color: #ffffff;
+}
+
+.cardTheme_dark .cardSubtitle {
+  color: #9ca3af;
+}
+
+.cardTheme_dark .cardCta {
+  color: #e5c158;
+}
+
+/* Theme 2: Light Cards (Welcome Kits, Tech, Eco) */
+.cardTheme_light {
+  background: #edf0f5;
+  color: #111827;
+}
+
+.cardTheme_light .cardBadge {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+}
+
+.cardTheme_light .cardTitle {
+  color: #111827;
+}
+
+.cardTheme_light .cardSubtitle {
+  color: #6b7280;
+}
+
+.cardTheme_light .cardCta {
+  color: #111827;
+}
+
+/* Theme 3: Gold Camel Card (Custom Merchandise) */
+.cardTheme_gold {
+  background: #d8962a;
+  color: #111217;
+}
+
+.cardTheme_gold .cardBadge {
+  background: #111217;
+  border: none;
+}
+
+.cardTheme_gold .cardTitle {
+  color: #111217;
+}
+
+.cardTheme_gold .cardSubtitle {
+  color: rgba(17, 18, 23, 0.85);
+}
+
+.cardTheme_gold .cardCta {
+  color: #111217;
+}
+
+/* Responsive */
+@media (max-width: 1280px) {
+  .collectionsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .collectionsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .collectionsGrid {
+    grid-template-columns: 1fr;
+  }
+  .collectionsHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

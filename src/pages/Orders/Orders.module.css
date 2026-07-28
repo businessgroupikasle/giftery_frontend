@@ -1,0 +1,13 @@
+.page { }
+.title { font-size: var(--text-2xl); font-weight: 800; margin-bottom: 2rem; }
+.list { display: flex; flex-direction: column; gap: 1rem; }
+.order { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: 1.25rem 1.5rem; }
+.orderHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.orderId { font-weight: 700; color: var(--color-text); }
+.orderDate { font-size: var(--text-xs); color: var(--color-text-muted); margin-left: 0.75rem; }
+.status { font-weight: 700; font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.04em; }
+.orderItems { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.itemName { font-size: var(--text-sm); color: var(--color-text-muted); background: var(--color-surface-alt); padding: 2px 8px; border-radius: 9999px; }
+.orderFooter { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--color-border); padding-top: 0.75rem; }
+.detailsLink { font-size: var(--text-sm); color: var(--color-primary); font-weight: 600; text-decoration: none; }
+.detailsLink:hover { text-decoration: underline; }

@@ -1,0 +1,8 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+.empty { text-align: center; padding: 4rem 1rem; color: var(--color-text-muted); }
+.emptyIcon { font-size: 3rem; display: block; margin-bottom: 0.75rem; }
+.empty p { font-size: var(--text-lg); }

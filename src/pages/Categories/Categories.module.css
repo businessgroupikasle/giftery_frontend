@@ -1,0 +1,269 @@
+/* Categories Page Styles */
+
+/* ── Hero Banner (Single Category Page) ── */
+.heroBanner {
+  background: radial-gradient(circle at 75% 30%, #151824 0%, #08090d 60%, #050508 100%);
+  color: #ffffff;
+  padding: 4rem 0;
+  border-bottom: 1px solid rgba(229, 193, 88, 0.15);
+}
+
+.heroContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.backLink {
+  display: inline-block;
+  color: #e5c158;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 1.25rem;
+  transition: color 0.15s ease;
+}
+
+.backLink:hover {
+  color: #ffffff;
+}
+
+.categoryTitle {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-size: clamp(2rem, 3.5vw, 3.2rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 1rem;
+  line-height: 1.15;
+}
+
+.categorySubtitle {
+  font-size: 1.05rem;
+  color: #a3a8b8;
+  line-height: 1.6;
+  max-width: 500px;
+  margin-bottom: 1.75rem;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(229, 193, 88, 0.12);
+  color: #e5c158;
+  border: 1px solid rgba(229, 193, 88, 0.3);
+  padding: 0.4rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.heroImgWrapper {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(229, 193, 88, 0.15);
+  border: 1px solid rgba(229, 193, 88, 0.2);
+  max-height: 320px;
+}
+
+.heroImg {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Section Headers */
+.sectionHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.headerSub {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #c58b29;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.headerTitle {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #111827;
+  font-family: 'Cinzel', serif;
+}
+
+.viewShopBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #111827;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 0.65rem 1.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.viewShopBtn:hover {
+  background: #c58b29;
+  color: #ffffff;
+}
+
+/* ── Overview Page (All Collections Gallery) ── */
+.headerBanner {
+  background: radial-gradient(circle at 50% 30%, #171a28 0%, #08090d 100%);
+  color: #ffffff;
+  padding: 4.5rem 0;
+  text-align: center;
+  border-bottom: 1px solid rgba(229, 193, 88, 0.15);
+}
+
+.subheading {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e5c158;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.mainTitle {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.mainDesc {
+  font-size: 1.05rem;
+  color: #a3a8b8;
+  max-width: 650px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Collections Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 4rem;
+}
+
+.collectionCard {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+.collectionCard:hover {
+  transform: translateY(-4px);
+  border-color: #c58b29;
+  box-shadow: 0 12px 30px rgba(197, 139, 41, 0.15);
+}
+
+.cardEmoji {
+  font-size: 2.5rem;
+  background: #f7f8fa;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cardInfo {
+  flex-grow: 1;
+}
+
+.cardBadge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #c58b29;
+  background: rgba(197, 139, 41, 0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  display: inline-block;
+  margin-bottom: 0.35rem;
+}
+
+.cardName {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.cardDesc {
+  font-size: 0.82rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.cardArrow {
+  font-size: 1.2rem;
+  color: #9ca3af;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.collectionCard:hover .cardArrow {
+  color: #c58b29;
+  transform: translateX(4px);
+}
+
+.allProductsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.allProductsHeader h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #111827;
+  font-family: 'Cinzel', serif;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .heroContainer {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,517 @@
+/* ── Hero Banner Section ── */
+.heroBanner {
+  background: radial-gradient(circle at 75% 30%, #151824 0%, #08090d 60%, #050508 100%);
+  color: #ffffff;
+  padding: 4.5rem 0;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(229, 193, 88, 0.15);
+}
+
+.heroBanner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: 
+    radial-gradient(rgba(229, 193, 88, 0.18) 1px, transparent 0),
+    radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 0);
+  background-size: 40px 40px, 70px 70px;
+  background-position: 0 0, 20px 20px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.heroContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: 1.05fr 1.15fr;
+  gap: 3.5rem;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.heroContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.topSubheading {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #e5c158;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.heroTitle {
+  font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+  font-weight: 700;
+  line-height: 1.12;
+  color: #ffffff;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.01em;
+}
+
+.goldSerifTitle {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  color: #e5c158;
+  font-weight: 700;
+  background: linear-gradient(135deg, #fff3ca 0%, #e5c158 50%, #b88d22 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
+.heroDescription {
+  font-size: 1.05rem;
+  color: #a3a8b8;
+  line-height: 1.65;
+  max-width: 520px;
+  margin-bottom: 2.25rem;
+}
+
+/* CTA Buttons */
+.heroCtaGroup {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+}
+
+.primaryCta {
+  background: linear-gradient(135deg, #f7dc6f 0%, #e5c158 50%, #c49626 100%);
+  color: #08090d;
+  font-weight: 800;
+  font-size: 0.88rem;
+  letter-spacing: 1.2px;
+  padding: 0.95rem 2.2rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 20px rgba(229, 193, 88, 0.3);
+  display: inline-flex;
+  align-items: center;
+}
+
+.primaryCta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(229, 193, 88, 0.45);
+  background: linear-gradient(135deg, #ffffff 0%, #e5c158 100%);
+}
+
+.secondaryCta {
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 1.2px;
+  padding: 0.95rem 2rem;
+  border-radius: 6px;
+  border: 1px solid rgba(229, 193, 88, 0.4);
+  text-decoration: none;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(4px);
+}
+
+.secondaryCta:hover {
+  background: rgba(229, 193, 88, 0.12);
+  border-color: #e5c158;
+  color: #e5c158;
+  transform: translateY(-2px);
+}
+
+/* Stats Row */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.statIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(229, 193, 88, 0.1);
+  border: 1px solid rgba(229, 193, 88, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statVal {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.statLbl {
+  font-size: 0.72rem;
+  color: #8c909e;
+  line-height: 1.2;
+}
+
+/* Right Visual */
+.heroVisual {
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.imageContainer {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 40px rgba(229, 193, 88, 0.15);
+  border: 1px solid rgba(229, 193, 88, 0.2);
+}
+
+.bannerImage {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.imageContainer:hover .bannerImage {
+  transform: scale(1.02);
+}
+
+.goldGlowOverlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, rgba(229, 193, 88, 0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ── Explore Our Gift Collections Section ── */
+.collectionsSection {
+  background-color: #f7f8fa;
+  padding: 5.5rem 0;
+}
+
+.collectionsContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.collectionsHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 3rem;
+}
+
+.collectionsSubheading {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #c58b29;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.collectionsTitle {
+  font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.collectionsTitleGold {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  color: #c58b29;
+}
+
+.viewAllBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.65rem 1.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+}
+
+.viewAllBtn:hover {
+  background: #111827;
+  color: #ffffff;
+  border-color: #111827;
+}
+
+/* Collections Grid & Cards */
+.collectionsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.25rem;
+}
+
+.collectionCard {
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+}
+
+.collectionCard:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+.cardImageWrapper {
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  position: relative;
+  background: #eaedf2;
+}
+
+.cardImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.collectionCard:hover .cardImg {
+  transform: scale(1.05);
+}
+
+.cardBadge {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  margin: -26px auto 0.75rem auto;
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cardContent {
+  padding: 0 1.25rem 1.75rem 1.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.cardTitle {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+  line-height: 1.3;
+}
+
+.cardSubtitle {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  margin-bottom: 1.25rem;
+  min-height: 2.5rem;
+}
+
+.cardCta {
+  margin-top: auto;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.cardCta:hover {
+  opacity: 0.8;
+}
+
+/* Theme 1: Dark Card (Corporate Gifts) */
+.cardTheme_dark {
+  background: #111217;
+  color: #ffffff;
+}
+
+.cardTheme_dark .cardBadge {
+  background: #111217;
+  border: 2px solid #e5c158;
+}
+
+.cardTheme_dark .cardTitle {
+  color: #ffffff;
+}
+
+.cardTheme_dark .cardSubtitle {
+  color: #9ca3af;
+}
+
+.cardTheme_dark .cardCta {
+  color: #e5c158;
+}
+
+/* Theme 2: Light Cards (Welcome Kits, Tech, Eco) */
+.cardTheme_light {
+  background: #edf0f5;
+  color: #111827;
+}
+
+.cardTheme_light .cardBadge {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+}
+
+.cardTheme_light .cardTitle {
+  color: #111827;
+}
+
+.cardTheme_light .cardSubtitle {
+  color: #6b7280;
+}
+
+.cardTheme_light .cardCta {
+  color: #111827;
+}
+
+/* Theme 3: Gold Camel Card (Custom Merchandise) */
+.cardTheme_gold {
+  background: #d8962a;
+  color: #111217;
+}
+
+.cardTheme_gold .cardBadge {
+  background: #111217;
+  border: none;
+}
+
+.cardTheme_gold .cardTitle {
+  color: #111217;
+}
+
+.cardTheme_gold .cardSubtitle {
+  color: rgba(17, 18, 23, 0.85);
+}
+
+.cardTheme_gold .cardCta {
+  color: #111217;
+}
+
+/* ── Featured Section ── */
+.featured {
+  padding: 5rem 0;
+  background: #090a0e;
+  color: #ffffff;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+}
+
+.sectionHeader h2 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #ffffff;
+  font-family: 'Cinzel', serif;
+}
+
+.viewAll {
+  color: #e5c158;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: color 0.15s ease;
+}
+
+.viewAll:hover {
+  color: #ffffff;
+}
+
+/* ── Trust Badges ── */
+.trust {
+  padding: 4.5rem 0;
+  background: #07080b;
+  border-top: 1px solid rgba(229, 193, 88, 0.15);
+}
+
+.trustGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+}
+
+.trustCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+.trustIcon {
+  font-size: 2.2rem;
+  flex-shrink: 0;
+}
+
+.trustTitle {
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.35rem;
+  font-size: 1rem;
+}
+
+.trustDesc {
+  font-size: 0.85rem;
+  color: #8c909e;
+  line-height: 1.5;
+}
+
+/* ── Responsive Adjustments ── */
+@media (max-width: 1280px) {
+  .collectionsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .collectionsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .collectionsGrid {
+    grid-template-columns: 1fr;
+  }
+  .collectionsHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

@@ -1,0 +1,33 @@
+/**
+ * routes.js — All frontend route path constants
+ */
+export const ROUTES = {
+  HOME: '/',
+  SHOP: '/shop',
+  PRODUCT: '/product/:slug',
+  PRODUCT_PATH: (slug) => `/product/${slug}`,
+  CATEGORIES: '/categories',
+  CATEGORY: '/categories/:id',
+  CATEGORY_PATH: (id) => `/categories/${id}`,
+  SEARCH: '/search',
+  CART: '/cart',
+  CHECKOUT: '/checkout',
+  WISHLIST: '/wishlist',
+  LOGIN: '/login',
+  REGISTER: '/register',
+  ORDERS: '/orders',
+  ORDER_DETAIL: '/orders/:id',
+  ORDER_DETAIL_PATH: (id) => `/orders/${id}`,
+  PROFILE: '/profile',
+  CONTACT: '/contact',
+  ABOUT: '/about',
+  FAQ: '/faq',
+  NOT_FOUND: '*',
+
+  // Admin
+  DASHBOARD: '/dashboard',
+  ADMIN_PRODUCTS: '/dashboard/products',
+  ADMIN_ORDERS: '/dashboard/orders',
+  ADMIN_USERS: '/dashboard/users',
+  ADMIN_SETTINGS: '/dashboard/settings',
+};

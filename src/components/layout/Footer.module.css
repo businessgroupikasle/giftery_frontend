@@ -1,0 +1,272 @@
+/* =============================================================
+   Footer.module.css — Giftery Modern Responsive Footer
+   ============================================================= */
+
+.footer {
+  background-color: #474747;
+  color: #ffffff;
+  font-family: var(--font-primary, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  padding: 3.5rem 0 1.5rem;
+  margin-top: auto;
+  width: 100%;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 2.2fr 1.1fr 1.1fr 1.2fr 1.8fr;
+  gap: 2.5rem;
+}
+
+/* ── Brand Column ───────────────────────────────────────────── */
+.brandCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.logoBadge {
+  background-color: #ffffff;
+  padding: 8px 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 2px;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.logoBadge:hover {
+  transform: translateY(-1px);
+}
+
+.logoIcon {
+  font-size: 28px;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+}
+
+.logoTextGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.logoTitle {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #1a1a1a;
+  line-height: 1;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.logoSubtitle {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: #555555;
+  margin-top: 3px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.brandDescription {
+  margin-top: 1.25rem;
+  font-size: 0.875rem;
+  color: #dedede;
+  line-height: 1.55;
+  max-width: 300px;
+}
+
+.socialIcons {
+  display: flex;
+  gap: 10px;
+  margin-top: 1.25rem;
+}
+
+.socialBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background-color: #383838;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.socialBtn:hover {
+  background-color: #222222;
+  transform: translateY(-2px);
+}
+
+/* ── Footer Columns ─────────────────────────────────────────── */
+.col {
+  display: flex;
+  flex-direction: column;
+}
+
+.colTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.2px;
+}
+
+.linkList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.linkList a {
+  color: #d1d1d1;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 0.15s ease;
+}
+
+.linkList a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* ── Store Info ─────────────────────────────────────────────── */
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.infoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: #d1d1d1;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.infoIcon {
+  font-size: 16px;
+  color: #ffffff;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.infoItem a {
+  color: #d1d1d1;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.infoItem a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* ── Bottom Copyright Bar ───────────────────────────────────── */
+.bottomBar {
+  margin-top: 3.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  padding-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.copyright {
+  color: #cccccc;
+  font-size: 0.8125rem;
+}
+
+.copyright strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.paymentMethods {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Payment Card Badges */
+.payCard {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 0 8px;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  user-select: none;
+}
+
+.payVisa {
+  background-color: #1a1f71;
+  color: #ffffff;
+  font-style: italic;
+}
+
+.payDiscover {
+  background-color: #ffffff;
+  color: #f68121;
+  border: 1px solid #cccccc;
+}
+
+.payAmex {
+  background-color: #006fcf;
+  color: #ffffff;
+}
+
+.payMastercard {
+  background-color: #eb001b;
+  color: #ffffff;
+}
+
+.payGiropay {
+  background-color: #002b66;
+  color: #ffffff;
+  font-style: italic;
+}
+
+/* ── Responsive Layouts ─────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .bottomBar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

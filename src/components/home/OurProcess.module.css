@@ -1,0 +1,136 @@
+.processSection {
+  background-color: #fafafd;
+  padding: 5.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.processContainer {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  text-align: center;
+}
+
+.processSubheading {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #c58b29;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.processTitle {
+  font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+  margin-bottom: 4rem;
+}
+
+.titleGold {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  color: #c58b29;
+}
+
+/* Steps Row */
+.stepsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  position: relative;
+}
+
+.stepItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+/* Circle Icon */
+.iconCircle {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid rgba(197, 139, 41, 0.25);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05), 0 0 15px rgba(197, 139, 41, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.75rem;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 3;
+}
+
+.stepItem:hover .iconCircle {
+  transform: translateY(-4px);
+  border-color: #c58b29;
+  box-shadow: 0 12px 30px rgba(197, 139, 41, 0.2);
+}
+
+/* Dashed Connector Line between Steps */
+.connectorLine {
+  position: absolute;
+  top: 42px;
+  left: 50%;
+  width: 100%;
+  border-top: 2px dashed #d8aa53;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.connectorDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: #c58b29;
+  margin: 0 auto;
+}
+
+/* Step Typography */
+.stepNumber {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.stepTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.stepDesc {
+  font-size: 0.85rem;
+  color: #6b7280;
+  line-height: 1.5;
+  max-width: 220px;
+  margin: 0 auto;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .stepsRow {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3rem 2rem;
+  }
+  .connectorLine {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .stepsRow {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
