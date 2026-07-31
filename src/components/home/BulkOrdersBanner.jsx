@@ -40,7 +40,7 @@ const BulkOrdersBanner = () => {
         {/* Dark Golden Sparkle Overlay */}
         <div className={styles.sparkleOverlay} />
 
-        <div className={styles.bulkContent}>
+        <div className={styles.bulkLeft}>
           <h2 className={styles.bulkTitle}>
             Bulk Orders? <span className={styles.goldText}>Get Special Benefits!</span>
           </h2>
@@ -48,30 +48,22 @@ const BulkOrdersBanner = () => {
             Unlock exclusive discounts and priority support for bulk corporate orders.
           </p>
 
-          <div className={styles.actionRow}>
-            <Link to={ROUTES.CONTACT} className={styles.contactBtn}>
-              CONTACT OUR TEAM &rarr;
-            </Link>
-
-            <div className={styles.benefitsGroup}>
-              {BENEFITS.map((item) => (
-                <div key={item.id} className={styles.benefitBadge}>
-                  <span className={styles.benefitIcon}>{item.icon}</span>
-                  <span className={styles.benefitText}>{item.text}</span>
-                </div>
-              ))}
-            </div>
+          <div className={styles.benefitsGroup}>
+            {BENEFITS.map((item) => (
+              <div key={item.id} className={styles.benefitBadge}>
+                <span className={styles.benefitIcon}>{item.icon}</span>
+                <span className={styles.benefitText}>{item.text}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Right Gift Box Visual */}
-        <div className={styles.bulkVisual}>
-          <img
-            src="/images/bulk_orders_gift_box.png"
-            alt="Luxury Corporate Gift Box"
-            className={styles.giftBoxImg}
-          />
+        <div className={styles.bulkRight}>
+          <Link to={ROUTES.CONTACT} className={styles.contactBtn}>
+            CONTACT OUR TEAM &rarr;
+          </Link>
         </div>
+
       </div>
     </section>
   );

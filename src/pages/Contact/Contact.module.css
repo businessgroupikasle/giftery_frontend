@@ -1,0 +1,575 @@
+/* ────────────────────────────────────────────────────────
+   Contact Page — Full Layout CSS
+   Color Palette: #0a0a0a (black), #1a1a1a, #D4AF37 (gold),
+                  #ffffff (white), #f8f8f8 (light gray)
+──────────────────────────────────────────────────────── */
+
+/* ── Page Container ─────────────────────────────────── */
+.pageContainer {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  color: #1a1a1a;
+  min-height: 100vh;
+  background: #f4f4f4;
+}
+
+/* ══════════════════════════════════════════════════════
+   SECTION 1 — HERO
+══════════════════════════════════════════════════════ */
+.heroSection {
+  position: relative;
+  min-height: 420px;
+  background: #0a0a0a;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+}
+
+/* Left side — text content */
+.heroLeft {
+  position: relative;
+  z-index: 2;
+  padding: 3.5rem 3rem 3.5rem 3.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+}
+
+/* Background hero image fills the left+center area */
+.heroBgImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.55;
+  z-index: 0;
+}
+
+/* Dark overlay on hero image for text readability */
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    rgba(0, 0, 0, 0.88) 0%,
+    rgba(0, 0, 0, 0.6) 50%,
+    rgba(0, 0, 0, 0.25) 100%
+  );
+  z-index: 1;
+}
+
+.getInTouchLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #D4AF37;
+  margin-bottom: 0.85rem;
+}
+
+.heroTitle {
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #ffffff;
+  margin: 0 0 0.85rem 0;
+}
+
+.heroTitleGold {
+  color: #D4AF37;
+}
+
+.heroSubtitle {
+  font-size: 0.9rem;
+  color: #a0a0a0;
+  line-height: 1.65;
+  max-width: 380px;
+  margin: 0 0 2rem 0;
+}
+
+/* Underline accent below title */
+.titleUnderline {
+  width: 52px;
+  height: 3px;
+  background: #D4AF37;
+  border-radius: 2px;
+  margin: 0.5rem 0 1.5rem;
+}
+
+/* Trust badges row */
+.heroBadges {
+  display: flex;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.heroBadgeItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.badgeIconCircle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.45rem;
+}
+
+.badgeIconCircle svg {
+  width: 18px;
+  height: 18px;
+  color: #D4AF37;
+}
+
+.badgeTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.badgeDesc {
+  font-size: 0.72rem;
+  color: #888;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Right Side — Message Form Card ─────────────────── */
+.heroRight {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 2rem 2.5rem 2rem 1rem;
+}
+
+.formCard {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideInRight 0.4s ease-out;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.formTitle {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0a0a0a;
+  margin: 0 0 0.25rem 0;
+}
+
+.formTitleUnderline {
+  width: 36px;
+  height: 3px;
+  background: #D4AF37;
+  border-radius: 2px;
+  margin-bottom: 1.25rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.formGroupFull {
+  grid-column: 1 / -1;
+}
+
+.formInput,
+.formSelect,
+.formTextarea {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  color: #1a1a1a;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.formInput:focus,
+.formSelect:focus,
+.formTextarea:focus {
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
+}
+
+.formInput::placeholder,
+.formTextarea::placeholder {
+  color: #aab;
+  font-size: 0.82rem;
+}
+
+.formTextarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.charCount {
+  text-align: right;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+}
+
+.sendBtn {
+  width: 100%;
+  background: #D4AF37;
+  color: #0a0a0a;
+  border: none;
+  border-radius: 7px;
+  padding: 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background 0.2s ease, transform 0.15s ease;
+  margin-top: 0.25rem;
+}
+
+.sendBtn:hover {
+  background: #c9a227;
+  transform: translateY(-1px);
+}
+
+.sendBtn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.successMessage {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.successEmoji {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.successMessage h4 {
+  font-size: 1.2rem;
+  color: #16a34a;
+  margin: 0 0 0.4rem 0;
+}
+
+.successMessage p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   SECTION 2 — BOTTOM INFO (Contact Info + Map + Cards)
+══════════════════════════════════════════════════════ */
+.bottomSection {
+  background: #ffffff;
+  padding: 2.5rem 2.5rem 3rem;
+  display: grid;
+  grid-template-columns: 300px 1fr 280px;
+  gap: 2rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* ── Left: Get In Touch Info ─────────────────────────── */
+.contactInfoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.contactInfoTitle {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0a0a0a;
+  margin: 0 0 0.35rem 0;
+  border-bottom: 2px solid #D4AF37;
+  padding-bottom: 0.6rem;
+  display: inline-block;
+}
+
+.contactInfoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.contactIconBubble {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contactIconBubble svg {
+  width: 18px;
+  height: 18px;
+  color: #D4AF37;
+}
+
+.contactInfoLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.15rem 0;
+}
+
+.contactInfoValue {
+  font-size: 0.9rem;
+  color: #1a1a1a;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* ── Center: Map ─────────────────────────────────────── */
+.mapWrapper {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  min-height: 240px;
+  background: #1a1a1a;
+  position: relative;
+}
+
+.mapFrame {
+  width: 100%;
+  height: 100%;
+  min-height: 260px;
+  border: none;
+  display: block;
+  filter: grayscale(30%) contrast(1.1);
+}
+
+.mapOfficeCard {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0a0a0a;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  min-width: 240px;
+}
+
+.mapOfficePinIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mapOfficePinIcon svg {
+  width: 18px;
+  height: 18px;
+  color: #D4AF37;
+}
+
+.mapOfficeTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #D4AF37;
+  margin: 0 0 0.15rem 0;
+}
+
+.mapOfficeAddress {
+  font-size: 0.75rem;
+  color: #a0a0a0;
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* ── Right: Studio + Bulk Cards ──────────────────────── */
+.rightCards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.studioCard {
+  background: #0a0a0a;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  flex: 1;
+}
+
+.bulkCard {
+  background: #f8f8f2;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  flex: 1;
+}
+
+.rightCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.rightCardIconBox {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rightCardIconBox svg {
+  width: 20px;
+  height: 20px;
+  color: #D4AF37;
+}
+
+.studioCardTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.bulkCardTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0a0a0a;
+  margin: 0;
+}
+
+.studioCardDesc {
+  font-size: 0.82rem;
+  color: #888;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.bulkCardDesc {
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.studioLink {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #D4AF37;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: gap 0.2s ease;
+  margin-top: 0.35rem;
+}
+
+.studioLink:hover {
+  gap: 0.6rem;
+}
+
+.bulkLink {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #D4AF37;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: gap 0.2s ease;
+  margin-top: 0.35rem;
+}
+
+.bulkLink:hover {
+  gap: 0.6rem;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .heroSection {
+    grid-template-columns: 1fr;
+  }
+
+  .heroLeft {
+    padding: 2.5rem 2rem;
+  }
+
+  .heroRight {
+    display: none;
+  }
+
+  .bottomSection {
+    grid-template-columns: 1fr;
+  }
+
+  .mapWrapper {
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 2rem;
+  }
+
+  .bottomSection {
+    padding: 2rem 1.25rem;
+  }
+}

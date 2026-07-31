@@ -8,23 +8,56 @@
   min-height: 100vh;
 }
 
-/* ── Hero Section ────────────────────────────────────────────── */
+/* ── Hero Section — Full-Bleed Background Image ─────────────── */
 .heroSection {
-  background: linear-gradient(135deg, #07080a 0%, #121318 60%, #0a0b0d 100%);
   position: relative;
   overflow: hidden;
-  padding: 5.5rem 0 6.5rem 0;
+  min-height: 320px;
   border-bottom: 1px solid rgba(229, 193, 88, 0.15);
+  display: flex;
+  align-items: center;
+}
+
+/* Full-bleed background image */
+.heroBgImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center right;
+  z-index: 0;
+}
+
+/* Dark left-to-right gradient overlay — text on left, products visible on right */
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(7, 8, 10, 0.95) 0%,
+    rgba(7, 8, 10, 0.82) 35%,
+    rgba(7, 8, 10, 0.35) 65%,
+    rgba(7, 8, 10, 0.05) 100%
+  );
+  z-index: 1;
 }
 
 .heroContainer {
+  position: relative;
+  z-index: 2;
+  width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 4.5rem 3.5rem;
   display: grid;
-  grid-template-columns: 1fr 1.1fr;
-  gap: 4rem;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
+}
+
+/* Spacer keeps the right column empty so the bg image shows through */
+.heroVisualSpacer {
+  display: block;
 }
 
 .heroContent {
@@ -451,21 +484,20 @@
   box-shadow: 0 8px 20px rgba(17, 24, 39, 0.25);
 }
 
-/* Right Half: OUR MISSION (Dark Luxury Theme) */
+/* Right Half: OUR MISSION — full-bleed background image */
 .splitRight {
   background-color: #0b0c0e;
   color: #ffffff;
-  padding: 5rem 4rem;
+  padding: 5rem 3.5rem 5rem 4rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   position: relative;
   overflow: hidden;
 }
 
 .missionContent {
-  flex: 1;
-  max-width: 360px;
+  flex: 0 0 auto;
+  width: 52%;
   position: relative;
   z-index: 2;
 }
@@ -506,25 +538,40 @@
   padding-bottom: 0.2rem;
 }
 
+/* Full-bleed image covering the right half */
 .missionVisual {
-  position: relative;
-  z-index: 2;
-  width: 280px;
-  flex-shrink: 0;
-  margin-left: 2rem;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Dark overlay so left text is readable — fades to transparent on the right */
+.missionVisual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(11, 12, 14, 0.92) 0%,
+    rgba(11, 12, 14, 0.72) 40%,
+    rgba(11, 12, 14, 0.15) 100%
+  );
+  z-index: 1;
 }
 
 .bagImg {
   width: 100%;
-  height: auto;
-  border-radius: 14px;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   display: block;
-  transition: transform 0.5s ease;
 }
 
 .splitRight:hover .bagImg {
-  transform: scale(1.03) rotate(-1deg);
+  transform: scale(1.04);
+  transition: transform 0.6s ease;
 }
 
 /* ── OUR VALUES Section (ENLARGED / BIGGER) ───────────────────── */

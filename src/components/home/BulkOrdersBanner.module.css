@@ -17,31 +17,54 @@
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(229, 193, 88, 0.08);
 }
 
+/* Full-bleed background image */
+.bulkCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/images/bulk_orders_bg.png');
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+  border-radius: 24px;
+}
+
 .sparkleOverlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
+  background:
+    linear-gradient(135deg, rgba(5, 6, 8, 0.82) 0%, rgba(5, 6, 8, 0.65) 60%, rgba(5, 6, 8, 0.45) 100%),
     radial-gradient(circle at 15% 30%, rgba(229, 193, 88, 0.12) 0%, transparent 40%),
     radial-gradient(circle at 85% 70%, rgba(229, 193, 88, 0.1) 0%, transparent 45%);
+  z-index: 1;
   pointer-events: none;
 }
 
-.bulkContent {
+.bulkLeft {
   flex: 1;
-  max-width: 780px;
   position: relative;
   z-index: 2;
+  padding-right: 2rem;
+}
+
+.bulkRight {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bulkTitle {
-  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
   font-weight: 800;
   color: #ffffff;
-  margin-bottom: 0.75rem;
-  line-height: 1.25;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
   letter-spacing: -0.01em;
 }
 
@@ -51,41 +74,33 @@
 }
 
 .bulkSubtitle {
-  font-size: 1.05rem;
+  font-size: 1rem;
   color: #9ca3af;
-  margin-bottom: 2.25rem;
+  margin-bottom: 1.75rem;
   line-height: 1.5;
-}
-
-/* Actions Row */
-.actionRow {
-  display: flex;
-  align-items: center;
-  gap: 2.5rem;
-  flex-wrap: wrap;
 }
 
 .contactBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e5c158 0%, #c58b29 100%);
+  background: linear-gradient(135deg, #e5c158 0%, #d49e29 100%);
   color: #0b0c0e;
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   font-weight: 800;
   letter-spacing: 1.2px;
-  padding: 1rem 2rem;
-  border-radius: 10px;
+  padding: 1.1rem 2.4rem;
+  border-radius: 12px;
   text-decoration: none;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(229, 193, 88, 0.3);
+  box-shadow: 0 4px 20px rgba(229, 193, 88, 0.4);
   white-space: nowrap;
 }
 
 .contactBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(229, 193, 88, 0.45);
-  background: linear-gradient(135deg, #f0cf6d 0%, #d8962a 100%);
+  box-shadow: 0 8px 28px rgba(229, 193, 88, 0.6);
+  background: linear-gradient(135deg, #f3d470 0%, #e0aa33 100%);
 }
 
 .benefitsGroup {

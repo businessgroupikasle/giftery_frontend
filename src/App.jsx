@@ -8,6 +8,9 @@ const Home        = lazy(() => import('@pages/Home'));
 const Shop        = lazy(() => import('@pages/Shop'));
 const Product     = lazy(() => import('@pages/Product'));
 const Categories  = lazy(() => import('@pages/Categories'));
+const CorporateGifts = lazy(() => import('@pages/CorporateGifts'));
+const PersonalizedGifts = lazy(() => import('@pages/PersonalizedGifts'));
+const Toys        = lazy(() => import('@pages/Toys'));
 const Search      = lazy(() => import('@pages/Search'));
 const Cart        = lazy(() => import('@pages/Cart'));
 const Checkout    = lazy(() => import('@pages/Checkout'));
@@ -39,6 +42,12 @@ const App = () => {
         <Route path={ROUTES.PRODUCT}    element={<Product />} />
         <Route path={ROUTES.CATEGORIES} element={<Categories />} />
         <Route path={ROUTES.CATEGORY}   element={<Categories />} />
+        <Route path={ROUTES.CORPORATE_GIFTS} element={<CorporateGifts />} />
+        <Route path={`${ROUTES.CATEGORIES}/corporate-gifts`} element={<CorporateGifts />} />
+        <Route path={ROUTES.PERSONALIZED_GIFTS} element={<PersonalizedGifts />} />
+        <Route path={`${ROUTES.CATEGORIES}/personalized-gifts`} element={<PersonalizedGifts />} />
+        <Route path={ROUTES.TOYS}       element={<Toys />} />
+        <Route path={`${ROUTES.CATEGORIES}/toys`} element={<Toys />} />
         <Route path={ROUTES.SEARCH}     element={<Search />} />
         <Route path={ROUTES.CART}       element={<Cart />} />
         <Route path={ROUTES.LOGIN}      element={<Login />} />

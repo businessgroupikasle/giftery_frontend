@@ -97,18 +97,29 @@ const Header = () => {
             onMouseLeave={() => setActiveDropdown(null)}
           >
             <NavLink
-              to={`${ROUTES.CATEGORIES}/corporate-gifts`}
+              to={ROUTES.CORPORATE_GIFTS}
               className={({ isActive }) => `${styles.navLink} ${isActive ? styles.active : ''}`}
             >
               Corporate Gifts <span className={styles.dropdownArrow}>⌄</span>
             </NavLink>
             {activeDropdown === 'corporate' && (
-              <div className={styles.dropdownMenu}>
-                <Link to={`${ROUTES.CATEGORIES}/corporate-gifts`}>All Corporate Gifts</Link>
-                <Link to={`${ROUTES.CATEGORIES}/corporate-gifts`}>Executive Gift Hampers</Link>
-                <Link to={`${ROUTES.CATEGORIES}/welcome-kits`}>Employee Welcome Kits</Link>
-                <Link to={`${ROUTES.CATEGORIES}/custom-merchandise`}>Custom Branded Merchandise</Link>
-                <Link to={`${ROUTES.CATEGORIES}/tech-gifts`}>Tech & Electronics Gifts</Link>
+              <div className={styles.dropdownMenuWide}>
+                <Link to={ROUTES.CORPORATE_GIFTS}>All Corporate Gifts</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>On Boarding Kit</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Updated Anniversary Kit</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Anniversary Kit Diaries</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Drinkware</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Apparel</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Electronics</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Backpacks</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Accessories</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Trophy</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Cap</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Umbrella</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Card Holders</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Premium Gifts</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Cups</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Keychains</Link>
               </div>
             )}
           </div>
@@ -120,17 +131,19 @@ const Header = () => {
             onMouseLeave={() => setActiveDropdown(null)}
           >
             <NavLink
-              to={`${ROUTES.CATEGORIES}/personalized-gifts`}
+              to={ROUTES.PERSONALIZED_GIFTS}
               className={({ isActive }) => `${styles.navLink} ${isActive ? styles.active : ''}`}
             >
               Personalized Gifts <span className={styles.dropdownArrow}>⌄</span>
             </NavLink>
             {activeDropdown === 'personalized' && (
               <div className={styles.dropdownMenu}>
-                <Link to={`${ROUTES.CATEGORIES}/personalized-gifts`}>All Personalized Gifts</Link>
-                <Link to={`${ROUTES.CATEGORIES}/personalized-gifts`}>Laser Engraved Leather Sets</Link>
-                <Link to={`${ROUTES.CATEGORIES}/personalized-gifts`}>Custom Logo Diaries & Pens</Link>
-                <Link to={`${ROUTES.CATEGORIES}/personalized-gifts`}>Custom Drinkware & Flasks</Link>
+                <Link to={ROUTES.PERSONALIZED_GIFTS}>All Personalized Gifts</Link>
+                <Link to={ROUTES.PERSONALIZED_GIFTS}>Photo Frames</Link>
+                <Link to={ROUTES.PERSONALIZED_GIFTS}>Acrylic Frame</Link>
+                <Link to={ROUTES.PERSONALIZED_GIFTS}>Caricature</Link>
+                <Link to={ROUTES.PERSONALIZED_GIFTS}>Clock</Link>
+                <Link to={ROUTES.PERSONALIZED_GIFTS}>Wooden Photo Engraving</Link>
               </div>
             )}
           </div>
@@ -142,17 +155,26 @@ const Header = () => {
             onMouseLeave={() => setActiveDropdown(null)}
           >
             <NavLink
-              to={`${ROUTES.CATEGORIES}/toys`}
+              to={ROUTES.TOYS}
               className={({ isActive }) => `${styles.navLink} ${isActive ? styles.active : ''}`}
             >
               Toys <span className={styles.dropdownArrow}>⌄</span>
             </NavLink>
             {activeDropdown === 'toys' && (
               <div className={styles.dropdownMenu}>
-                <Link to={`${ROUTES.CATEGORIES}/toys`}>All Toys & Desk Games</Link>
-                <Link to={`${ROUTES.CATEGORIES}/toys`}>Executive Desk Toys & Fidgets</Link>
-                <Link to={`${ROUTES.CATEGORIES}/toys`}>Educational Brain Teasers</Link>
-                <Link to={`${ROUTES.CATEGORIES}/toys`}>Corporate Board Games</Link>
+                <Link to={ROUTES.TOYS}>All Toys</Link>
+                <Link to={ROUTES.TOYS}>0 - 2 Years</Link>
+                <Link to={ROUTES.TOYS}>3 - 5 Years</Link>
+                <Link to={ROUTES.TOYS}>6 - 8 Years</Link>
+                <Link to={ROUTES.TOYS}>9 - 12 Years</Link>
+                <Link to={ROUTES.TOYS}>Teens</Link>
+                <Link to={ROUTES.TOYS}>Educational Toys</Link>
+                <Link to={ROUTES.TOYS}>Remote Control Toys</Link>
+                <Link to={ROUTES.TOYS}>Soft Toys</Link>
+                <Link to={ROUTES.TOYS}>Building Blocks</Link>
+                <Link to={ROUTES.TOYS}>Dolls</Link>
+                <Link to={ROUTES.TOYS}>Cars & Bikes</Link>
+                <Link to={ROUTES.TOYS}>Outdoor Toys</Link>
               </div>
             )}
           </div>
