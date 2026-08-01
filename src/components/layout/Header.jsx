@@ -229,7 +229,11 @@ const Header = () => {
                 <Link to={ROUTES.PROFILE}>My Profile</Link>
                 <Link to={ROUTES.ORDERS}>My Orders</Link>
                 <Link to={ROUTES.WISHLIST}>Wishlist</Link>
-                {user?.role === 'ADMIN' && <Link to={ROUTES.DASHBOARD}>Dashboard</Link>}
+                {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
+                  <Link to={ROUTES.DASHBOARD} style={{ color: '#dfa843', fontWeight: 'bold' }}>
+                    {user?.role === 'SUPER_ADMIN' ? '👑 Super Admin Panel' : '💼 Admin Dashboard'}
+                  </Link>
+                )}
                 <button onClick={() => dispatch(logout())}>Logout</button>
               </div>
             )}

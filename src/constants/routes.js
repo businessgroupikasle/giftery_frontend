@@ -27,8 +27,11 @@ export const ROUTES = {
   FAQ: '/faq',
   NOT_FOUND: '*',
 
-  // Admin
+  // Admin & Super Admin
   DASHBOARD: '/dashboard',
+  ADMIN_LOGIN: '/admin/login',
+  SUPER_ADMIN_LOGIN: '/super-admin/login',
+  SUPER_ADMIN_DASHBOARD: '/super-admin/dashboard',
   ADMIN_PRODUCTS: '/dashboard/products',
   ADMIN_ORDERS: '/dashboard/orders',
   ADMIN_USERS: '/dashboard/users',

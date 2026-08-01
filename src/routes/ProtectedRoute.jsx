@@ -22,8 +22,21 @@ const ProtectedRoute = ({ children, requiredRole }) => {
     );
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
-    return <Navigate to={ROUTES.HOME} replace />;
+  if (requiredRole) {
+    const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+    const isAdmin = user?.role === 'ADMIN';
+
+    if (requiredRole === 'SUPER_ADMIN' && !isSuperAdmin) {
+      return <Navigate to={ROUTES.HOME} replace />;
+    }
+
+    if (requiredRole === 'ADMIN' && !isAdmin && !isSuperAdmin) {
+      return <Navigate to={ROUTES.HOME} replace />;
+    }
+
+    if (requiredRole !== 'SUPER_ADMIN' && requiredRole !== 'ADMIN' && user?.role !== requiredRole) {
+      return <Navigate to={ROUTES.HOME} replace />;
+    }
   }
 
   return children;

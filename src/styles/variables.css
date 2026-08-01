@@ -4,9 +4,9 @@
 
 :root {
   /* ── Colors ──────────────────────────────────────────── */
-  --color-primary:       hsl(230, 85%, 60%);
-  --color-primary-dark:  hsl(230, 85%, 48%);
-  --color-primary-light: hsl(230, 85%, 72%);
+  --color-primary:       hsl(38, 80%, 52%);
+  --color-primary-dark:  hsl(38, 80%, 40%);
+  --color-primary-light: hsl(38, 80%, 68%);
   --color-secondary:     hsl(280, 75%, 60%);
   --color-accent:        hsl(340, 90%, 55%);
   --color-success:       hsl(145, 65%, 42%);

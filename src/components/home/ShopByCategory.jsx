@@ -8,7 +8,7 @@ const giftCollections = [
     title: 'Corporate Gifts',
     subtitle: 'Premium gifts for your valued clients & partners',
     image: '/images/cat_corporate.png',
-    link: `${ROUTES.CATEGORIES}/corporate-gifts`,
+    link: ROUTES.CORPORATE_GIFTS,
     theme: 'dark',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e5c158" strokeWidth="2">
@@ -22,7 +22,7 @@ const giftCollections = [
     title: 'Employee Welcome Kits',
     subtitle: 'Make new beginnings memorable for your team',
     image: '/images/cat_welcome.png',
-    link: `${ROUTES.CATEGORIES}/welcome-kits`,
+    link: ROUTES.CORPORATE_GIFTS,
     theme: 'light',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2">
@@ -38,7 +38,7 @@ const giftCollections = [
     title: 'Custom Merchandise',
     subtitle: 'Branded merchandise that represents you',
     image: '/images/cat_merch.png',
-    link: `${ROUTES.CATEGORIES}/custom-merchandise`,
+    link: ROUTES.CORPORATE_GIFTS,
     theme: 'gold',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e5c158" strokeWidth="2">
@@ -52,7 +52,7 @@ const giftCollections = [
     title: 'Tech Gifts',
     subtitle: 'Innovative tech for a modern world',
     image: '/images/cat_tech.png',
-    link: `${ROUTES.CATEGORIES}/tech-gifts`,
+    link: ROUTES.CORPORATE_GIFTS,
     theme: 'light',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2">
@@ -67,7 +67,7 @@ const giftCollections = [
     title: 'Eco Friendly Gifts',
     subtitle: 'Sustainable gifts for a better tomorrow',
     image: '/images/cat_eco.png',
-    link: `${ROUTES.CATEGORIES}/eco-gifts`,
+    link: ROUTES.CORPORATE_GIFTS,
     theme: 'light',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2">
@@ -89,7 +89,7 @@ const ShopByCategory = () => {
               Explore Our <span className={styles.collectionsTitleGold}>Gift Collections</span>
             </h2>
           </div>
-          <Link to={ROUTES.CATEGORIES} className={styles.viewAllBtn}>
+          <Link to={ROUTES.CORPORATE_GIFTS} className={styles.viewAllBtn}>
             View All Categories &rarr;
           </Link>
         </div>

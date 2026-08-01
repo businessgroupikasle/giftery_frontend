@@ -5,6 +5,7 @@ import Layout from '@components/layout/Layout';
 import { addToCart } from '@store/slices/cartSlice';
 import { addToWishlist } from '@store/slices/wishlistSlice';
 import { ROUTES } from '@constants/routes';
+import { toast } from 'react-toastify';
 import styles from './CorporateGifts.module.css';
 
 const SUBCATEGORIES_DATA = [
@@ -285,6 +286,20 @@ const CorporateGifts = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Missing filter handlers
+  const toggleOccasion = (id) => {
+    setSelectedOccasions((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleClearAll = () => {
+    setSelectedCategory('hampers');
+    setMinPrice('100');
+    setMaxPrice('5000');
+    setSelectedOccasions([]);
+  };
+
   // Carousel Scroll Handler
   const scrollCarousel = (direction) => {
     if (carouselRef.current) {
@@ -305,26 +320,41 @@ const CorporateGifts = () => {
     notes: '',
   });
 
-  const toggleOccasion = (id) => {
-    setSelectedOccasions((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
-  const handleClearAll = () => {
-    setSelectedCategory('hampers');
-    setMinPrice('100');
-    setMaxPrice('5000');
-    setSelectedOccasions([]);
-  };
-
   const handleQuoteSubmit = (e) => {
     e.preventDefault();
+    if (!quoteForm.name || !quoteForm.email) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    const newQuote = {
+      id: 'Q-' + Math.floor(1000 + Math.random() * 9000),
+      name: quoteForm.name,
+      company: quoteForm.company || 'Individual / StartUp',
+      email: quoteForm.email,
+      phone: quoteForm.phone || 'Not provided',
+      quantity: quoteForm.quantity || '50-100 Units',
+      notes: quoteForm.notes || 'Corporate Gift Quote Request from Website CTA',
+      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      status: 'New',
+    };
+
+    try {
+      const existingQuotes = JSON.parse(localStorage.getItem('corporate_quotes') || '[]');
+      const updatedQuotes = [newQuote, ...existingQuotes];
+      localStorage.setItem('corporate_quotes', JSON.stringify(updatedQuotes));
+      window.dispatchEvent(new Event('corporate_quotes_updated'));
+    } catch (err) {
+      console.warn('Failed to save corporate quote to storage:', err);
+    }
+
     setQuoteSubmitted(true);
+    toast.success('Quote request submitted! Our team will contact you within 1 business hour.');
     setTimeout(() => {
       setShowQuoteModal(false);
       setQuoteSubmitted(false);
-    }, 2000);
+      setQuoteForm({ name: '', company: '', email: '', phone: '', quantity: '50-100', notes: '' });
+    }, 2500);
   };
 
   return (
@@ -741,6 +771,18 @@ const CorporateGifts = () => {
                       placeholder="name@company.com"
                       value={quoteForm.email}
                       onChange={(e) => setQuoteForm({ ...quoteForm, email: e.target.value })}
+                      className={styles.formControl}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label>Mobile Number</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="+91 98765 43210"
+                      value={quoteForm.phone}
+                      onChange={(e) => setQuoteForm({ ...quoteForm, phone: e.target.value })}
                       className={styles.formControl}
                     />
                   </div>

@@ -1,0 +1,451 @@
+/* =============================================================
+   Login.module.css — Luxury Gifterys Auth Page Centered Design
+   ============================================================= */
+
+/* Page Outer Container (Full Viewport Centering) */
+.authPageContainer {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0c0c0e;
+  background-image: 
+    radial-gradient(circle at 50% 30%, rgba(223, 168, 67, 0.12) 0%, transparent 60%),
+    radial-gradient(circle at 85% 85%, rgba(200, 145, 45, 0.08) 0%, transparent 50%),
+    url('/images/login_luxury_bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+  position: relative;
+  /* Hide scrollbar completely on login page */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.authPageContainer::-webkit-scrollbar {
+  display: none;
+}
+
+/* Back to Home Button — Top Left */
+.backHomeBtn {
+  position: fixed;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.1rem;
+  background: rgba(20, 22, 27, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(217, 155, 38, 0.45);
+  border-radius: 50px;
+  color: #f7d58b;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 12px rgba(217, 155, 38, 0.2);
+  transition: all 0.22s ease;
+}
+
+.backHomeBtn:hover {
+  background: linear-gradient(135deg, #d99b26 0%, #b8832a 100%);
+  color: #0e0e11;
+  border-color: #f7d58b;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55), 0 0 20px rgba(217, 155, 38, 0.45);
+}
+
+.backHomeIcon {
+  font-size: 0.95rem;
+  transition: transform 0.2s ease;
+}
+
+.backHomeBtn:hover .backHomeIcon {
+  transform: translateX(-3px);
+}
+
+
+/* Card Container (Centered Box) */
+.authCard {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 460px;
+  background: rgba(20, 22, 27, 0.94);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 2.25rem 2rem;
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.75),
+    0 0 40px rgba(217, 155, 38, 0.1);
+  margin: 0 auto;
+  color: #f8fafc;
+}
+
+/* Header Logo Box */
+.authCardHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.headerLogoLink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.headerLogoSvg {
+  width: 48px !important;
+  height: 48px !important;
+  max-width: 48px;
+  max-height: 48px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 8px rgba(217, 155, 38, 0.4));
+}
+
+.headerBrandGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.headerBrandTitle {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #f7d58b;
+  margin: 0;
+  line-height: 1;
+}
+
+.headerBrandTagline {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #bfa163;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+.authHeaderSubtitle {
+  font-size: 0.825rem;
+  color: #94a3b8;
+  margin: 0.65rem 0 0 0;
+}
+
+/* Segmented Control Tab Switcher */
+.segmentedControl {
+  position: relative;
+  display: flex;
+  background: #111318;
+  border: 1px solid #282c37;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.segmentedIndicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  background: #d99b26;
+  border-radius: 8px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(217, 155, 38, 0.35);
+}
+
+.segmentBtn {
+  flex: 1;
+  position: relative;
+  z-index: 2;
+  background: none;
+  border: none;
+  padding: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.segmentBtnActive {
+  color: #ffffff !important;
+}
+
+/* Form Groups */
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+}
+
+.inputHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inputLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.forgotPasswordBtn {
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  color: #d99b26;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.forgotPasswordBtn:hover {
+  text-decoration: underline;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 0.85rem;
+  color: #64748b;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.inputField {
+  width: 100%;
+  padding: 0.65rem 2.5rem 0.65rem 2.4rem;
+  background: #111317;
+  border: 1px solid #2a2e37;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: #f8fafc;
+  outline: none;
+  transition: border-color 0.18s ease;
+}
+
+.inputField:focus {
+  border-color: #d99b26;
+  box-shadow: 0 0 0 3px rgba(217, 155, 38, 0.15);
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 0.85rem;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+}
+
+.eyeBtn:hover {
+  color: #f8fafc;
+}
+
+.termsCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  cursor: pointer;
+  margin-top: 0.25rem;
+  text-align: left;
+}
+
+.termsCheckbox {
+  width: 15px;
+  height: 15px;
+  accent-color: #d99b26;
+  cursor: pointer;
+}
+
+.termsLink {
+  color: #d99b26;
+  text-decoration: none;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 0.78rem;
+  background: #d99b26;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 14px rgba(217, 155, 38, 0.35);
+  transition: transform 0.15s ease, background 0.15s ease;
+  margin-top: 0.5rem;
+}
+
+.submitBtn:hover {
+  background: #c78a1d;
+  transform: translateY(-1px);
+}
+
+/* Social Buttons */
+.socialDivider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0 1rem 0;
+}
+
+.socialDividerLine {
+  flex: 1;
+  height: 1px;
+  background: #2a2e37;
+}
+
+.socialDividerText {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.socialGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.socialBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem;
+  background: #111317;
+  border: 1px solid #2a2e37;
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.socialBtn:hover {
+  background: #181b22;
+  border-color: #3b4252;
+}
+
+.socialIcon {
+  font-size: 1.1rem;
+}
+
+/* Forgot Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.forgotModal {
+  background: #181a20;
+  border: 1px solid #2a2e37;
+  border-radius: 16px;
+  padding: 1.75rem;
+  width: 100%;
+  max-width: 400px;
+  color: #f8fafc;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.modalHeader h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.modalDescription {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 1.25rem;
+  line-height: 1.4;
+}
+
+.modalActions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.cancelBtn {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid #2a2e37;
+  color: #94a3b8;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.sendBtn {
+  padding: 0.5rem 1.25rem;
+  background: #d99b26;
+  border: none;
+  color: #ffffff;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+}

@@ -8,23 +8,51 @@ import { setToken, setUser, clearAuth } from '@utils/storage';
 const authService = {
   /**
    * Login with email + password
-   * @param {{ email: string, password: string }} credentials
    */
   login: async (credentials) => {
-    const data = await axiosInstance.post(ENDPOINTS.AUTH.LOGIN, credentials);
-    setToken(data.token);
-    setUser(data.user);
-    return data;
+    const response = await axiosInstance.post(ENDPOINTS.AUTH.LOGIN, credentials);
+    const payload = response.data || response;
+    if (payload.token) setToken(payload.token);
+    if (payload.user) setUser(payload.user);
+    return payload;
   },
 
   /**
-   * Register a new user
+   * Request Email Verification OTP inline
    */
-  register: async (payload) => {
-    const data = await axiosInstance.post(ENDPOINTS.AUTH.REGISTER, payload);
-    setToken(data.token);
-    setUser(data.user);
-    return data;
+  requestOTP: async ({ email, name }) => {
+    const response = await axiosInstance.post(ENDPOINTS.AUTH.REQUEST_OTP, { email, name });
+    return response.data || response;
+  },
+
+  /**
+   * Register user (with inline OTP verification)
+   */
+  register: async (payloadData) => {
+    const response = await axiosInstance.post(ENDPOINTS.AUTH.REGISTER, payloadData);
+    const payload = response.data || response;
+    if (payload.token) setToken(payload.token);
+    if (payload.user) setUser(payload.user);
+    return payload;
+  },
+
+  /**
+   * Verify Email using 6-Digit OTP Code
+   */
+  verifyEmail: async ({ email, otp }) => {
+    const response = await axiosInstance.post(ENDPOINTS.AUTH.VERIFY_EMAIL, { email, otp });
+    const payload = response.data || response;
+    if (payload.token) setToken(payload.token);
+    if (payload.user) setUser(payload.user);
+    return payload;
+  },
+
+  /**
+   * Resend Verification OTP Code
+   */
+  resendOTP: async ({ email }) => {
+    const response = await axiosInstance.post(ENDPOINTS.AUTH.RESEND_OTP, { email });
+    return response.data || response;
   },
 
   /**

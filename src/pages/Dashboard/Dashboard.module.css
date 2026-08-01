@@ -1,0 +1,949 @@
+/* =============================================================
+   Dashboard.module.css — Exact Super Admin Mockup UI Design
+   ============================================================= */
+
+/* Main Container */
+.dashboardContainer {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  background-color: #f8fafc;
+  color: #1e293b;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ── LEFT SIDEBAR ────────────────────────────────────────────── */
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  background-color: #111317;
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-right: 1px solid #1e2229;
+  user-select: none;
+}
+
+/* Logo Box */
+.brandBox {
+  padding: 1.5rem 1.25rem 1.25rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid #1e2229;
+}
+
+.brandLogoSvg {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+.brandTextGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandTitle {
+  font-family: 'Playfair Display', serif, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #f7d58b;
+  margin: 0;
+  line-height: 1;
+}
+
+.brandTagline {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #bfa163;
+  margin-top: 3px;
+  text-transform: uppercase;
+}
+
+/* Scrollable Nav Menu */
+.navMenu {
+  flex: 1;
+  padding: 1rem 0.85rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.navMenu::-webkit-scrollbar {
+  width: 4px;
+}
+
+.navMenu::-webkit-scrollbar-thumb {
+  background: #2a2e37;
+  border-radius: 4px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  width: 100%;
+  text-align: left;
+  text-decoration: none;
+}
+
+.navItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navIcon {
+  font-size: 1.1rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.caretIcon {
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
+}
+
+.navItem:hover .navIcon {
+  color: #f8fafc;
+}
+
+/* Active Highlight Pill (Gold background as shown in design) */
+.navItemActive {
+  background: #d99b26 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(217, 155, 38, 0.35);
+}
+
+.navItemActive .navIcon {
+  color: #ffffff !important;
+}
+
+.navItemActive .caretIcon {
+  color: #ffffff !important;
+}
+
+/* Bottom Profile Card in Sidebar */
+.sidebarProfile {
+  margin: 0.85rem;
+  padding: 0.75rem 0.85rem;
+  background: #181b21;
+  border: 1px solid #242832;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profileInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.profileAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #d99b26;
+}
+
+.profileName {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.profileRole {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #d99b26;
+  margin: 0;
+}
+
+.profileDots {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.profileDots:hover {
+  color: #ef4444 !important;
+}
+
+/* ── MAIN WORKSPACE CONTENT ───────────────────────────────────── */
+.mainWorkspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Top Navbar (Light) */
+.topNavbar {
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+.navToggleBtn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 1.35rem;
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navToggleBtn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Top Search Bar */
+.searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 340px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.85rem;
+  color: #94a3b8;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.5rem 4rem 0.5rem 2.4rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.searchInput:focus {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 0 0 3px rgba(217, 155, 38, 0.1);
+}
+
+.searchShortcut {
+  position: absolute;
+  right: 0.65rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  color: #64748b;
+  padding: 0.15rem 0.4rem;
+  font-weight: 600;
+}
+
+/* Top Right Action Icons */
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.iconBtnWithBadge {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.iconBtnWithBadge:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.logoutTopBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fee2e2;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.logoutTopBtn:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.topBadge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}
+
+.topBadgeAmber {
+  background: #f59e0b;
+}
+
+.topUserAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+/* Inner Workspace */
+.workspaceInner {
+  padding: 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+/* Header Banner Row */
+.headerBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pageHeaderTitle {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+  letter-spacing: -0.02em;
+}
+
+.pageHeaderSub {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.datePickerPill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.datePickerPill:hover {
+  background: #f8fafc;
+}
+
+/* ── ROW 1: KPI STAT CARDS GRID ───────────────────────────────── */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 1400px) {
+  .kpiGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.kpiCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.15rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.kpiCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+}
+
+.kpiHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.kpiIconCircle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* Soft Icon Backgrounds from mockup */
+.bgPurple  { background: #f3e8ff; color: #a855f7; }
+.bgBlue    { background: #e0f2fe; color: #0284c7; }
+.bgOrange  { background: #ffedd5; color: #ea580c; }
+.bgGreen   { background: #dcfce7; color: #16a34a; }
+.bgIndigo  { background: #e0e7ff; color: #4f46e5; }
+.bgPink    { background: #ffe4e6; color: #e11d48; }
+
+.kpiTitle {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0;
+}
+
+.kpiValue {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.kpiFooter {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+}
+
+.trendGreen {
+  color: #16a34a;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.trendRed {
+  color: #dc2626;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.kpiSubtext {
+  color: #94a3b8;
+}
+
+/* ── ROW 2: CHARTS GRID ───────────────────────────────────────── */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 2.2fr 1.4fr 1.4fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 1200px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cardContainer {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.cardTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.dropdownSelect {
+  padding: 0.3rem 0.65rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+}
+
+/* Sales Line Chart */
+.chartLegendRow {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  font-size: 0.78rem;
+  margin-bottom: 1rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.legendDotOrange {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+
+.legendLineGray {
+  width: 14px;
+  height: 2px;
+  background: #9ca3af;
+  border-top: 2px dashed #9ca3af;
+}
+
+.lineChartBox {
+  position: relative;
+  width: 100%;
+  height: 200px;
+}
+
+.tooltipCallout {
+  position: absolute;
+  top: 30px;
+  left: 42%;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 0.4rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 5;
+}
+
+.tooltipSub {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* Donut Charts & Legends */
+.donutWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.donutSvgBox {
+  position: relative;
+  width: 150px;
+  height: 150px;
+}
+
+.donutCenterLabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.donutCenterSub {
+  font-size: 0.68rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.donutCenterVal {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.categoryList {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+}
+
+.categoryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.categoryLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.catDotBlue { width: 8px; height: 8px; border-radius: 50%; background: #0284c7; }
+.catDotPink { width: 8px; height: 8px; border-radius: 50%; background: #e11d48; }
+.catDotYellow { width: 8px; height: 8px; border-radius: 50%; background: #eab308; }
+.catDotTeal { width: 8px; height: 8px; border-radius: 50%; background: #14b8a6; }
+.catDotPurple { width: 8px; height: 8px; border-radius: 50%; background: #a855f7; }
+
+.categoryRight {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.pctBadge {
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ── ROW 3: TABLES & LISTS GRID ───────────────────────────────── */
+.bottomGrid {
+  display: grid;
+  grid-template-columns: 2.2fr 1.4fr 1.4fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 1200px) {
+  .bottomGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.viewAllBtn {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+}
+
+.viewAllBtn:hover {
+  background: #f1f5f9;
+}
+
+/* Orders Table */
+.ordersTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.ordersTable th {
+  padding: 0.65rem 0.5rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ordersTable td {
+  padding: 0.75rem 0.5rem;
+  font-size: 0.82rem;
+  color: #334155;
+  border-bottom: 1px solid #f8fafc;
+  vertical-align: middle;
+}
+
+.orderIdText {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.pillStatus {
+  padding: 0.2rem 0.55rem;
+  border-radius: 50px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.pillDelivered { background: #dcfce7; color: #15803d; }
+.pillProcessing { background: #ffedd5; color: #c2410c; }
+.pillPending { background: #e0f2fe; color: #0369a1; }
+
+.dotsBtn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* Mini Cards Row under Table */
+.miniAlertsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.miniAlertCard {
+  border-radius: 12px;
+  padding: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.miniIconBox {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.miniCardOrange { background: #fff7ed; border: 1px solid #ffedd5; }
+.miniCardRed    { background: #fef2f2; border: 1px solid #fee2e2; }
+.miniCardBlue   { background: #f0f9ff; border: 1px solid #e0f2fe; }
+.miniCardGreen  { background: #f0fdf4; border: 1px solid #dcfce7; }
+
+.miniLabel {
+  font-size: 0.68rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.miniVal {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.miniSub {
+  font-size: 0.65rem;
+  color: #94a3b8;
+}
+
+/* Top Selling Products List */
+.productsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.productRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.productLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.productThumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.productTitle {
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.productSoldText {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.productRevenue {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* Recent Activities Timeline */
+.timelineFeed {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.timelineItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.timelineIconBox {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.timelineContent {
+  flex: 1;
+}
+
+.timelineTitle {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.timelineDesc {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+.timelineTime {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.viewActivitiesLink {
+  margin-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-decoration: none;
+  padding-top: 0.85rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.viewActivitiesLink:hover {
+  color: #d99b26;
+}

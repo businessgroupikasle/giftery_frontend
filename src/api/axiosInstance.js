@@ -10,7 +10,7 @@ import { getToken, clearAuth } from '@utils/storage';
  * - Handles 401 → clears auth and redirects to login
  */
 const axiosInstance = axios.create({
-  baseURL: `${env.API_BASE_URL}/api`,
+  baseURL: `${env.API_BASE_URL}/api/v1`,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',

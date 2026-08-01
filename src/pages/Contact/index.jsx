@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '@components/layout/Layout';
 import { ROUTES } from '@constants/routes';
+import axiosInstance from '@api/axiosInstance';
+import { ENDPOINTS } from '@api/endpoints';
 import styles from './Contact.module.css';
 
 /* ── SVG Icon components ─────────────────────────────── */
@@ -102,9 +104,20 @@ const Contact = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    try {
+      await axiosInstance.post(ENDPOINTS.ENQUIRIES.SUBMIT, {
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject || formData.inquiryType || 'General Inquiry',
+        message: formData.message,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitted(true);
+    }
   };
 
   return (

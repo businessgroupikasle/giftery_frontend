@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from '@routes/ProtectedRoute';
 import { ROUTES } from '@constants/routes';
 
@@ -7,7 +7,6 @@ import { ROUTES } from '@constants/routes';
 const Home        = lazy(() => import('@pages/Home'));
 const Shop        = lazy(() => import('@pages/Shop'));
 const Product     = lazy(() => import('@pages/Product'));
-const Categories  = lazy(() => import('@pages/Categories'));
 const CorporateGifts = lazy(() => import('@pages/CorporateGifts'));
 const PersonalizedGifts = lazy(() => import('@pages/PersonalizedGifts'));
 const Toys        = lazy(() => import('@pages/Toys'));
@@ -40,17 +39,20 @@ const App = () => {
         <Route path={ROUTES.HOME}       element={<Home />} />
         <Route path={ROUTES.SHOP}       element={<Shop />} />
         <Route path={ROUTES.PRODUCT}    element={<Product />} />
-        <Route path={ROUTES.CATEGORIES} element={<Categories />} />
-        <Route path={ROUTES.CATEGORY}   element={<Categories />} />
+        {/* Categories page removed — redirect all /categories/* to Corporate Gifts */}
+        <Route path={ROUTES.CATEGORIES} element={<Navigate to={ROUTES.CORPORATE_GIFTS} replace />} />
+        <Route path={ROUTES.CATEGORY}   element={<Navigate to={ROUTES.CORPORATE_GIFTS} replace />} />
         <Route path={ROUTES.CORPORATE_GIFTS} element={<CorporateGifts />} />
-        <Route path={`${ROUTES.CATEGORIES}/corporate-gifts`} element={<CorporateGifts />} />
+        <Route path={`${ROUTES.CATEGORIES}/corporate-gifts`} element={<Navigate to={ROUTES.CORPORATE_GIFTS} replace />} />
         <Route path={ROUTES.PERSONALIZED_GIFTS} element={<PersonalizedGifts />} />
-        <Route path={`${ROUTES.CATEGORIES}/personalized-gifts`} element={<PersonalizedGifts />} />
+        <Route path={`${ROUTES.CATEGORIES}/personalized-gifts`} element={<Navigate to={ROUTES.PERSONALIZED_GIFTS} replace />} />
         <Route path={ROUTES.TOYS}       element={<Toys />} />
-        <Route path={`${ROUTES.CATEGORIES}/toys`} element={<Toys />} />
+        <Route path={`${ROUTES.CATEGORIES}/toys`} element={<Navigate to={ROUTES.TOYS} replace />} />
         <Route path={ROUTES.SEARCH}     element={<Search />} />
         <Route path={ROUTES.CART}       element={<Cart />} />
         <Route path={ROUTES.LOGIN}      element={<Login />} />
+        <Route path={ROUTES.ADMIN_LOGIN} element={<Navigate to={ROUTES.LOGIN} replace />} />
+        <Route path={ROUTES.SUPER_ADMIN_LOGIN} element={<Navigate to={ROUTES.LOGIN} replace />} />
         <Route path={ROUTES.REGISTER}   element={<Register />} />
         <Route path={ROUTES.CONTACT}    element={<Contact />} />
         <Route path={ROUTES.ABOUT}      element={<About />} />
@@ -62,8 +64,9 @@ const App = () => {
         <Route path={ROUTES.ORDERS}    element={<ProtectedRoute><Orders /></ProtectedRoute>} />
         <Route path={ROUTES.PROFILE}   element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
-        {/* Admin */}
+        {/* Admin & Super Admin */}
         <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute requiredRole="ADMIN"><Dashboard /></ProtectedRoute>} />
+        <Route path={ROUTES.SUPER_ADMIN_DASHBOARD} element={<ProtectedRoute requiredRole="SUPER_ADMIN"><Dashboard /></ProtectedRoute>} />
 
         {/* 404 */}
         <Route path={ROUTES.NOT_FOUND} element={<NotFound />} />

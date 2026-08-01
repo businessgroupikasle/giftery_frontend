@@ -5,6 +5,7 @@ import Layout from '@components/layout/Layout';
 import { addToCart } from '@store/slices/cartSlice';
 import { addToWishlist } from '@store/slices/wishlistSlice';
 import { ROUTES } from '@constants/routes';
+import { toast } from 'react-toastify';
 import styles from './PersonalizedGifts.module.css';
 
 const SUBCATEGORIES_DATA = [
@@ -214,6 +215,7 @@ const PersonalizedGifts = () => {
     notes: '',
   });
 
+  // Missing filter handlers
   const toggleOccasion = (id) => {
     setSelectedOccasions((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -229,11 +231,39 @@ const PersonalizedGifts = () => {
 
   const handleQuoteSubmit = (e) => {
     e.preventDefault();
+    if (!quoteForm.name || !quoteForm.email) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    const newQuote = {
+      id: 'Q-' + Math.floor(1000 + Math.random() * 9000),
+      name: quoteForm.name,
+      company: quoteForm.company || 'Personalized Gift Request',
+      email: quoteForm.email,
+      phone: quoteForm.phone || 'Not provided',
+      quantity: quoteForm.quantity || '10-25 Units',
+      notes: quoteForm.notes || 'Personalized Gift Custom Branding Quote',
+      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      status: 'New',
+    };
+
+    try {
+      const existingQuotes = JSON.parse(localStorage.getItem('corporate_quotes') || '[]');
+      const updatedQuotes = [newQuote, ...existingQuotes];
+      localStorage.setItem('corporate_quotes', JSON.stringify(updatedQuotes));
+      window.dispatchEvent(new Event('corporate_quotes_updated'));
+    } catch (err) {
+      console.warn('Failed to save quote to storage:', err);
+    }
+
     setQuoteSubmitted(true);
+    toast.success('Quote request submitted! Our specialist will contact you within 1 business hour.');
     setTimeout(() => {
       setShowQuoteModal(false);
       setQuoteSubmitted(false);
-    }, 2000);
+      setQuoteForm({ name: '', email: '', phone: '', quantity: '10-25', notes: '' });
+    }, 2500);
   };
 
   return (
@@ -618,6 +648,18 @@ const PersonalizedGifts = () => {
                       placeholder="ananya@example.com"
                       value={quoteForm.email}
                       onChange={(e) => setQuoteForm({ ...quoteForm, email: e.target.value })}
+                      className={styles.formControl}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label>Mobile Number</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="+91 98765 43210"
+                      value={quoteForm.phone}
+                      onChange={(e) => setQuoteForm({ ...quoteForm, phone: e.target.value })}
                       className={styles.formControl}
                     />
                   </div>

@@ -1,2 +1,7 @@
-const Checkout = () => <main><h1>Checkout Page</h1></main>;
+import Cart from '@pages/Cart';
+
+const Checkout = () => {
+  return <Cart />;
+};
+
 export default Checkout;

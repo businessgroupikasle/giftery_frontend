@@ -1,0 +1,273 @@
+/* =============================================================
+   AdminLogin.module.css — Gold & Onyx Store Admin Portal
+   ============================================================= */
+
+.adminAuthContainer {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background-color: #0b0a0d;
+  background-image: 
+    radial-gradient(circle at 50% 30%, rgba(223, 168, 67, 0.16) 0%, transparent 55%),
+    radial-gradient(circle at 80% 80%, rgba(212, 152, 50, 0.1) 0%, transparent 45%);
+  padding: 3rem 1.5rem;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.adminOverlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(14, 13, 18, 0.7) 0%, rgba(9, 8, 12, 0.92) 100%);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.backHomeBtn {
+  position: absolute;
+  top: 1.75rem;
+  left: 1.75rem;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 1.15rem;
+  background: rgba(24, 22, 28, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(223, 168, 67, 0.45);
+  border-radius: 50px;
+  color: #f7d58b;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6), 0 0 15px rgba(223, 168, 67, 0.2);
+  transition: all 0.25s ease;
+}
+
+.backHomeBtn:hover {
+  background: linear-gradient(135deg, #f7d58b 0%, #dfa843 100%);
+  color: #0c0c0e;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 25px rgba(223, 168, 67, 0.5);
+}
+
+.adminCard {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 460px;
+  background: rgba(22, 20, 27, 0.9);
+  backdrop-filter: blur(28px);
+  border: 1px solid rgba(223, 168, 67, 0.25);
+  border-radius: 24px;
+  padding: 2.75rem 2.5rem;
+  box-shadow: 
+    0 30px 60px rgba(0, 0, 0, 0.85),
+    0 0 50px rgba(223, 168, 67, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.brandHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.briefcaseBadge {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(223, 168, 67, 0.2) 0%, rgba(184, 131, 42, 0.1) 100%);
+  border: 1px solid rgba(223, 168, 67, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f7d58b;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 0 20px rgba(223, 168, 67, 0.3);
+}
+
+.brandTitle {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  background: linear-gradient(135deg, #f7d58b 0%, #dfa843 60%, #b8832a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+.brandSub {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #dfa843;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.titleGroup {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.mainTitle {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.75rem;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+}
+
+.subTitle {
+  font-size: 0.85rem;
+  color: #d1d5db;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.quickFillBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px dashed rgba(223, 168, 67, 0.3);
+  border-radius: 10px;
+  padding: 0.5rem 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.quickFillText {
+  font-size: 0.72rem;
+  color: #f7d58b;
+  font-weight: 600;
+}
+
+.quickFillBtn {
+  background: rgba(223, 168, 67, 0.2);
+  border: 1px solid #dfa843;
+  border-radius: 6px;
+  color: #f7d58b;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quickFillBtn:hover {
+  background: #dfa843;
+  color: #0c0c0e;
+  box-shadow: 0 0 12px rgba(223, 168, 67, 0.4);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.inputLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 1rem;
+  color: #dfa843;
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+
+.inputField {
+  width: 100%;
+  padding: 0.85rem 1rem 0.85rem 2.8rem;
+  background: rgba(14, 13, 18, 0.7);
+  border: 1px solid rgba(223, 168, 67, 0.25);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.inputField:focus {
+  border-color: #dfa843;
+  box-shadow: 0 0 15px rgba(223, 168, 67, 0.3);
+}
+
+.togglePass {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.submitBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.95rem;
+  background: linear-gradient(135deg, #f7d58b 0%, #dfa843 50%, #b8832a 100%);
+  border: none;
+  border-radius: 12px;
+  color: #0c0c0e;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(223, 168, 67, 0.35);
+  transition: all 0.25s ease;
+  margin-top: 0.5rem;
+}
+
+.submitBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(223, 168, 67, 0.5);
+}
+
+.otherPortals {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.portalLink {
+  color: #c084fc;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.portalLink:hover {
+  text-decoration: underline;
+}

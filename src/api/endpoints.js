@@ -11,6 +11,9 @@ export const ENDPOINTS = {
   AUTH: {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',
+    REQUEST_OTP: '/auth/request-otp',
+    VERIFY_EMAIL: '/auth/verify-email',
+    RESEND_OTP: '/auth/resend-otp',
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh-token',
     FORGOT_PASSWORD: '/auth/forgot-password',
@@ -107,5 +110,15 @@ export const ENDPOINTS = {
   SETTINGS: {
     GET: '/settings',
     UPDATE: '/settings',
+  },
+
+  // ── Enquiries & Uploads ────────────────────────────────────
+  ENQUIRIES: {
+    SUBMIT: '/enquiries',
+    LIST: '/enquiries',
+    UPDATE_STATUS: (id) => `/enquiries/${id}/status`,
+  },
+  UPLOADS: {
+    SINGLE: '/uploads',
   },
 };
