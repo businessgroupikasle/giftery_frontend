@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import Layout from '@components/layout/Layout';
 import useFetch from '@hooks/useFetch';
 import { ENDPOINTS } from '@api/endpoints';
@@ -17,8 +18,38 @@ const STATUS_COLORS = {
 };
 
 const Orders = () => {
-  const { data, loading } = useFetch(ENDPOINTS.ORDERS.MY);
-  const orders = data?.data || [];
+  const { data, loading: fetchLoading } = useFetch(ENDPOINTS.ORDERS.MY);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadOrders = () => {
+      const apiOrders = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+      const localOrders = JSON.parse(localStorage.getItem('giftery_orders') || '[]');
+
+      const storedUser = JSON.parse(localStorage.getItem('giftery_user') || '{}');
+      const currentUserEmail = storedUser.email ? storedUser.email.toLowerCase().trim() : '';
+
+      const filteredLocal = currentUserEmail
+        ? localOrders.filter(o => !o.customerEmail || o.customerEmail.toLowerCase().trim() === currentUserEmail)
+        : localOrders;
+
+      const merged = [...filteredLocal];
+      apiOrders.forEach(ao => {
+        if (!merged.find(m => m.id === ao.id || m.orderId === ao.id)) {
+          merged.push(ao);
+        }
+      });
+
+      setOrders(merged);
+      setLoading(false);
+    };
+
+    loadOrders();
+
+    window.addEventListener('orders_updated', loadOrders);
+    return () => window.removeEventListener('orders_updated', loadOrders);
+  }, [data]);
 
   return (
     <Layout>

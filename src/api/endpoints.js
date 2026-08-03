@@ -93,6 +93,8 @@ export const ENDPOINTS = {
 
   // ── Payments ──────────────────────────────────────────────
   PAYMENTS: {
+    RAZORPAY_CREATE_ORDER: '/payments/razorpay/create-order',
+    RAZORPAY_VERIFY: '/payments/razorpay/verify-payment',
     CREATE_INTENT: '/payments/create-intent',
     CONFIRM: '/payments/confirm',
     WEBHOOK: '/payments/webhook',

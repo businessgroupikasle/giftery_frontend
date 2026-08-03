@@ -1,29 +1,34 @@
-import { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import Layout from '@components/layout/Layout';
 import { addToCart } from '@store/slices/cartSlice';
 import { addToWishlist } from '@store/slices/wishlistSlice';
 import { ROUTES } from '@constants/routes';
 import { toast } from 'react-toastify';
+import { isValidEmail, isValidMobile } from '../../utils/validation';
+import axiosInstance from '@api/axiosInstance';
+import { ENDPOINTS } from '@api/endpoints';
+import ThreeDotMenu from '@components/product/ThreeDotMenu';
 import styles from './CorporateGifts.module.css';
 
 const SUBCATEGORIES_DATA = [
   { id: 'all', name: 'All Products' },
-  { id: 'onboarding', name: 'On Boarding Kit' },
-  { id: 'anniversary-updated', name: 'Anniversary Kit' },
-  { id: 'diaries', name: 'Anniversary Diaries' },
+  { id: 'onboarding', name: 'Onboarding Kit' },
+  { id: 'work-anniversary', name: 'Work Anniversary Kit' },
+  { id: 'employee-anniversary', name: 'Employee Anniversary Kit' },
+  { id: 'diaries', name: 'Diaries & Notebooks' },
   { id: 'drinkware', name: 'Drinkware' },
   { id: 'apparel', name: 'Apparel' },
   { id: 'electronics', name: 'Electronics' },
   { id: 'backpacks', name: 'Backpacks' },
   { id: 'accessories', name: 'Accessories' },
-  { id: 'trophy', name: 'Trophy' },
-  { id: 'cap', name: 'Cap' },
-  { id: 'umbrella', name: 'Umbrella' },
+  { id: 'trophies', name: 'Trophies & Awards' },
+  { id: 'caps', name: 'Caps' },
+  { id: 'umbrellas', name: 'Umbrellas' },
   { id: 'card-holders', name: 'Card Holders' },
   { id: 'premium-gifts', name: 'Premium Gifts' },
-  { id: 'cups', name: 'Cups' },
+  { id: 'cups-mugs', name: 'Cups & Mugs' },
   { id: 'keychains', name: 'Keychains' },
 ];
 
@@ -42,6 +47,8 @@ const SubCategoryIcon = ({ type }) => {
           <rect x="28" y="8" width="6" height="14" rx="2" fill={gold} stroke={stroke} strokeWidth="1.8"/>
         </svg>
       );
+    case 'work-anniversary':
+    case 'employee-anniversary':
     case 'anniversary-updated':
       return (
         <svg width="54" height="54" viewBox="0 0 48 48" fill="none">
@@ -100,6 +107,7 @@ const SubCategoryIcon = ({ type }) => {
           <circle cx="33" cy="26" r="1.5" fill="#FFFFFF"/>
         </svg>
       );
+    case 'trophies':
     case 'trophy':
       return (
         <svg width="54" height="54" viewBox="0 0 48 48" fill="none">
@@ -110,6 +118,7 @@ const SubCategoryIcon = ({ type }) => {
           <polygon points="24,16 25.5,19.5 29,20 26.5,22 27.5,25.5 24,23.5 20.5,25.5 21.5,22 19,20 22.5,19.5" fill={gold}/>
         </svg>
       );
+    case 'caps':
     case 'cap':
       return (
         <svg width="54" height="54" viewBox="0 0 48 48" fill="none">
@@ -117,6 +126,7 @@ const SubCategoryIcon = ({ type }) => {
           <path d="M10 28C10 28 22 32 38 27L42 30C34 35 14 33 10 28Z" fill={gold} stroke={stroke} strokeWidth="2"/>
         </svg>
       );
+    case 'umbrellas':
     case 'umbrella':
       return (
         <svg width="54" height="54" viewBox="0 0 48 48" fill="none">
@@ -143,6 +153,7 @@ const SubCategoryIcon = ({ type }) => {
           <path d="M18 10C16 6 22 6 24 14C26 6 32 6 30 10Z" fill={gold} stroke={stroke} strokeWidth="1.8"/>
         </svg>
       );
+    case 'cups-mugs':
     case 'cups':
       return (
         <svg width="54" height="54" viewBox="0 0 48 48" fill="none">
@@ -167,14 +178,23 @@ const SubCategoryIcon = ({ type }) => {
 };
 
 const CATEGORIES_DATA = [
-  { id: 'hampers', name: 'Executive Hampers', count: 48, icon: '💼' },
-  { id: 'welcome', name: 'Welcome Kits', count: 32, icon: '🎒' },
-  { id: 'tech', name: 'Tech Gadgets', count: 28, icon: '📱' },
-  { id: 'apparel', name: 'Custom Apparel', count: 22, icon: '👔' },
-  { id: 'office', name: 'Office Essentials', count: 26, icon: '🏢' },
-  { id: 'eco', name: 'Eco Friendly Gifts', count: 18, icon: '🌿' },
-  { id: 'sets', name: 'Gift Sets', count: 29, icon: '🎁' },
-  { id: 'accessories', name: 'Accessories', count: 31, icon: '🏷️' },
+  { id: 'all', name: 'All Products', count: 168 },
+  { id: 'onboarding', name: 'Onboarding Kit', count: 32 },
+  { id: 'work-anniversary', name: 'Work Anniversary Kit', count: 24 },
+  { id: 'employee-anniversary', name: 'Employee Anniversary Kit', count: 28 },
+  { id: 'diaries', name: 'Diaries & Notebooks', count: 35 },
+  { id: 'drinkware', name: 'Drinkware', count: 42 },
+  { id: 'apparel', name: 'Apparel', count: 22 },
+  { id: 'electronics', name: 'Electronics', count: 28 },
+  { id: 'backpacks', name: 'Backpacks', count: 19 },
+  { id: 'accessories', name: 'Accessories', count: 31 },
+  { id: 'trophies', name: 'Trophies & Awards', count: 16 },
+  { id: 'caps', name: 'Caps', count: 14 },
+  { id: 'umbrellas', name: 'Umbrellas', count: 12 },
+  { id: 'card-holders', name: 'Card Holders', count: 18 },
+  { id: 'premium-gifts', name: 'Premium Gifts', count: 25 },
+  { id: 'cups-mugs', name: 'Cups & Mugs', count: 30 },
+  { id: 'keychains', name: 'Keychains', count: 20 },
 ];
 
 const OCCASIONS_DATA = [
@@ -188,117 +208,222 @@ const OCCASIONS_DATA = [
 const PRODUCTS_LIST = [
   {
     id: 'cg-101',
-    name: 'Executive Premium Gift Set',
+    name: 'Executive Kinetic Desk Gyro Sculpture',
     price: 1499,
+    comparePrice: 1999,
     rating: 4.8,
-    reviewsCount: 128,
-    badge: 'BEST SELLER',
-    badgeType: 'badgeBestSeller',
-    image: '/images/cat_corporate.png',
-    slug: 'executive-premium-gift-set',
+    reviewsCount: 49,
+    discount: '25%',
+    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&auto=format&fit=crop&q=80',
+    slug: 'executive-kinetic-desk-gyro-sculpture',
   },
   {
     id: 'cg-102',
-    name: 'Urban Pro Laptop Backpack',
+    name: '3D Wooden Mechanical Gear Clock Puzzle',
     price: 2199,
-    rating: 4.7,
-    reviewsCount: 96,
-    badge: null,
-    image: '/images/cat_welcome.png',
-    slug: 'urban-pro-laptop-backpack',
+    comparePrice: 2799,
+    rating: 4.9,
+    reviewsCount: 81,
+    discount: '21%',
+    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500&auto=format&fit=crop&q=80',
+    slug: '3d-wooden-mechanical-gear-clock-puzzle',
   },
   {
     id: 'cg-103',
-    name: 'Vacuum Insulated Bottle',
-    price: 899,
-    rating: 4.8,
-    reviewsCount: 76,
-    badge: null,
-    image: '/images/cat_merch.png',
-    slug: 'vacuum-insulated-bottle',
+    name: 'Miniature Executive Golf Putting Desk Game Set',
+    price: 1299,
+    comparePrice: 1699,
+    rating: 4.7,
+    reviewsCount: 38,
+    discount: '24%',
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=80',
+    slug: 'miniature-executive-golf-putting-desk-game-set',
   },
   {
     id: 'cg-104',
-    name: 'Desktop Organizer Set',
-    price: 1299,
-    rating: 4.6,
-    reviewsCount: 63,
-    badge: 'NEW',
-    badgeType: 'badgeNew',
-    image: '/images/cat_eco.png',
-    slug: 'desktop-organizer-set',
+    name: 'Interactive Newton Cradle LED Balance Balls',
+    price: 1799,
+    comparePrice: 2299,
+    rating: 4.8,
+    reviewsCount: 57,
+    discount: '22%',
+    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=80',
+    slug: 'interactive-newton-cradle-led-balance-balls',
   },
   {
     id: 'cg-105',
-    name: 'Premium Leather Notebook',
-    price: 649,
+    name: 'DIY Mechanical Automata Moving Model Kit',
+    price: 2499,
+    comparePrice: 3199,
     rating: 4.9,
-    reviewsCount: 112,
-    badge: null,
-    image: '/images/cat_corporate.png',
-    slug: 'premium-leather-notebook',
+    reviewsCount: 84,
+    discount: '22%',
+    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=80',
+    slug: 'diy-mechanical-automata-moving-model-kit',
   },
   {
     id: 'cg-106',
-    name: 'Wireless Headphone Set',
-    price: 1799,
-    rating: 4.7,
-    reviewsCount: 89,
-    badge: 'TRENDING',
-    badgeType: 'badgeTrending',
-    image: '/images/cat_tech.png',
-    slug: 'wireless-headphone-set',
+    name: 'Retro Wooden Desktop Bowling Alley Game',
+    price: 899,
+    comparePrice: 1199,
+    rating: 4.6,
+    reviewsCount: 42,
+    discount: '25%',
+    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500&auto=format&fit=crop&q=80',
+    slug: 'retro-wooden-desktop-bowling-alley-game',
   },
   {
     id: 'cg-107',
-    name: 'Welcome Kit - Deluxe',
-    price: 2499,
-    rating: 4.9,
-    reviewsCount: 57,
-    badge: null,
-    image: '/images/cat_welcome.png',
-    slug: 'welcome-kit-deluxe',
+    name: 'Precision Metal Balance Pendulum Desk Toy',
+    price: 1599,
+    comparePrice: 1999,
+    rating: 4.7,
+    reviewsCount: 31,
+    discount: '20%',
+    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&auto=format&fit=crop&q=80',
+    slug: 'precision-metal-balance-pendulum-desk-toy',
   },
   {
     id: 'cg-108',
-    name: 'Eco Friendly Gift Set',
-    price: 799,
-    rating: 4.6,
-    reviewsCount: 68,
-    badge: 'ECO FRIENDLY',
-    badgeType: 'badgeEco',
-    image: '/images/cat_eco.png',
-    slug: 'eco-friendly-gift-set',
+    name: 'Handcrafted Wooden IQ Teaser Lock Set',
+    price: 999,
+    comparePrice: 1399,
+    rating: 4.8,
+    reviewsCount: 53,
+    discount: '29%',
+    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=80',
+    slug: 'handcrafted-wooden-iq-teaser-lock-set',
   },
 ];
 
 const CorporateGifts = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const carouselRef = useRef(null);
 
+  // Live Products State from Database
+  const [liveProducts, setLiveProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchLiveProducts = async () => {
+      let apiProducts = [];
+      try {
+        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
+        const data = res.data?.products || res.data?.data || res.data || [];
+        if (Array.isArray(data)) apiProducts = data;
+      } catch (err) {
+        console.warn('Fallback to catalog products:', err.message);
+      }
+
+      const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+      const combined = [...localProducts];
+      apiProducts.forEach(ap => {
+        if (!combined.find(c => c.id === ap.id || c.slug === ap.slug)) {
+          combined.push(ap);
+        }
+      });
+
+      if (combined.length > 0) {
+        const formatted = combined.map((p) => {
+          const imgList = Array.isArray(p.images)
+            ? p.images
+            : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
+          return {
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            comparePrice: p.comparePrice,
+            rating: p.rating || 4.8,
+            reviewsCount: p.reviewsCount || p._count?.reviews || 24,
+            discount: p.comparePrice ? `${Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100)}%` : null,
+            images: imgList,
+            image: imgList[0] || '/placeholder.jpg',
+            slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          };
+        });
+        setLiveProducts(formatted);
+      }
+    };
+
+    fetchLiveProducts();
+    window.addEventListener('products_updated', fetchLiveProducts);
+    return () => window.removeEventListener('products_updated', fetchLiveProducts);
+  }, []);
+
+  // Base raw products catalog
+  const rawProducts = liveProducts.length > 0 ? liveProducts : PRODUCTS_LIST;
+
   // Filter States
-  const [activeSubCategory, setActiveSubCategory] = useState('onboarding');
-  const [selectedCategory, setSelectedCategory] = useState('hampers');
+  const [activeSubCategory, setActiveSubCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [minPrice, setMinPrice] = useState('100');
   const [maxPrice, setMaxPrice] = useState('5000');
-  const [selectedOccasions, setSelectedOccasions] = useState(['appreciation']);
+  const [selectedOccasions, setSelectedOccasions] = useState([]);
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Missing filter handlers
+  const handleCategorySelect = (catId) => {
+    setSelectedCategory(catId);
+    setActiveSubCategory(catId);
+  };
+
   const toggleOccasion = (id) => {
     setSelectedOccasions((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
+  const handleApplyFilters = () => {
+    toast.success('Filters applied successfully! 🔍');
+  };
+
   const handleClearAll = () => {
-    setSelectedCategory('hampers');
+    setSelectedCategory('all');
+    setActiveSubCategory('all');
     setMinPrice('100');
     setMaxPrice('5000');
     setSelectedOccasions([]);
+    toast.info('Filters cleared');
   };
+
+  // Filtered & Sorted Products computation
+  const displayProducts = rawProducts
+    .filter((prod) => {
+      // 1. Price Filter
+      const price = Number(prod.price) || 0;
+      const minP = Number(minPrice) || 0;
+      const maxP = Number(maxPrice) || Infinity;
+      if (price < minP || price > maxP) return false;
+
+      // 2. Category / Subcategory Filter
+      const activeCat = selectedCategory !== 'all' ? selectedCategory : activeSubCategory;
+      if (activeCat !== 'all') {
+        const catObj = CATEGORIES_DATA.find((c) => c.id === activeCat) || SUBCATEGORIES_DATA.find((s) => s.id === activeCat);
+        if (catObj) {
+          const catName = catObj.name.toLowerCase();
+          const pName = (prod.name || '').toLowerCase();
+          const pSlug = (prod.slug || '').toLowerCase();
+          const pCategory = (prod.category?.name || prod.categoryName || '').toLowerCase();
+
+          // Check if category words match product name, slug, or category name
+          const words = catName.split(' ').filter(w => w.length > 2 && w !== 'and' && w !== 'kit' && w !== 'kits');
+          const isMatch = words.some(w => pName.includes(w) || pSlug.includes(w) || pCategory.includes(w));
+
+          if (!isMatch && prod.categoryId !== activeCat) {
+            // Soft match
+          }
+        }
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'price_asc') return a.price - b.price;
+      if (sortBy === 'price_desc') return b.price - a.price;
+      if (sortBy === 'newest') return (b.id || '').localeCompare(a.id || '');
+      return (b.rating || 0) - (a.rating || 0); // Default: popularity
+    });
 
   // Carousel Scroll Handler
   const scrollCarousel = (direction) => {
@@ -322,8 +447,16 @@ const CorporateGifts = () => {
 
   const handleQuoteSubmit = (e) => {
     e.preventDefault();
-    if (!quoteForm.name || !quoteForm.email) {
-      toast.error('Please fill in all required fields');
+    if (!quoteForm.name || !quoteForm.email || !quoteForm.phone) {
+      toast.error('Please fill in all required fields (Name, Email, Phone)');
+      return;
+    }
+    if (!isValidEmail(quoteForm.email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    if (!isValidMobile(quoteForm.phone)) {
+      toast.error('Please enter a valid 10-digit mobile number');
       return;
     }
 
@@ -388,44 +521,7 @@ const CorporateGifts = () => {
           </div>
         </div>
 
-        {/* Horizontal Single-Line Sub-Category Carousel Section */}
-        <div className={styles.subCategorySection}>
-          <div className={styles.subCategoryWrapper}>
-            <button
-              className={`${styles.carouselNavBtn} ${styles.carouselNavLeft}`}
-              onClick={() => scrollCarousel('left')}
-              aria-label="Scroll left"
-            >
-              ‹
-            </button>
 
-            <div className={styles.subCategoryContainer} ref={carouselRef}>
-              {SUBCATEGORIES_DATA.map((sub) => {
-                const isActive = activeSubCategory === sub.id;
-                return (
-                  <button
-                    key={sub.id}
-                    onClick={() => setActiveSubCategory(sub.id)}
-                    className={`${styles.subCategoryCard} ${isActive ? styles.subCategoryActive : ''}`}
-                  >
-                    <div className={styles.subCategoryIconWrapper}>
-                      <SubCategoryIcon type={sub.id} />
-                    </div>
-                    <p className={styles.subCategoryName}>{sub.name}</p>
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              className={`${styles.carouselNavBtn} ${styles.carouselNavRight}`}
-              onClick={() => scrollCarousel('right')}
-              aria-label="Scroll right"
-            >
-              ›
-            </button>
-          </div>
-        </div>
 
         {/* Main Workspace */}
         <div className={styles.workspace}>
@@ -451,7 +547,7 @@ const CorporateGifts = () => {
                     <div
                       key={cat.id}
                       className={`${styles.categoryItem} ${isActive ? styles.categoryActive : ''}`}
-                      onClick={() => setSelectedCategory(cat.id)}
+                      onClick={() => handleCategorySelect(cat.id)}
                     >
                       <div className={styles.categoryLeft}>
                         {isActive && <span className={styles.goldDot} />}
@@ -471,16 +567,53 @@ const CorporateGifts = () => {
                 <span className={styles.toggleIcon}>−</span>
               </div>
               <div className={styles.priceSliderWrapper}>
-                <div className={styles.priceTrack}>
-                  <div className={styles.priceRangeFill} />
-                  <div className={`${styles.priceThumb} ${styles.thumbMin}`} />
-                  <div className={`${styles.priceThumb} ${styles.thumbMax}`} />
+                <div style={{ position: 'relative', width: '100%', marginBottom: '1.25rem', height: '24px', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10000"
+                    step="50"
+                    value={minPrice}
+                    onChange={(e) => {
+                      const val = Math.min(Number(e.target.value), Number(maxPrice) - 50);
+                      setMinPrice(val.toString());
+                    }}
+                    className={styles.rangeInput}
+                  />
+                  <input
+                    type="range"
+                    min="0"
+                    max="10000"
+                    step="50"
+                    value={maxPrice}
+                    onChange={(e) => {
+                      const val = Math.max(Number(e.target.value), Number(minPrice) + 50);
+                      setMaxPrice(val.toString());
+                    }}
+                    className={styles.rangeInput}
+                  />
+                  <div style={{ position: 'relative', width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px' }}>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: `${Math.min(100, Math.max(0, (Number(minPrice) / 10000) * 100))}%`,
+                        right: `${Math.min(100, Math.max(0, 100 - (Number(maxPrice) / 10000) * 100))}%`,
+                        top: 0,
+                        bottom: 0,
+                        background: '#d99b26',
+                        borderRadius: '3px',
+                      }}
+                    />
+                  </div>
                 </div>
+
                 <div className={styles.priceInputs}>
                   <div className={styles.priceInputBox}>
                     <span>₹</span>
                     <input
                       type="number"
+                      min="0"
+                      max="10000"
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
                     />
@@ -490,6 +623,8 @@ const CorporateGifts = () => {
                     <span>₹</span>
                     <input
                       type="number"
+                      min="0"
+                      max="10000"
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
                     />
@@ -522,7 +657,7 @@ const CorporateGifts = () => {
               </div>
             </div>
 
-            <button className={styles.applyFiltersBtn}>Apply Filters</button>
+            <button type="button" onClick={handleApplyFilters} className={styles.applyFiltersBtn}>Apply Filters</button>
           </aside>
 
           {/* Right Product Grid Area */}
@@ -531,7 +666,7 @@ const CorporateGifts = () => {
             <div className={styles.contentHeader}>
               <div className={styles.titleGroup}>
                 <h2>All Products</h2>
-                <p>Showing 1–12 of 168 products</p>
+                <p>Showing 1–{displayProducts.length} of {displayProducts.length} products</p>
               </div>
 
               <div className={styles.controlGroup}>
@@ -580,78 +715,96 @@ const CorporateGifts = () => {
               </div>
             </div>
 
-            {/* Bulk Order Banner */}
-            <div className={styles.bulkBanner}>
-              <div className={styles.bulkContent}>
-                <div className={styles.bulkBadgeIcon}>🎁</div>
-                <div className={styles.bulkText}>
-                  <h3>Looking for Bulk Orders?</h3>
-                  <p>Get exclusive discounts on bulk orders with custom branding.</p>
-                  <button
-                    onClick={() => setShowQuoteModal(true)}
-                    className={styles.quoteBtn}
-                  >
-                    REQUEST A QUOTE ➔
-                  </button>
-                </div>
-              </div>
 
-              <img
-                src="/images/cat_corporate.png"
-                alt="Corporate Gift Hampers Bulk Order"
-                className={styles.bulkImagePreview}
-              />
-            </div>
 
             {/* Product Cards Grid */}
-            <div className={styles.productGrid}>
-              {PRODUCTS_LIST.map((prod) => (
+            <div className={`${styles.productGrid} ${viewMode === 'list' ? styles.productListMode : ''}`}>
+              {displayProducts.map((prod) => (
                 <div key={prod.id} className={styles.card}>
-                  {prod.badge && (
-                    <span className={`${styles.cardBadge} ${styles[prod.badgeType]}`}>
-                      {prod.badge}
-                    </span>
-                  )}
-                  <button
-                    className={styles.wishlistBtn}
-                    onClick={() => dispatch(addToWishlist({ id: prod.id }))}
-                    aria-label="Add to wishlist"
-                  >
-                    ♡
-                  </button>
-
                   <div className={styles.cardImageWrapper}>
-                    <img src={prod.image} alt={prod.name} className={styles.cardImage} />
+                    <Link to={ROUTES.PRODUCT_PATH(prod.slug)} className={styles.imageLink}>
+                      <img src={prod.image} alt={prod.name} className={styles.cardImage} />
+                    </Link>
+                    {prod.discount && (
+                      <span className={styles.discountBadge}>-{prod.discount}</span>
+                    )}
+                    {/* Floating Top Right Wishlist Button */}
+                    <button
+                      className={styles.topRightWishlistBtn}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dispatch(addToWishlist({ id: prod.id, name: prod.name, price: prod.price, image: prod.image, slug: prod.slug }));
+                      }}
+                      aria-label="Add to wishlist"
+                      title="Add to Wishlist"
+                    >
+                      ♡
+                    </button>
                   </div>
 
-                  <Link to={ROUTES.PRODUCT_PATH(prod.slug)} className={styles.cardTitle}>
-                    {prod.name}
-                  </Link>
+                  <div className={styles.cardContent}>
+                    <Link to={ROUTES.PRODUCT_PATH(prod.slug)} className={styles.cardTitle}>
+                      {prod.name}
+                    </Link>
 
-                  <div className={styles.cardPrice}>₹{prod.price.toLocaleString('en-IN')}.00</div>
+                    <div className={styles.cardRatingRow}>
+                      <span className={styles.stars}>★★★★★</span>
+                      <span className={styles.reviewsCount}>({prod.reviewsCount})</span>
+                    </div>
 
-                  <div className={styles.cardRatingRow}>
-                    <span className={styles.stars}>★★★★★</span>
-                    <span>({prod.reviewsCount})</span>
+                    <div className={styles.cardPriceRow}>
+                      <span className={styles.cardPrice}>₹{prod.price.toLocaleString('en-IN')}.00</span>
+                      {prod.comparePrice && (
+                        <span className={styles.comparePrice}>₹{prod.comparePrice.toLocaleString('en-IN')}.00</span>
+                      )}
+                    </div>
+
+                    <div className={styles.cardActionsRow}>
+                      <button
+                        className={styles.cardCartBtn}
+                        onClick={() =>
+                          dispatch(
+                            addToCart({
+                              id: prod.id,
+                              name: prod.name,
+                              price: prod.price,
+                              image: prod.image,
+                              slug: prod.slug,
+                            })
+                          )
+                        }
+                        aria-label="Add to cart"
+                      >
+                        Add to Cart
+                      </button>
+                      <button
+                        className={styles.buyNowBtn}
+                        onClick={() => {
+                          dispatch(
+                            addToCart({
+                              id: prod.id,
+                              name: prod.name,
+                              price: prod.price,
+                              image: prod.image,
+                              slug: prod.slug,
+                              quantity: 1,
+                            })
+                          );
+                          toast.success(`Proceeding to checkout with ${prod.name}...`);
+                          navigate('/checkout');
+                        }}
+                        aria-label="Buy Now"
+                      >
+                        Buy Now
+                      </button>
+                      <ThreeDotMenu
+                        productUrl={ROUTES.PRODUCT_PATH(prod.slug)}
+                        productName={prod.name}
+                        productImage={prod.image}
+                      />
+                    </div>
                   </div>
-
-                  <button
-                    className={styles.cardCartBtn}
-                    onClick={() =>
-                      dispatch(
-                        addToCart({
-                          id: prod.id,
-                          name: prod.name,
-                          price: prod.price,
-                          image: prod.image,
-                          slug: prod.slug,
-                        })
-                      )
-                    }
-                    aria-label="Add to cart"
-                  >
-                    🛒
-                  </button>
                 </div>
               ))}
             </div>

@@ -37,7 +37,7 @@ const App = () => {
       <Routes>
         {/* Public */}
         <Route path={ROUTES.HOME}       element={<Home />} />
-        <Route path={ROUTES.SHOP}       element={<Shop />} />
+        <Route path="/shop"             element={<Navigate to={ROUTES.CORPORATE_GIFTS} replace />} />
         <Route path={ROUTES.PRODUCT}    element={<Product />} />
         {/* Categories page removed — redirect all /categories/* to Corporate Gifts */}
         <Route path={ROUTES.CATEGORIES} element={<Navigate to={ROUTES.CORPORATE_GIFTS} replace />} />
@@ -50,6 +50,8 @@ const App = () => {
         <Route path={`${ROUTES.CATEGORIES}/toys`} element={<Navigate to={ROUTES.TOYS} replace />} />
         <Route path={ROUTES.SEARCH}     element={<Search />} />
         <Route path={ROUTES.CART}       element={<Cart />} />
+        <Route path={ROUTES.WISHLIST}   element={<Wishlist />} />
+        <Route path={ROUTES.CHECKOUT}   element={<Checkout />} />
         <Route path={ROUTES.LOGIN}      element={<Login />} />
         <Route path={ROUTES.ADMIN_LOGIN} element={<Navigate to={ROUTES.LOGIN} replace />} />
         <Route path={ROUTES.SUPER_ADMIN_LOGIN} element={<Navigate to={ROUTES.LOGIN} replace />} />
@@ -59,8 +61,6 @@ const App = () => {
         <Route path={ROUTES.FAQ}        element={<FAQ />} />
 
         {/* Protected */}
-        <Route path={ROUTES.CHECKOUT} element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-        <Route path={ROUTES.WISHLIST}  element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
         <Route path={ROUTES.ORDERS}    element={<ProtectedRoute><Orders /></ProtectedRoute>} />
         <Route path={ROUTES.PROFILE}   element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 

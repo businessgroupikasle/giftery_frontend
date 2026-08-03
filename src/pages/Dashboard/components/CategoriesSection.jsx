@@ -27,7 +27,18 @@ const CategoriesSection = ({
             type="button"
             className={styles.viewAllBtn}
             onClick={handleOpenAddCategory}
-            style={{ background: '#d99b26', color: '#fff', fontWeight: '700', border: 'none', cursor: 'pointer' }}
+            style={{
+              background: 'linear-gradient(135deg, #d99b26 0%, #b87c12 100%)',
+              color: '#ffffff',
+              fontWeight: '800',
+              fontSize: '0.92rem',
+              padding: '0.65rem 1.4rem',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 3px 10px rgba(217, 155, 38, 0.35)',
+              transition: 'all 0.15s ease',
+            }}
           >
             + Add New Category
           </button>
@@ -50,7 +61,6 @@ const CategoriesSection = ({
               justifyContent: 'center',
               padding: '1rem',
             }}
-            onClick={resetCategoryForm}
           >
             <form
               onSubmit={handleCategorySubmit}
@@ -100,6 +110,42 @@ const CategoriesSection = ({
                 />
               </div>
 
+              {/* Category Type / Parent Category */}
+              <div>
+                <label style={{ fontSize: '0.88rem', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
+                  Category Type / Parent Category
+                </label>
+                <select
+                  name="parentId"
+                  value={categoryForm.parentId || ''}
+                  onChange={handleCategoryFormChange}
+                  className={styles.searchInput}
+                  style={{
+                    paddingLeft: '0.85rem',
+                    width: '100%',
+                    height: '42px',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    background: '#ffffff',
+                  }}
+                >
+                  <option value="">— None (This is a Main Category) —</option>
+                  {categories
+                    .filter(c => !c.parentId && c.id !== editingCategory?.id)
+                    .map(mainCat => (
+                      <option key={mainCat.id} value={mainCat.id}>
+                        Subcategory under "{mainCat.name}"
+                      </option>
+                    ))
+                  }
+                </select>
+                <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                  Select a parent category to create a <strong>Subcategory</strong>, or select <em>None</em> for a <strong>Main Category</strong>.
+                </span>
+              </div>
+
               {/* Description */}
               <div>
                 <label style={{ fontSize: '0.88rem', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
@@ -123,104 +169,7 @@ const CategoriesSection = ({
                 />
               </div>
 
-              {/* Image * File Picker */}
-              <div>
-                <label style={{ fontSize: '0.88rem', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
-                  Image *
-                </label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <label
-                    htmlFor="catImageFile"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                      padding: '0.5rem 1rem',
-                      background: '#ecfdf5',
-                      color: '#059669',
-                      border: '1px solid #a7f3d0',
-                      borderRadius: '8px',
-                      fontWeight: '600',
-                      fontSize: '0.88rem',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Choose File
-                  </label>
-                  <input
-                    id="catImageFile"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleCategoryImageFileChange}
-                    style={{ display: 'none' }}
-                  />
-                  <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                    {categoryForm.image ? '✓ Image selected' : 'No file chosen'}
-                  </span>
-                </div>
-                {/* Optional Image URL fallback */}
-                <input
-                  type="text"
-                  name="image"
-                  value={categoryForm.image}
-                  onChange={handleCategoryFormChange}
-                  placeholder="Or enter image URL (https://...)"
-                  className={styles.searchInput}
-                  style={{
-                    marginTop: '0.5rem',
-                    paddingLeft: '0.85rem',
-                    width: '100%',
-                    height: '36px',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '6px',
-                    fontSize: '0.8rem',
-                    color: '#64748b',
-                  }}
-                />
-              </div>
 
-              {/* Sort Order & Active Checkbox */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <div style={{ flex: '0 0 200px' }}>
-                  <label style={{ fontSize: '0.88rem', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
-                    Sort Order
-                  </label>
-                  <input
-                    type="number"
-                    name="sortOrder"
-                    value={categoryForm.sortOrder}
-                    onChange={handleCategoryFormChange}
-                    className={styles.searchInput}
-                    style={{
-                      paddingLeft: '0.85rem',
-                      width: '100%',
-                      height: '42px',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '8px',
-                      fontSize: '0.9rem',
-                    }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.4rem' }}>
-                  <input
-                    id="catActiveCheck"
-                    type="checkbox"
-                    name="isActive"
-                    checked={categoryForm.isActive}
-                    onChange={handleCategoryFormChange}
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      accentColor: '#059669',
-                      cursor: 'pointer',
-                    }}
-                  />
-                  <label htmlFor="catActiveCheck" style={{ fontSize: '0.92rem', fontWeight: '600', color: '#1e293b', cursor: 'pointer' }}>
-                    Active
-                  </label>
-                </div>
-              </div>
 
               {/* Buttons: Cancel & Save */}
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1rem' }}>

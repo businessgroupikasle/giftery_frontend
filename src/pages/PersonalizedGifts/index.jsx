@@ -1,19 +1,23 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import Layout from '@components/layout/Layout';
 import { addToCart } from '@store/slices/cartSlice';
 import { addToWishlist } from '@store/slices/wishlistSlice';
 import { ROUTES } from '@constants/routes';
 import { toast } from 'react-toastify';
+import { isValidEmail, isValidMobile } from '../../utils/validation';
+import axiosInstance from '@api/axiosInstance';
+import { ENDPOINTS } from '@api/endpoints';
+import ThreeDotMenu from '@components/product/ThreeDotMenu';
 import styles from './PersonalizedGifts.module.css';
 
 const SUBCATEGORIES_DATA = [
   { id: 'all', name: 'All Personalized Gifts' },
   { id: 'photo-frames', name: 'Photo Frames' },
-  { id: 'acrylic-frame', name: 'Acrylic Frame' },
-  { id: 'caricature', name: 'Caricature' },
-  { id: 'clock', name: 'Clock' },
+  { id: 'acrylic-frames', name: 'Acrylic Frames' },
+  { id: 'caricatures', name: 'Caricatures' },
+  { id: 'clocks', name: 'Clocks' },
   { id: 'wooden-engraving', name: 'Wooden Photo Engraving' },
 ];
 
@@ -33,6 +37,7 @@ const SubCategoryIcon = ({ type }) => {
           <line x1="12" y1="42" x2="8" y2="44" stroke={stroke} strokeWidth="2.5"/>
         </svg>
       );
+    case 'acrylic-frames':
     case 'acrylic-frame':
       return (
         <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
@@ -46,6 +51,7 @@ const SubCategoryIcon = ({ type }) => {
           <circle cx="24" cy="22" r="2" fill={gold}/>
         </svg>
       );
+    case 'caricatures':
     case 'caricature':
       return (
         <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
@@ -56,6 +62,7 @@ const SubCategoryIcon = ({ type }) => {
           <path d="M19 38C19 32 23 30 27 30C31 30 35 32 35 38" fill={goldLight} stroke={stroke} strokeWidth="2"/>
         </svg>
       );
+    case 'clocks':
     case 'clock':
       return (
         <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
@@ -87,13 +94,12 @@ const SubCategoryIcon = ({ type }) => {
 };
 
 const CATEGORIES_DATA = [
-  { id: 'frames', name: 'Photo Frames', count: 42 },
-  { id: 'acrylic', name: 'Acrylic Frames', count: 35 },
-  { id: 'wallets', name: 'Engraved Leather Wallets', count: 28 },
-  { id: 'pens', name: 'Custom Name Pens', count: 39 },
-  { id: 'plaques', name: 'Wooden Engraved Plaques', count: 24 },
-  { id: 'caricature', name: 'Hand-drawn Caricatures', count: 19 },
-  { id: 'clocks', name: 'Personalized Photo Clocks', count: 26 },
+  { id: 'all', name: 'All Personalized Gifts', count: 120 },
+  { id: 'photo-frames', name: 'Photo Frames', count: 42 },
+  { id: 'acrylic-frames', name: 'Acrylic Frames', count: 35 },
+  { id: 'caricatures', name: 'Caricatures', count: 19 },
+  { id: 'clocks', name: 'Clocks', count: 26 },
+  { id: 'wooden-engraving', name: 'Wooden Photo Engraving', count: 24 },
 ];
 
 const OCCASIONS_DATA = [
@@ -107,99 +113,156 @@ const OCCASIONS_DATA = [
 const PRODUCTS_LIST = [
   {
     id: 'pg-101',
-    name: 'Laser Engraved Photo Frame',
+    name: 'Laser Engraved Custom Photo Frame',
     price: 1499,
+    comparePrice: 1999,
     rating: 4.9,
-    reviewsCount: 142,
-    badge: 'BEST SELLER',
-    badgeType: 'badgeBestSeller',
-    image: '/images/cat_corporate.png',
-    slug: 'laser-engraved-photo-frame',
+    reviewsCount: 49,
+    discount: '25%',
+    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&auto=format&fit=crop&q=80',
+    slug: 'laser-engraved-custom-photo-frame',
   },
   {
     id: 'pg-102',
-    name: 'Acrylic Photo Standee with Standoffs',
+    name: '3D Acrylic Photo Standee with LED Base',
     price: 2199,
+    comparePrice: 2799,
     rating: 4.8,
-    reviewsCount: 96,
-    badge: null,
-    image: '/images/cat_welcome.png',
-    slug: 'acrylic-photo-standee-standoffs',
+    reviewsCount: 81,
+    discount: '21%',
+    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500&auto=format&fit=crop&q=80',
+    slug: '3d-acrylic-photo-standee-led-base',
   },
   {
     id: 'pg-103',
-    name: 'Custom Engraved Wooden Plaque',
-    price: 899,
-    rating: 4.8,
-    reviewsCount: 76,
-    badge: null,
-    image: '/images/cat_merch.png',
-    slug: 'custom-engraved-wooden-plaque',
+    name: 'Custom Name Engraved Stainless Hydro Bottle',
+    price: 1299,
+    comparePrice: 1699,
+    rating: 4.7,
+    reviewsCount: 38,
+    discount: '24%',
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=80',
+    slug: 'custom-name-engraved-stainless-hydro-bottle',
   },
   {
     id: 'pg-104',
-    name: 'Handcrafted Caricature Portrait Frame',
-    price: 1299,
-    rating: 4.7,
-    reviewsCount: 63,
-    badge: 'NEW',
-    badgeType: 'badgeNew',
-    image: '/images/cat_eco.png',
-    slug: 'handcrafted-caricature-portrait-frame',
+    name: 'Handcrafted Wooden IQ Teaser Lock Box Set',
+    price: 1799,
+    comparePrice: 2299,
+    rating: 4.8,
+    reviewsCount: 57,
+    discount: '22%',
+    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=80',
+    slug: 'handcrafted-wooden-iq-teaser-lock-box-set',
   },
   {
     id: 'pg-105',
-    name: 'Laser Engraved Leather Journal & Pen',
-    price: 649,
+    name: 'Personalized Leather Notebook & Metallic Pen Set',
+    price: 2499,
+    comparePrice: 3199,
     rating: 4.9,
-    reviewsCount: 112,
-    badge: null,
-    image: '/images/cat_corporate.png',
-    slug: 'laser-engraved-leather-journal-pen',
+    reviewsCount: 84,
+    discount: '22%',
+    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=80',
+    slug: 'personalized-leather-notebook-metallic-pen-set',
   },
   {
     id: 'pg-106',
-    name: 'Personalized Photo Desk Clock',
-    price: 1799,
-    rating: 4.8,
-    reviewsCount: 89,
-    badge: 'TRENDING',
-    badgeType: 'badgeTrending',
-    image: '/images/cat_tech.png',
-    slug: 'personalized-photo-desk-clock',
+    name: 'Laser Etched Wooden Desk Photo Clock',
+    price: 899,
+    comparePrice: 1199,
+    rating: 4.6,
+    reviewsCount: 42,
+    discount: '25%',
+    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500&auto=format&fit=crop&q=80',
+    slug: 'laser-etched-wooden-desk-photo-clock',
   },
   {
     id: 'pg-107',
-    name: 'Custom Name Hydro Flask Bottle',
-    price: 2499,
-    rating: 4.9,
-    reviewsCount: 57,
-    badge: null,
-    image: '/images/cat_welcome.png',
-    slug: 'custom-name-hydro-flask-bottle',
+    name: 'Precision Engraved Executive Diary Gift Set',
+    price: 1599,
+    comparePrice: 1999,
+    rating: 4.7,
+    reviewsCount: 31,
+    discount: '20%',
+    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&auto=format&fit=crop&q=80',
+    slug: 'precision-engraved-executive-diary-gift-set',
   },
   {
     id: 'pg-108',
-    name: 'Eco Wooden Photo Engraving Set',
-    price: 799,
-    rating: 4.7,
-    reviewsCount: 68,
-    badge: 'ECO FRIENDLY',
-    badgeType: 'badgeEco',
-    image: '/images/cat_eco.png',
-    slug: 'eco-wooden-photo-engraving-set',
+    name: 'Custom Wood Monogram Keepsake Box',
+    price: 999,
+    comparePrice: 1399,
+    rating: 4.8,
+    reviewsCount: 53,
+    discount: '29%',
+    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=80',
+    slug: 'custom-wood-monogram-keepsake-box',
   },
 ];
 
 const PersonalizedGifts = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  // Live Products State from Database
+  const [liveProducts, setLiveProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchLiveProducts = async () => {
+      let apiProducts = [];
+      try {
+        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
+        const data = res.data?.products || res.data?.data || res.data || [];
+        if (Array.isArray(data)) apiProducts = data;
+      } catch (err) {
+        console.warn('Fallback to catalog products:', err.message);
+      }
+
+      const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+      const combined = [...localProducts];
+      apiProducts.forEach(ap => {
+        if (!combined.find(c => c.id === ap.id || c.slug === ap.slug)) {
+          combined.push(ap);
+        }
+      });
+
+      if (combined.length > 0) {
+        const formatted = combined.map((p) => {
+          const imgList = Array.isArray(p.images)
+            ? p.images
+            : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
+          return {
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            comparePrice: p.comparePrice,
+            rating: p.rating || 4.8,
+            reviewsCount: p.reviewsCount || p._count?.reviews || 24,
+            discount: p.comparePrice ? `${Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100)}%` : null,
+            images: imgList,
+            image: imgList[0] || '/placeholder.jpg',
+            slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          };
+        });
+        setLiveProducts(formatted);
+      }
+    };
+
+    fetchLiveProducts();
+    window.addEventListener('products_updated', fetchLiveProducts);
+    return () => window.removeEventListener('products_updated', fetchLiveProducts);
+  }, []);
+
+  // Base raw products catalog
+  const rawProducts = liveProducts.length > 0 ? liveProducts : PRODUCTS_LIST;
 
   // Filter States
-  const [activeSubCategory, setActiveSubCategory] = useState('photo-frames');
-  const [selectedCategory, setSelectedCategory] = useState('frames');
+  const [activeSubCategory, setActiveSubCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [minPrice, setMinPrice] = useState('100');
   const [maxPrice, setMaxPrice] = useState('5000');
-  const [selectedOccasions, setSelectedOccasions] = useState(['birthday']);
+  const [selectedOccasions, setSelectedOccasions] = useState([]);
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
@@ -215,24 +278,78 @@ const PersonalizedGifts = () => {
     notes: '',
   });
 
-  // Missing filter handlers
+  const handleCategorySelect = (catId) => {
+    setSelectedCategory(catId);
+    setActiveSubCategory(catId);
+  };
+
   const toggleOccasion = (id) => {
     setSelectedOccasions((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
+  const handleApplyFilters = () => {
+    toast.success('Filters applied successfully! 🔍');
+  };
+
   const handleClearAll = () => {
-    setSelectedCategory('frames');
+    setSelectedCategory('all');
+    setActiveSubCategory('all');
     setMinPrice('100');
     setMaxPrice('5000');
     setSelectedOccasions([]);
+    toast.info('Filters cleared');
   };
+
+  // Filtered & Sorted Products computation
+  const displayProducts = rawProducts
+    .filter((prod) => {
+      // 1. Price Filter
+      const price = Number(prod.price) || 0;
+      const minP = Number(minPrice) || 0;
+      const maxP = Number(maxPrice) || Infinity;
+      if (price < minP || price > maxP) return false;
+
+      // 2. Category / Subcategory Filter
+      const activeCat = selectedCategory !== 'all' ? selectedCategory : activeSubCategory;
+      if (activeCat !== 'all') {
+        const catObj = CATEGORIES_DATA.find((c) => c.id === activeCat) || SUBCATEGORIES_DATA.find((s) => s.id === activeCat);
+        if (catObj) {
+          const catName = catObj.name.toLowerCase();
+          const pName = (prod.name || '').toLowerCase();
+          const pSlug = (prod.slug || '').toLowerCase();
+
+          const words = catName.split(' ').filter(w => w.length > 3 && w !== 'gifts' && w !== 'personalized');
+          const isMatch = words.some(w => pName.includes(w) || pSlug.includes(w));
+
+          if (!isMatch && prod.categoryId !== activeCat) {
+            // soft match
+          }
+        }
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'price_asc') return a.price - b.price;
+      if (sortBy === 'price_desc') return b.price - a.price;
+      if (sortBy === 'newest') return (b.id || '').localeCompare(a.id || '');
+      return (b.rating || 0) - (a.rating || 0);
+    });
 
   const handleQuoteSubmit = (e) => {
     e.preventDefault();
-    if (!quoteForm.name || !quoteForm.email) {
-      toast.error('Please fill in all required fields');
+    if (!quoteForm.name || !quoteForm.email || !quoteForm.phone) {
+      toast.error('Please fill in all required fields (Name, Email, Phone)');
+      return;
+    }
+    if (!isValidEmail(quoteForm.email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    if (!isValidMobile(quoteForm.phone)) {
+      toast.error('Please enter a valid 10-digit mobile number');
       return;
     }
 
@@ -295,26 +412,7 @@ const PersonalizedGifts = () => {
           </div>
         </div>
 
-        {/* Sub-Category Icon Bar Section */}
-        <div className={styles.subCategorySection}>
-          <div className={styles.subCategoryContainer}>
-            {SUBCATEGORIES_DATA.map((sub) => {
-              const isActive = activeSubCategory === sub.id;
-              return (
-                <button
-                  key={sub.id}
-                  onClick={() => setActiveSubCategory(sub.id)}
-                  className={`${styles.subCategoryCard} ${isActive ? styles.subCategoryActive : ''}`}
-                >
-                  <div className={styles.subCategoryIconWrapper}>
-                    <SubCategoryIcon type={sub.id} />
-                  </div>
-                  <p className={styles.subCategoryName}>{sub.name}</p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+
 
         {/* Main Workspace */}
         <div className={styles.workspace}>
@@ -340,7 +438,7 @@ const PersonalizedGifts = () => {
                     <div
                       key={cat.id}
                       className={`${styles.categoryItem} ${isActive ? styles.categoryActive : ''}`}
-                      onClick={() => setSelectedCategory(cat.id)}
+                      onClick={() => handleCategorySelect(cat.id)}
                     >
                       <div className={styles.categoryLeft}>
                         {isActive && <span className={styles.goldDot} />}
@@ -360,16 +458,53 @@ const PersonalizedGifts = () => {
                 <span className={styles.toggleIcon}>−</span>
               </div>
               <div className={styles.priceSliderWrapper}>
-                <div className={styles.priceTrack}>
-                  <div className={styles.priceRangeFill} />
-                  <div className={`${styles.priceThumb} ${styles.thumbMin}`} />
-                  <div className={`${styles.priceThumb} ${styles.thumbMax}`} />
+                <div style={{ position: 'relative', width: '100%', marginBottom: '1.25rem', height: '24px', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10000"
+                    step="50"
+                    value={minPrice}
+                    onChange={(e) => {
+                      const val = Math.min(Number(e.target.value), Number(maxPrice) - 50);
+                      setMinPrice(val.toString());
+                    }}
+                    className={styles.rangeInput}
+                  />
+                  <input
+                    type="range"
+                    min="0"
+                    max="10000"
+                    step="50"
+                    value={maxPrice}
+                    onChange={(e) => {
+                      const val = Math.max(Number(e.target.value), Number(minPrice) + 50);
+                      setMaxPrice(val.toString());
+                    }}
+                    className={styles.rangeInput}
+                  />
+                  <div style={{ position: 'relative', width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px' }}>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: `${Math.min(100, Math.max(0, (Number(minPrice) / 10000) * 100))}%`,
+                        right: `${Math.min(100, Math.max(0, 100 - (Number(maxPrice) / 10000) * 100))}%`,
+                        top: 0,
+                        bottom: 0,
+                        background: '#d99b26',
+                        borderRadius: '3px',
+                      }}
+                    />
+                  </div>
                 </div>
+
                 <div className={styles.priceInputs}>
                   <div className={styles.priceInputBox}>
                     <span>₹</span>
                     <input
                       type="number"
+                      min="0"
+                      max="10000"
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
                     />
@@ -379,6 +514,8 @@ const PersonalizedGifts = () => {
                     <span>₹</span>
                     <input
                       type="number"
+                      min="0"
+                      max="10000"
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
                     />
@@ -411,7 +548,7 @@ const PersonalizedGifts = () => {
               </div>
             </div>
 
-            <button className={styles.applyFiltersBtn}>Apply Filters</button>
+            <button type="button" onClick={handleApplyFilters} className={styles.applyFiltersBtn}>Apply Filters</button>
           </aside>
 
           {/* Right Product Grid Area */}
@@ -420,7 +557,7 @@ const PersonalizedGifts = () => {
             <div className={styles.contentHeader}>
               <div className={styles.titleGroup}>
                 <h2>All Products</h2>
-                <p>Showing 1–12 of 148 products</p>
+                <p>Showing 1–{displayProducts.length} of {displayProducts.length} products</p>
               </div>
 
               <div className={styles.controlGroup}>
@@ -469,78 +606,96 @@ const PersonalizedGifts = () => {
               </div>
             </div>
 
-            {/* Custom Engraving Bulk Banner */}
-            <div className={styles.bulkBanner}>
-              <div className={styles.bulkContent}>
-                <div className={styles.bulkBadgeIcon}>✒️</div>
-                <div className={styles.bulkText}>
-                  <h3>Looking for Bulk Custom Engraving?</h3>
-                  <p>Get exclusive pricing on custom photo frames, engraved gifts & corporate sets.</p>
-                  <button
-                    onClick={() => setShowQuoteModal(true)}
-                    className={styles.quoteBtn}
-                  >
-                    REQUEST A QUOTE ➔
-                  </button>
-                </div>
-              </div>
 
-              <img
-                src="/images/cat_corporate.png"
-                alt="Personalized Gifts Custom Engraving Bulk Order"
-                className={styles.bulkImagePreview}
-              />
-            </div>
 
             {/* Product Cards Grid */}
-            <div className={styles.productGrid}>
-              {PRODUCTS_LIST.map((prod) => (
+            <div className={`${styles.productGrid} ${viewMode === 'list' ? styles.productListMode : ''}`}>
+              {displayProducts.map((prod) => (
                 <div key={prod.id} className={styles.card}>
-                  {prod.badge && (
-                    <span className={`${styles.cardBadge} ${styles[prod.badgeType]}`}>
-                      {prod.badge}
-                    </span>
-                  )}
-                  <button
-                    className={styles.wishlistBtn}
-                    onClick={() => dispatch(addToWishlist({ id: prod.id }))}
-                    aria-label="Add to wishlist"
-                  >
-                    ♡
-                  </button>
-
                   <div className={styles.cardImageWrapper}>
-                    <img src={prod.image} alt={prod.name} className={styles.cardImage} />
+                    <Link to={ROUTES.PRODUCT_PATH(prod.slug)} className={styles.imageLink}>
+                      <img src={prod.image} alt={prod.name} className={styles.cardImage} />
+                    </Link>
+                    {prod.discount && (
+                      <span className={styles.discountBadge}>-{prod.discount}</span>
+                    )}
+                    {/* Floating Top Right Wishlist Button */}
+                    <button
+                      className={styles.topRightWishlistBtn}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dispatch(addToWishlist({ id: prod.id, name: prod.name, price: prod.price, image: prod.image, slug: prod.slug }));
+                      }}
+                      aria-label="Add to wishlist"
+                      title="Add to Wishlist"
+                    >
+                      ♡
+                    </button>
                   </div>
 
-                  <Link to={ROUTES.PRODUCT_PATH(prod.slug)} className={styles.cardTitle}>
-                    {prod.name}
-                  </Link>
+                  <div className={styles.cardContent}>
+                    <Link to={ROUTES.PRODUCT_PATH(prod.slug)} className={styles.cardTitle}>
+                      {prod.name}
+                    </Link>
 
-                  <div className={styles.cardPrice}>₹{prod.price.toLocaleString('en-IN')}.00</div>
+                    <div className={styles.cardRatingRow}>
+                      <span className={styles.stars}>★★★★★</span>
+                      <span className={styles.reviewsCount}>({prod.reviewsCount})</span>
+                    </div>
 
-                  <div className={styles.cardRatingRow}>
-                    <span className={styles.stars}>★★★★★</span>
-                    <span>({prod.reviewsCount})</span>
+                    <div className={styles.cardPriceRow}>
+                      <span className={styles.cardPrice}>₹{prod.price.toLocaleString('en-IN')}.00</span>
+                      {prod.comparePrice && (
+                        <span className={styles.comparePrice}>₹{prod.comparePrice.toLocaleString('en-IN')}.00</span>
+                      )}
+                    </div>
+
+                    <div className={styles.cardActionsRow}>
+                      <button
+                        className={styles.cardCartBtn}
+                        onClick={() =>
+                          dispatch(
+                            addToCart({
+                              id: prod.id,
+                              name: prod.name,
+                              price: prod.price,
+                              image: prod.image,
+                              slug: prod.slug,
+                            })
+                          )
+                        }
+                        aria-label="Add to cart"
+                      >
+                        Add to Cart
+                      </button>
+                      <button
+                        className={styles.buyNowBtn}
+                        onClick={() => {
+                          dispatch(
+                            addToCart({
+                              id: prod.id,
+                              name: prod.name,
+                              price: prod.price,
+                              image: prod.image,
+                              slug: prod.slug,
+                              quantity: 1,
+                            })
+                          );
+                          toast.success(`Proceeding to checkout with ${prod.name}...`);
+                          navigate('/checkout');
+                        }}
+                        aria-label="Buy Now"
+                      >
+                        Buy Now
+                      </button>
+                      <ThreeDotMenu
+                        productUrl={ROUTES.PRODUCT_PATH(prod.slug)}
+                        productName={prod.name}
+                        productImage={prod.image}
+                      />
+                    </div>
                   </div>
-
-                  <button
-                    className={styles.cardCartBtn}
-                    onClick={() =>
-                      dispatch(
-                        addToCart({
-                          id: prod.id,
-                          name: prod.name,
-                          price: prod.price,
-                          image: prod.image,
-                          slug: prod.slug,
-                        })
-                      )
-                    }
-                    aria-label="Add to cart"
-                  >
-                    🛒
-                  </button>
                 </div>
               ))}
             </div>

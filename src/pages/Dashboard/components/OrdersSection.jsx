@@ -2,17 +2,18 @@ import { useState } from 'react';
 import { FiShoppingBag, FiMoreVertical } from 'react-icons/fi';
 import styles from '../Dashboard.module.css';
 
-const OrdersSection = ({ handleExportOrdersCSV }) => {
-  const [orderFilter, setOrderFilter] = useState('ALL');
+const INITIAL_ORDERS = [
+  { id: 'ORD-1256', customer: 'Tech Solutions Pvt. Ltd.', date: 'May 18, 2025', itemsCount: 4, amount: '₹45,600', rawAmount: 45600, status: 'Delivered' },
+  { id: 'ORD-1255', customer: 'Rahul Verma', date: 'May 18, 2025', itemsCount: 1, amount: '₹12,450', rawAmount: 12450, status: 'Processing' },
+  { id: 'ORD-1254', customer: 'ABC Corporation', date: 'May 17, 2025', itemsCount: 15, amount: '₹78,900', rawAmount: 78900, status: 'Pending' },
+  { id: 'ORD-1253', customer: 'Sneha Iyer', date: 'May 17, 2025', itemsCount: 2, amount: '₹5,250', rawAmount: 5250, status: 'Delivered' },
+  { id: 'ORD-1252', customer: 'Global Enterprises', date: 'May 16, 2025', itemsCount: 8, amount: '₹32,750', rawAmount: 32750, status: 'Processing' },
+  { id: 'ORD-1251', customer: 'Ananya Sharma', date: 'May 15, 2025', itemsCount: 3, amount: '₹18,400', rawAmount: 18400, status: 'Cancelled' },
+];
 
-  const orders = [
-    { id: 'ORD-1256', customer: 'Tech Solutions Pvt. Ltd.', date: 'May 18, 2025', itemsCount: 4, amount: '₹45,600', status: 'Delivered' },
-    { id: 'ORD-1255', customer: 'Rahul Verma', date: 'May 18, 2025', itemsCount: 1, amount: '₹12,450', status: 'Processing' },
-    { id: 'ORD-1254', customer: 'ABC Corporation', date: 'May 17, 2025', itemsCount: 15, amount: '₹78,900', status: 'Pending' },
-    { id: 'ORD-1253', customer: 'Sneha Iyer', date: 'May 17, 2025', itemsCount: 2, amount: '₹5,250', status: 'Delivered' },
-    { id: 'ORD-1252', customer: 'Global Enterprises', date: 'May 16, 2025', itemsCount: 8, amount: '₹32,750', status: 'Processing' },
-    { id: 'ORD-1251', customer: 'Ananya Sharma', date: 'May 15, 2025', itemsCount: 3, amount: '₹18,400', status: 'Cancelled' },
-  ];
+const OrdersSection = ({ ordersList = INITIAL_ORDERS, handleExportOrdersCSV }) => {
+  const [orderFilter, setOrderFilter] = useState('ALL');
+  const orders = ordersList.length > 0 ? ordersList : INITIAL_ORDERS;
 
   const filteredOrders = orders.filter(o => {
     if (orderFilter === 'ALL') return true;

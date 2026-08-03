@@ -38,8 +38,9 @@
 .heroContent {
   position: relative;
   z-index: 2;
-  padding: 3rem 3.5rem;
-  max-width: 600px;
+  padding: 3.5rem 3.5rem 3.5rem 6.5rem;
+  margin-left: 6.5rem;
+  max-width: 650px;
   display: flex;
   flex-direction: column;
 }

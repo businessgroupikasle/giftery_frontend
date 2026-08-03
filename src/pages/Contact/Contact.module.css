@@ -150,8 +150,9 @@
   z-index: 2;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding: 2rem 2.5rem 2rem 1rem;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  width: 100%;
 }
 
 .formCard {
@@ -160,6 +161,7 @@
   padding: 2rem;
   width: 100%;
   max-width: 440px;
+  margin: 0 auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   animation: slideInRight 0.4s ease-out;
 }
@@ -289,15 +291,124 @@
 }
 
 /* ══════════════════════════════════════════════════════
-   SECTION 2 — BOTTOM INFO (Contact Info + Map + Cards)
+   SECTION 2 — TWO LOCATIONS MAPS GRID
+══════════════════════════════════════════════════════ */
+.twoMapsContainer {
+  background: #f8fafc;
+  padding: 3rem 2.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.mapsSectionHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.mapsSectionSublabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #D4AF37;
+  margin-bottom: 0.35rem;
+}
+
+.mapsSectionTitle {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0a0a0a;
+  margin: 0 0 0.5rem 0;
+}
+
+.mapsTitleUnderline {
+  width: 48px;
+  height: 3px;
+  background: #D4AF37;
+  border-radius: 2px;
+  margin: 0 auto;
+}
+
+.mapsTwoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.75rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.mapCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.mapCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+.mapCardHeader {
+  padding: 1.25rem 1.5rem;
+  background: #0a0a0a;
+  color: #ffffff;
+  border-bottom: 2px solid #D4AF37;
+}
+
+.mapBadgeHeadquarters {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #0a0a0a;
+  background: #D4AF37;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.mapBadgeStudio {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  background: #2563eb;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.mapTitleText {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 0.25rem 0;
+}
+
+.mapAddressSubtext {
+  font-size: 0.82rem;
+  color: #a0a0a0;
+  margin: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   SECTION 3 — BOTTOM INFO (Contact Info + Cards)
 ══════════════════════════════════════════════════════ */
 .bottomSection {
   background: #ffffff;
   padding: 2.5rem 2.5rem 3rem;
   display: grid;
-  grid-template-columns: 300px 1fr 280px;
-  gap: 2rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.75rem;
+  align-items: stretch;
   border-top: 1px solid #e2e8f0;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 /* ── Left: Get In Touch Info ─────────────────────────── */
@@ -552,7 +663,13 @@
   }
 
   .heroRight {
-    display: none;
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem 1.5rem 3rem 1.5rem;
+  }
+
+  .mapsTwoGrid {
+    grid-template-columns: 1fr;
   }
 
   .bottomSection {
@@ -567,6 +684,10 @@
 @media (max-width: 768px) {
   .heroTitle {
     font-size: 2rem;
+  }
+
+  .twoMapsContainer {
+    padding: 2rem 1.25rem;
   }
 
   .bottomSection {

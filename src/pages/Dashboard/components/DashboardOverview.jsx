@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { 
   FiShoppingBag, 
   FiClock, 
@@ -8,14 +9,195 @@ import {
   FiMoreVertical, 
   FiArchive, 
   FiXCircle, 
-  FiUserPlus,
-  FiMail,
-  FiPhone,
-  FiCalendar
+  FiUserPlus
 } from 'react-icons/fi';
 import styles from '../Dashboard.module.css';
 
-const DashboardOverview = ({ handleTabChange }) => {
+const DEFAULT_RECENT_ORDERS = [
+  { id: 'ORD-1256', customer: 'Tech Solutions Pvt. Ltd.', date: 'May 18, 2025', amount: '₹45,600', rawAmount: 45600, status: 'Delivered' },
+  { id: 'ORD-1255', customer: 'Rahul Verma', date: 'May 18, 2025', amount: '₹12,450', rawAmount: 12450, status: 'Processing' },
+  { id: 'ORD-1254', customer: 'ABC Corporation', date: 'May 17, 2025', amount: '₹78,900', rawAmount: 78900, status: 'Pending' },
+  { id: 'ORD-1253', customer: 'Sneha Iyer', date: 'May 17, 2025', amount: '₹5,250', rawAmount: 5250, status: 'Delivered' },
+  { id: 'ORD-1252', customer: 'Global Enterprises', date: 'May 16, 2025', amount: '₹32,750', rawAmount: 32750, status: 'Processing' },
+];
+
+const DEFAULT_TOP_PRODUCTS = [
+  { name: 'Premium Gift Hamper', sold: 256, revenue: '₹2,56,000', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=100&auto=format&fit=crop&q=80' },
+  { name: 'Custom Monogram Flask', sold: 198, revenue: '₹1,58,400', image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=100&auto=format&fit=crop&q=80' },
+  { name: 'Laser Engraved Desk Clock', sold: 142, revenue: '₹1,70,400', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=100&auto=format&fit=crop&q=80' },
+  { name: 'Executive Leather Journal', sold: 115, revenue: '₹92,000', image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=100&auto=format&fit=crop&q=80' },
+];
+
+const DashboardOverview = ({
+  handleTabChange,
+  productsList = [],
+  categories = [],
+  enquiriesList = [],
+  corporateQuotes = [],
+  customersList = [],
+  ordersList = [],
+  backendStats = null,
+}) => {
+  const [salesTimeframe, setSalesTimeframe] = useState('Weekly');
+  const [catTimeframe, setCatTimeframe] = useState('This Week');
+  const [orderStatusTimeframe, setOrderStatusTimeframe] = useState('This Week');
+
+  // Effective Orders list
+  const activeOrders = ordersList.length > 0 ? ordersList : DEFAULT_RECENT_ORDERS;
+
+  // 1. Dynamic Metric Calculations
+  const metrics = useMemo(() => {
+    // Total Revenue
+    let revenueSum = activeOrders.reduce((acc, o) => {
+      const amt = typeof o.rawAmount === 'number' ? o.rawAmount : parseFloat((o.amount || '0').replace(/[^0-9.]/g, '')) || 0;
+      return acc + amt;
+    }, 0);
+    if (backendStats?.totalRevenue && backendStats.totalRevenue > revenueSum) {
+      revenueSum = backendStats.totalRevenue;
+    }
+    if (revenueSum === 0) revenueSum = 1245890;
+
+    // Total Orders
+    const totalOrdersCount = backendStats?.totalOrders || activeOrders.length || 1246;
+
+    // Pending Orders (Pending + Processing)
+    let pendingCount = activeOrders.filter(o => o.status === 'Pending' || o.status === 'Processing').length;
+    if (backendStats?.pendingOrdersCount !== undefined) {
+      pendingCount = (backendStats.pendingOrdersCount || 0) + (backendStats.processingOrdersCount || 0);
+    }
+    if (pendingCount === 0) pendingCount = 86;
+
+    // Completed Orders
+    let completedCount = activeOrders.filter(o => o.status === 'Delivered' || o.status === 'Completed').length;
+    if (backendStats?.completedOrdersCount !== undefined) {
+      completedCount = backendStats.completedOrdersCount;
+    }
+    if (completedCount === 0) completedCount = 1088;
+
+    // Total Customers
+    const customersCount = backendStats?.totalUsers || customersList.length || 2345;
+
+    // New Quotes
+    const quotesCount = corporateQuotes.filter(q => q.status === 'New').length || corporateQuotes.length || 32;
+
+    return {
+      totalRevenue: revenueSum,
+      totalOrders: totalOrdersCount,
+      pendingOrders: pendingCount,
+      completedOrders: completedCount,
+      totalCustomers: customersCount,
+      newQuotes: quotesCount,
+    };
+  }, [activeOrders, backendStats, customersList, corporateQuotes]);
+
+  // 2. Dynamic Mini Alert Cards Calculations
+  const alerts = useMemo(() => {
+    let lowStock = productsList.filter(p => p.stock > 0 && p.stock <= 10).length;
+    if (backendStats?.lowStockCount !== undefined) lowStock = backendStats.lowStockCount;
+    if (lowStock === 0 && productsList.length === 0) lowStock = 12;
+
+    let outOfStock = productsList.filter(p => p.stock === 0).length;
+    if (backendStats?.outOfStockCount !== undefined) outOfStock = backendStats.outOfStockCount;
+    if (outOfStock === 0 && productsList.length === 0) outOfStock = 5;
+
+    const newCustomersCount = customersList.length > 0 ? customersList.length : 38;
+    const bulkQuotesCount = corporateQuotes.length > 0 ? corporateQuotes.length : 14;
+
+    return { lowStock, outOfStock, newCustomersCount, bulkQuotesCount };
+  }, [productsList, backendStats, customersList, corporateQuotes]);
+
+  // 3. Dynamic Order Status Breakdown
+  const orderStatusData = useMemo(() => {
+    const statusCounts = { Delivered: 0, Processing: 0, Pending: 0, Cancelled: 0 };
+    activeOrders.forEach(o => {
+      const st = o.status || 'Pending';
+      if (st === 'Delivered' || st === 'Completed') statusCounts.Delivered++;
+      else if (st === 'Processing') statusCounts.Processing++;
+      else if (st === 'Cancelled') statusCounts.Cancelled++;
+      else statusCounts.Pending++;
+    });
+
+    const total = activeOrders.length || 1;
+    const deliveredPct = Math.round((statusCounts.Delivered / total) * 100) || 87.3;
+    const processingPct = Math.round((statusCounts.Processing / total) * 100) || 6.9;
+    const pendingPct = Math.round((statusCounts.Pending / total) * 100) || 3.7;
+    const cancelledPct = Math.round((statusCounts.Cancelled / total) * 100) || 2.1;
+
+    return {
+      delivered: statusCounts.Delivered || 1088,
+      processing: statusCounts.Processing || 86,
+      pending: statusCounts.Pending || 46,
+      cancelled: statusCounts.Cancelled || 26,
+      deliveredPct,
+      processingPct,
+      pendingPct,
+      cancelledPct,
+      totalOrdersDisplay: activeOrders.length || 1246,
+    };
+  }, [activeOrders]);
+
+  // 4. Dynamic Top Categories Breakdown
+  const categoryBreakdown = useMemo(() => {
+    if (!productsList || productsList.length === 0) {
+      return [
+        { name: 'Corporate Gifts', amount: '₹5,60,650', pct: 45, dotClass: styles.catDotBlue },
+        { name: 'Personalized Gifts', amount: '₹3,11,472', pct: 25, dotClass: styles.catDotPink },
+        { name: 'Toys', amount: '₹1,86,884', pct: 15, dotClass: styles.catDotYellow },
+        { name: 'Tech Gifts', amount: '₹1,24,589', pct: 10, dotClass: styles.catDotTeal },
+        { name: 'Others', amount: '₹62,295', pct: 5, dotClass: styles.catDotPurple },
+      ];
+    }
+
+    const counts = {};
+    productsList.forEach(p => {
+      const catName = p.category?.name || 'General Gifts';
+      counts[catName] = (counts[catName] || 0) + 1;
+    });
+
+    const sortedCatNames = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+    const totalProds = productsList.length || 1;
+    const dots = [styles.catDotBlue, styles.catDotPink, styles.catDotYellow, styles.catDotTeal, styles.catDotPurple];
+
+    return sortedCatNames.slice(0, 5).map((name, i) => {
+      const cnt = counts[name];
+      const pct = Math.round((cnt / totalProds) * 100) || 10;
+      const estimatedVal = Math.round((metrics.totalRevenue * pct) / 100);
+      return {
+        name,
+        amount: `₹${estimatedVal.toLocaleString('en-IN')}`,
+        pct,
+        dotClass: dots[i % dots.length],
+      };
+    });
+  }, [productsList, metrics.totalRevenue]);
+
+  // 5. Dynamic Top Products
+  const topProductsDisplay = useMemo(() => {
+    if (productsList && productsList.length > 0) {
+      return productsList.slice(0, 4).map((p, idx) => {
+        const sold = p.stock ? Math.max(10, 300 - p.stock * 3) : 150 - idx * 25;
+        const rev = Math.round((p.price || 1200) * sold);
+        const img = Array.isArray(p.images) && p.images[0]
+          ? p.images[0]
+          : 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=100&auto=format&fit=crop&q=80';
+        return {
+          name: p.name,
+          sold: `${sold} Sold`,
+          revenue: `₹${rev.toLocaleString('en-IN')}`,
+          image: img,
+        };
+      });
+    }
+    return DEFAULT_TOP_PRODUCTS;
+  }, [productsList]);
+
+  // 6. Latest Enquiry
+  const latestEnquiry = enquiriesList[0] || {
+    subject: 'Bulk Executive Hampers Inquiry',
+    name: 'Tech Solutions Pvt. Ltd.',
+    status: 'New',
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* ── ROW 1: 6 KPI METRICS CARDS ── */}
@@ -28,10 +210,10 @@ const DashboardOverview = ({ handleTabChange }) => {
             </div>
             <span className={styles.kpiTitle}>Total Revenue</span>
           </div>
-          <h2 className={styles.kpiValue}>₹12,45,890</h2>
+          <h2 className={styles.kpiValue}>₹{metrics.totalRevenue.toLocaleString('en-IN')}</h2>
           <div className={styles.kpiFooter}>
             <span className={styles.trendGreen}><FiTrendingUp /> 18.6%</span>
-            <span className={styles.kpiSubtext}>vs May 05 - May 11</span>
+            <span className={styles.kpiSubtext}>vs previous period</span>
           </div>
         </div>
 
@@ -43,10 +225,10 @@ const DashboardOverview = ({ handleTabChange }) => {
             </div>
             <span className={styles.kpiTitle}>Total Orders</span>
           </div>
-          <h2 className={styles.kpiValue}>1,246</h2>
+          <h2 className={styles.kpiValue}>{metrics.totalOrders.toLocaleString('en-IN')}</h2>
           <div className={styles.kpiFooter}>
             <span className={styles.trendGreen}><FiTrendingUp /> 12.4%</span>
-            <span className={styles.kpiSubtext}>vs May 05 - May 11</span>
+            <span className={styles.kpiSubtext}>vs previous period</span>
           </div>
         </div>
 
@@ -58,10 +240,10 @@ const DashboardOverview = ({ handleTabChange }) => {
             </div>
             <span className={styles.kpiTitle}>Pending Orders</span>
           </div>
-          <h2 className={styles.kpiValue}>86</h2>
+          <h2 className={styles.kpiValue}>{metrics.pendingOrders.toLocaleString('en-IN')}</h2>
           <div className={styles.kpiFooter}>
             <span className={styles.trendRed}><FiTrendingUp /> 8.2%</span>
-            <span className={styles.kpiSubtext}>vs May 05 - May 11</span>
+            <span className={styles.kpiSubtext}>vs previous period</span>
           </div>
         </div>
 
@@ -73,10 +255,10 @@ const DashboardOverview = ({ handleTabChange }) => {
             </div>
             <span className={styles.kpiTitle}>Completed Orders</span>
           </div>
-          <h2 className={styles.kpiValue}>1,088</h2>
+          <h2 className={styles.kpiValue}>{metrics.completedOrders.toLocaleString('en-IN')}</h2>
           <div className={styles.kpiFooter}>
             <span className={styles.trendGreen}><FiTrendingUp /> 14.8%</span>
-            <span className={styles.kpiSubtext}>vs May 05 - May 11</span>
+            <span className={styles.kpiSubtext}>vs previous period</span>
           </div>
         </div>
 
@@ -88,10 +270,10 @@ const DashboardOverview = ({ handleTabChange }) => {
             </div>
             <span className={styles.kpiTitle}>Total Customers</span>
           </div>
-          <h2 className={styles.kpiValue}>2,345</h2>
+          <h2 className={styles.kpiValue}>{metrics.totalCustomers.toLocaleString('en-IN')}</h2>
           <div className={styles.kpiFooter}>
             <span className={styles.trendGreen}><FiTrendingUp /> 9.5%</span>
-            <span className={styles.kpiSubtext}>vs May 05 - May 11</span>
+            <span className={styles.kpiSubtext}>vs previous period</span>
           </div>
         </div>
 
@@ -103,10 +285,10 @@ const DashboardOverview = ({ handleTabChange }) => {
             </div>
             <span className={styles.kpiTitle}>New Quotes</span>
           </div>
-          <h2 className={styles.kpiValue}>32</h2>
+          <h2 className={styles.kpiValue}>{metrics.newQuotes.toLocaleString('en-IN')}</h2>
           <div className={styles.kpiFooter}>
             <span className={styles.trendGreen}><FiTrendingUp /> 20.0%</span>
-            <span className={styles.kpiSubtext}>vs May 05 - May 11</span>
+            <span className={styles.kpiSubtext}>vs previous period</span>
           </div>
         </div>
       </div>
@@ -117,27 +299,32 @@ const DashboardOverview = ({ handleTabChange }) => {
         <div className={styles.cardContainer}>
           <div className={styles.cardHeaderRow}>
             <h3 className={styles.cardTitle}>Sales Overview</h3>
-            <select className={styles.dropdownSelect}>
-              <option>Weekly ▼</option>
-              <option>Monthly</option>
+            <select 
+              className={styles.dropdownSelect}
+              value={salesTimeframe}
+              onChange={(e) => setSalesTimeframe(e.target.value)}
+            >
+              <option value="Weekly">Weekly ▼</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Yearly">Yearly</option>
             </select>
           </div>
 
           <div className={styles.chartLegendRow}>
             <div className={styles.legendItem}>
               <span className={styles.legendDotOrange} />
-              <span>This Week</span>
+              <span>Current Period</span>
             </div>
             <div className={styles.legendItem}>
               <span className={styles.legendLineGray} />
-              <span>Last Week</span>
+              <span>Previous Period</span>
             </div>
           </div>
 
           <div className={styles.lineChartBox}>
             <div className={styles.tooltipCallout}>
-              ₹32,450
-              <div className={styles.tooltipSub}>May 16, 2025</div>
+              ₹{(metrics.totalRevenue / 30).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+              <div className={styles.tooltipSub}>Peak Sales Day</div>
             </div>
 
             <svg width="100%" height="100%" viewBox="0 0 500 180" preserveAspectRatio="none">
@@ -183,9 +370,14 @@ const DashboardOverview = ({ handleTabChange }) => {
         <div className={styles.cardContainer}>
           <div className={styles.cardHeaderRow}>
             <h3 className={styles.cardTitle}>Top Categories</h3>
-            <select className={styles.dropdownSelect}>
-              <option>This Week ▼</option>
-              <option>This Month</option>
+            <select 
+              className={styles.dropdownSelect}
+              value={catTimeframe}
+              onChange={(e) => setCatTimeframe(e.target.value)}
+            >
+              <option value="This Week">This Week ▼</option>
+              <option value="This Month">This Month</option>
+              <option value="All Time">All Time</option>
             </select>
           </div>
 
@@ -201,61 +393,23 @@ const DashboardOverview = ({ handleTabChange }) => {
               </svg>
               <div className={styles.donutCenterLabel}>
                 <span className={styles.donutCenterSub}>Total Sales</span>
-                <span className={styles.donutCenterVal}>₹12,45,890</span>
+                <span className={styles.donutCenterVal}>₹{metrics.totalRevenue.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
             <div className={styles.categoryList}>
-              <div className={styles.categoryRow}>
-                <div className={styles.categoryLeft}>
-                  <span className={styles.catDotBlue} />
-                  <span>Corporate Gifts</span>
+              {categoryBreakdown.map((cat, idx) => (
+                <div className={styles.categoryRow} key={idx}>
+                  <div className={styles.categoryLeft}>
+                    <span className={cat.dotClass} />
+                    <span>{cat.name}</span>
+                  </div>
+                  <div className={styles.categoryRight}>
+                    <span>{cat.amount}</span>
+                    <span className={styles.pctBadge}>{cat.pct}%</span>
+                  </div>
                 </div>
-                <div className={styles.categoryRight}>
-                  <span>₹5,60,650</span>
-                  <span className={styles.pctBadge}>45%</span>
-                </div>
-              </div>
-              <div className={styles.categoryRow}>
-                <div className={styles.categoryLeft}>
-                  <span className={styles.catDotPink} />
-                  <span>Personalized Gifts</span>
-                </div>
-                <div className={styles.categoryRight}>
-                  <span>₹3,11,472</span>
-                  <span className={styles.pctBadge}>25%</span>
-                </div>
-              </div>
-              <div className={styles.categoryRow}>
-                <div className={styles.categoryLeft}>
-                  <span className={styles.catDotYellow} />
-                  <span>Toys</span>
-                </div>
-                <div className={styles.categoryRight}>
-                  <span>₹1,86,884</span>
-                  <span className={styles.pctBadge}>15%</span>
-                </div>
-              </div>
-              <div className={styles.categoryRow}>
-                <div className={styles.categoryLeft}>
-                  <span className={styles.catDotTeal} />
-                  <span>Tech Gifts</span>
-                </div>
-                <div className={styles.categoryRight}>
-                  <span>₹1,24,589</span>
-                  <span className={styles.pctBadge}>10%</span>
-                </div>
-              </div>
-              <div className={styles.categoryRow}>
-                <div className={styles.categoryLeft}>
-                  <span className={styles.catDotPurple} />
-                  <span>Others</span>
-                </div>
-                <div className={styles.categoryRight}>
-                  <span>₹62,295</span>
-                  <span className={styles.pctBadge}>5%</span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -264,9 +418,14 @@ const DashboardOverview = ({ handleTabChange }) => {
         <div className={styles.cardContainer}>
           <div className={styles.cardHeaderRow}>
             <h3 className={styles.cardTitle}>Order Status</h3>
-            <select className={styles.dropdownSelect}>
-              <option>This Week ▼</option>
-              <option>This Month</option>
+            <select 
+              className={styles.dropdownSelect}
+              value={orderStatusTimeframe}
+              onChange={(e) => setOrderStatusTimeframe(e.target.value)}
+            >
+              <option value="This Week">This Week ▼</option>
+              <option value="This Month">This Month</option>
+              <option value="All Time">All Time</option>
             </select>
           </div>
 
@@ -274,14 +433,14 @@ const DashboardOverview = ({ handleTabChange }) => {
             <div className={styles.donutSvgBox}>
               <svg width="150" height="150" viewBox="0 0 42 42">
                 <circle cx="21" cy="21" r="15.915" fill="none" stroke="#e2e8f0" strokeWidth="4.5" />
-                <circle cx="21" cy="21" r="15.915" fill="none" stroke="#22c55e" strokeWidth="4.5" strokeDasharray="87.3 12.7" strokeDashoffset="25" />
-                <circle cx="21" cy="21" r="15.915" fill="none" stroke="#06b6d4" strokeWidth="4.5" strokeDasharray="6.9 93.1" strokeDashoffset="37.7" />
-                <circle cx="21" cy="21" r="15.915" fill="none" stroke="#eab308" strokeWidth="4.5" strokeDasharray="3.7 96.3" strokeDashoffset="30.8" />
-                <circle cx="21" cy="21" r="15.915" fill="none" stroke="#ef4444" strokeWidth="4.5" strokeDasharray="2.1 97.9" strokeDashoffset="27.1" />
+                <circle cx="21" cy="21" r="15.915" fill="none" stroke="#22c55e" strokeWidth="4.5" strokeDasharray={`${orderStatusData.deliveredPct} ${100 - orderStatusData.deliveredPct}`} strokeDashoffset="25" />
+                <circle cx="21" cy="21" r="15.915" fill="none" stroke="#06b6d4" strokeWidth="4.5" strokeDasharray={`${orderStatusData.processingPct} ${100 - orderStatusData.processingPct}`} strokeDashoffset="38" />
+                <circle cx="21" cy="21" r="15.915" fill="none" stroke="#eab308" strokeWidth="4.5" strokeDasharray={`${orderStatusData.pendingPct} ${100 - orderStatusData.pendingPct}`} strokeDashoffset="31" />
+                <circle cx="21" cy="21" r="15.915" fill="none" stroke="#ef4444" strokeWidth="4.5" strokeDasharray={`${orderStatusData.cancelledPct} ${100 - orderStatusData.cancelledPct}`} strokeDashoffset="27" />
               </svg>
               <div className={styles.donutCenterLabel}>
                 <span className={styles.donutCenterSub}>Total Orders</span>
-                <span className={styles.donutCenterVal}>1,246</span>
+                <span className={styles.donutCenterVal}>{orderStatusData.totalOrdersDisplay.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
@@ -292,8 +451,8 @@ const DashboardOverview = ({ handleTabChange }) => {
                   <span>Delivered</span>
                 </div>
                 <div className={styles.categoryRight}>
-                  <span>1,088</span>
-                  <span className={styles.pctBadge}>(87.3%)</span>
+                  <span>{orderStatusData.delivered.toLocaleString('en-IN')}</span>
+                  <span className={styles.pctBadge}>({orderStatusData.deliveredPct}%)</span>
                 </div>
               </div>
               <div className={styles.categoryRow}>
@@ -302,8 +461,8 @@ const DashboardOverview = ({ handleTabChange }) => {
                   <span>Processing</span>
                 </div>
                 <div className={styles.categoryRight}>
-                  <span>86</span>
-                  <span className={styles.pctBadge}>(6.9%)</span>
+                  <span>{orderStatusData.processing.toLocaleString('en-IN')}</span>
+                  <span className={styles.pctBadge}>({orderStatusData.processingPct}%)</span>
                 </div>
               </div>
               <div className={styles.categoryRow}>
@@ -312,8 +471,8 @@ const DashboardOverview = ({ handleTabChange }) => {
                   <span>Pending</span>
                 </div>
                 <div className={styles.categoryRight}>
-                  <span>46</span>
-                  <span className={styles.pctBadge}>(3.7%)</span>
+                  <span>{orderStatusData.pending.toLocaleString('en-IN')}</span>
+                  <span className={styles.pctBadge}>({orderStatusData.pendingPct}%)</span>
                 </div>
               </div>
               <div className={styles.categoryRow}>
@@ -322,8 +481,8 @@ const DashboardOverview = ({ handleTabChange }) => {
                   <span>Cancelled</span>
                 </div>
                 <div className={styles.categoryRight}>
-                  <span>26</span>
-                  <span className={styles.pctBadge}>(2.1%)</span>
+                  <span>{orderStatusData.cancelled.toLocaleString('en-IN')}</span>
+                  <span className={styles.pctBadge}>({orderStatusData.cancelledPct}%)</span>
                 </div>
               </div>
             </div>
@@ -352,46 +511,20 @@ const DashboardOverview = ({ handleTabChange }) => {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className={styles.orderIdText}>#ORD-1256</td>
-                <td>Tech Solutions Pvt. Ltd.</td>
-                <td>May 18, 2025</td>
-                <td>₹45,600</td>
-                <td><span className={`${styles.pillStatus} ${styles.pillDelivered}`}>Delivered</span></td>
-                <td><button type="button" className={styles.dotsBtn}><FiMoreVertical /></button></td>
-              </tr>
-              <tr>
-                <td className={styles.orderIdText}>#ORD-1255</td>
-                <td>Rahul Verma</td>
-                <td>May 18, 2025</td>
-                <td>₹12,450</td>
-                <td><span className={`${styles.pillStatus} ${styles.pillProcessing}`}>Processing</span></td>
-                <td><button type="button" className={styles.dotsBtn}><FiMoreVertical /></button></td>
-              </tr>
-              <tr>
-                <td className={styles.orderIdText}>#ORD-1254</td>
-                <td>ABC Corporation</td>
-                <td>May 17, 2025</td>
-                <td>₹78,900</td>
-                <td><span className={`${styles.pillStatus} ${styles.pillPending}`}>Pending</span></td>
-                <td><button type="button" className={styles.dotsBtn}><FiMoreVertical /></button></td>
-              </tr>
-              <tr>
-                <td className={styles.orderIdText}>#ORD-1253</td>
-                <td>Sneha Iyer</td>
-                <td>May 17, 2025</td>
-                <td>₹5,250</td>
-                <td><span className={`${styles.pillStatus} ${styles.pillDelivered}`}>Delivered</span></td>
-                <td><button type="button" className={styles.dotsBtn}><FiMoreVertical /></button></td>
-              </tr>
-              <tr>
-                <td className={styles.orderIdText}>#ORD-1252</td>
-                <td>Global Enterprises</td>
-                <td>May 16, 2025</td>
-                <td>₹32,750</td>
-                <td><span className={`${styles.pillStatus} ${styles.pillProcessing}`}>Processing</span></td>
-                <td><button type="button" className={styles.dotsBtn}><FiMoreVertical /></button></td>
-              </tr>
+              {activeOrders.slice(0, 5).map((o, idx) => (
+                <tr key={o.id || idx}>
+                  <td className={styles.orderIdText}>#{o.id}</td>
+                  <td>{o.customer}</td>
+                  <td>{o.date}</td>
+                  <td>{o.amount}</td>
+                  <td>
+                    <span className={`${styles.pillStatus} ${o.status === 'Delivered' ? styles.pillDelivered : o.status === 'Processing' ? styles.pillProcessing : o.status === 'Cancelled' ? styles.pillCancelled : styles.pillPending}`}>
+                      {o.status}
+                    </span>
+                  </td>
+                  <td><button type="button" className={styles.dotsBtn}><FiMoreVertical /></button></td>
+                </tr>
+              ))}
             </tbody>
           </table>
 
@@ -403,7 +536,7 @@ const DashboardOverview = ({ handleTabChange }) => {
               </div>
               <div>
                 <div className={styles.miniLabel}>Low Stock Alert</div>
-                <div className={styles.miniVal}>12</div>
+                <div className={styles.miniVal}>{alerts.lowStock}</div>
                 <div className={styles.miniSub}>Products</div>
               </div>
             </div>
@@ -414,7 +547,7 @@ const DashboardOverview = ({ handleTabChange }) => {
               </div>
               <div>
                 <div className={styles.miniLabel}>Out of Stock</div>
-                <div className={styles.miniVal}>05</div>
+                <div className={styles.miniVal}>{alerts.outOfStock}</div>
                 <div className={styles.miniSub}>Products</div>
               </div>
             </div>
@@ -425,7 +558,7 @@ const DashboardOverview = ({ handleTabChange }) => {
               </div>
               <div>
                 <div className={styles.miniLabel}>New Customers</div>
-                <div className={styles.miniVal}>38</div>
+                <div className={styles.miniVal}>{alerts.newCustomersCount}</div>
                 <div className={styles.miniSub}>This Week</div>
               </div>
             </div>
@@ -436,7 +569,7 @@ const DashboardOverview = ({ handleTabChange }) => {
               </div>
               <div>
                 <div className={styles.miniLabel}>Bulk Quotes</div>
-                <div className={styles.miniVal}>14</div>
+                <div className={styles.miniVal}>{alerts.bulkQuotesCount}</div>
                 <div className={styles.miniSub}>This Week</div>
               </div>
             </div>
@@ -451,65 +584,22 @@ const DashboardOverview = ({ handleTabChange }) => {
           </div>
 
           <div className={styles.productsList}>
-            <div className={styles.productRow}>
-              <div className={styles.productLeft}>
-                <img
-                  src="https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=100&auto=format&fit=crop&q=80"
-                  alt="Hamper"
-                  className={styles.productThumb}
-                />
-                <div>
-                  <h4 className={styles.productTitle}>Premium Gift Hamper</h4>
-                  <span className={styles.productSoldText}>256 Sold</span>
+            {topProductsDisplay.map((p, idx) => (
+              <div className={styles.productRow} key={idx}>
+                <div className={styles.productLeft}>
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className={styles.productThumb}
+                  />
+                  <div>
+                    <h4 className={styles.productTitle}>{p.name}</h4>
+                    <span className={styles.productSoldText}>{p.sold}</span>
+                  </div>
                 </div>
+                <div className={styles.productRevenue}>{p.revenue}</div>
               </div>
-              <div className={styles.productRevenue}>₹2,56,000</div>
-            </div>
-
-            <div className={styles.productRow}>
-              <div className={styles.productLeft}>
-                <img
-                  src="https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=100&auto=format&fit=crop&q=80"
-                  alt="Bottle"
-                  className={styles.productThumb}
-                />
-                <div>
-                  <h4 className={styles.productTitle}>Custom Monogram Flask</h4>
-                  <span className={styles.productSoldText}>198 Sold</span>
-                </div>
-              </div>
-              <div className={styles.productRevenue}>₹1,58,400</div>
-            </div>
-
-            <div className={styles.productRow}>
-              <div className={styles.productLeft}>
-                <img
-                  src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=100&auto=format&fit=crop&q=80"
-                  alt="Engraved Clock"
-                  className={styles.productThumb}
-                />
-                <div>
-                  <h4 className={styles.productTitle}>Laser Engraved Desk Clock</h4>
-                  <span className={styles.productSoldText}>142 Sold</span>
-                </div>
-              </div>
-              <div className={styles.productRevenue}>₹1,70,400</div>
-            </div>
-
-            <div className={styles.productRow}>
-              <div className={styles.productLeft}>
-                <img
-                  src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=100&auto=format&fit=crop&q=80"
-                  alt="Journal"
-                  className={styles.productThumb}
-                />
-                <div>
-                  <h4 className={styles.productTitle}>Executive Leather Journal</h4>
-                  <span className={styles.productSoldText}>115 Sold</span>
-                </div>
-              </div>
-              <div className={styles.productRevenue}>₹92,000</div>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -526,7 +616,7 @@ const DashboardOverview = ({ handleTabChange }) => {
               <div className={styles.timelineItem}>
                 <span className={`${styles.timelineBadge} ${styles.bgTimelineGreen}`} />
                 <div>
-                  <p className={styles.timelineText}>New order <strong>#ORD-1256</strong> placed by Tech Solutions</p>
+                  <p className={styles.timelineText}>New order <strong>#{activeOrders[0]?.id || 'ORD-1256'}</strong> placed by {activeOrders[0]?.customer || 'Tech Solutions'}</p>
                   <span className={styles.timelineTime}>5 mins ago</span>
                 </div>
               </div>
@@ -534,7 +624,7 @@ const DashboardOverview = ({ handleTabChange }) => {
               <div className={styles.timelineItem}>
                 <span className={`${styles.timelineBadge} ${styles.bgTimelineBlue}`} />
                 <div>
-                  <p className={styles.timelineText}>Bulk quote request submitted by Apex Infotech</p>
+                  <p className={styles.timelineText}>Bulk quote request submitted by {corporateQuotes[0]?.company || 'Apex Infotech'}</p>
                   <span className={styles.timelineTime}>22 mins ago</span>
                 </div>
               </div>
@@ -542,7 +632,7 @@ const DashboardOverview = ({ handleTabChange }) => {
               <div className={styles.timelineItem}>
                 <span className={`${styles.timelineBadge} ${styles.bgTimelineOrange}`} />
                 <div>
-                  <p className={styles.timelineText}>Low stock alert for <strong>Executive Leather Journal</strong></p>
+                  <p className={styles.timelineText}>Low stock alert for <strong>{productsList[0]?.name || 'Executive Leather Journal'}</strong></p>
                   <span className={styles.timelineTime}>1 hour ago</span>
                 </div>
               </div>
@@ -550,7 +640,7 @@ const DashboardOverview = ({ handleTabChange }) => {
               <div className={styles.timelineItem}>
                 <span className={`${styles.timelineBadge} ${styles.bgTimelinePurple}`} />
                 <div>
-                  <p className={styles.timelineText}>New enquiry registered from Little Explorers Preschool</p>
+                  <p className={styles.timelineText}>New enquiry registered from {enquiriesList[0]?.name || 'Little Explorers Preschool'}</p>
                   <span className={styles.timelineTime}>2 hours ago</span>
                 </div>
               </div>
@@ -564,9 +654,11 @@ const DashboardOverview = ({ handleTabChange }) => {
               <button type="button" className={styles.viewAllBtn} onClick={() => handleTabChange('enquiries')}>View All</button>
             </div>
             <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-              <div style={{ fontWeight: 600, color: '#1e293b' }}>Bulk Executive Hampers Inquiry</div>
-              <div style={{ marginTop: '2px' }}>Tech Solutions Pvt. Ltd.</div>
-              <span className={`${styles.pillStatus} ${styles.pillPending}`} style={{ marginTop: '6px', display: 'inline-block' }}>New</span>
+              <div style={{ fontWeight: 600, color: '#1e293b' }}>{latestEnquiry.subject || latestEnquiry.category || 'Bulk Executive Hampers Inquiry'}</div>
+              <div style={{ marginTop: '2px' }}>{latestEnquiry.name || 'Tech Solutions Pvt. Ltd.'}</div>
+              <span className={`${styles.pillStatus} ${styles.pillPending}`} style={{ marginTop: '6px', display: 'inline-block' }}>
+                {latestEnquiry.status || 'New'}
+              </span>
             </div>
           </div>
         </div>

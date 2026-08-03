@@ -1,4 +1,4 @@
-import { FiUsers } from 'react-icons/fi';
+import { FiUsers, FiRefreshCw } from 'react-icons/fi';
 import styles from '../Dashboard.module.css';
 
 const CustomersSection = ({
@@ -6,6 +6,8 @@ const CustomersSection = ({
   selectedCustomerModal,
   setSelectedCustomerModal,
   handleExportCustomersCSV,
+  loadingCustomers,
+  onRefresh,
 }) => {
   return (
     <div className={styles.cardContainer} style={{ background: '#ffffff', borderRadius: '16px', padding: '1.75rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.03)' }}>
@@ -14,14 +16,25 @@ const CustomersSection = ({
           <FiUsers style={{ color: '#d99b26' }} />
           <span>Store Customers & Registered Users ({customersList.length})</span>
         </h3>
-        <button
-          type="button"
-          onClick={handleExportCustomersCSV}
-          className={styles.viewAllBtn}
-          style={{ background: '#d99b26', color: '#fff', fontWeight: '700', border: 'none', cursor: 'pointer' }}
-        >
-          📥 Export CSV
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button
+            type="button"
+            onClick={onRefresh}
+            title="Refresh Users"
+            style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#334155', borderRadius: '8px', padding: '0.45rem 0.75rem', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <FiRefreshCw size={13} style={{ animation: loadingCustomers ? 'spin 1s linear infinite' : 'none' }} />
+            {loadingCustomers ? 'Loading...' : 'Refresh'}
+          </button>
+          <button
+            type="button"
+            onClick={handleExportCustomersCSV}
+            className={styles.viewAllBtn}
+            style={{ background: '#d99b26', color: '#fff', fontWeight: '700', border: 'none', cursor: 'pointer' }}
+          >
+            📥 Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Table Layout */}

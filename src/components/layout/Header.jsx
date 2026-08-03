@@ -7,7 +7,7 @@ import { logout } from '@store/slices/authSlice';
 import styles from './Header.module.css';
 
 const GiftLogo = () => (
-  <svg width="36" height="40" viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.logoSvg}>
+  <svg width="42" height="46" viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.logoSvg}>
     {/* Ribbon Top Loops */}
     <path d="M13 10C13 10 9 3 4.5 5.5C1 7.5 2 12 8.5 12H13" stroke="#e5c158" strokeWidth="2.2" strokeLinecap="round"/>
     <path d="M23 10C23 10 27 3 31.5 5.5C35 7.5 34 12 27.5 12H23" stroke="#e5c158" strokeWidth="2.2" strokeLinecap="round"/>
@@ -50,15 +50,7 @@ const Header = () => {
   const wishlistCount = useSelector((s) => s.wishlist.items.length);
   const { toggleCart } = useCartContext();
 
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeDropdown, setActiveDropdown] = useState(null);
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`${ROUTES.SHOP}?search=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
 
   return (
     <header className={styles.header}>
@@ -105,20 +97,21 @@ const Header = () => {
             {activeDropdown === 'corporate' && (
               <div className={styles.dropdownMenuWide}>
                 <Link to={ROUTES.CORPORATE_GIFTS}>All Corporate Gifts</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>On Boarding Kit</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Updated Anniversary Kit</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Anniversary Kit Diaries</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Onboarding Kit</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Work Anniversary Kit</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Employee Anniversary Kit</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Diaries & Notebooks</Link>
                 <Link to={ROUTES.CORPORATE_GIFTS}>Drinkware</Link>
                 <Link to={ROUTES.CORPORATE_GIFTS}>Apparel</Link>
                 <Link to={ROUTES.CORPORATE_GIFTS}>Electronics</Link>
                 <Link to={ROUTES.CORPORATE_GIFTS}>Backpacks</Link>
                 <Link to={ROUTES.CORPORATE_GIFTS}>Accessories</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Trophy</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Cap</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Umbrella</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Trophies & Awards</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Caps</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Umbrellas</Link>
                 <Link to={ROUTES.CORPORATE_GIFTS}>Card Holders</Link>
                 <Link to={ROUTES.CORPORATE_GIFTS}>Premium Gifts</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Cups</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS}>Cups & Mugs</Link>
                 <Link to={ROUTES.CORPORATE_GIFTS}>Keychains</Link>
               </div>
             )}
@@ -140,9 +133,9 @@ const Header = () => {
               <div className={styles.dropdownMenu}>
                 <Link to={ROUTES.PERSONALIZED_GIFTS}>All Personalized Gifts</Link>
                 <Link to={ROUTES.PERSONALIZED_GIFTS}>Photo Frames</Link>
-                <Link to={ROUTES.PERSONALIZED_GIFTS}>Acrylic Frame</Link>
-                <Link to={ROUTES.PERSONALIZED_GIFTS}>Caricature</Link>
-                <Link to={ROUTES.PERSONALIZED_GIFTS}>Clock</Link>
+                <Link to={ROUTES.PERSONALIZED_GIFTS}>Acrylic Frames</Link>
+                <Link to={ROUTES.PERSONALIZED_GIFTS}>Caricatures</Link>
+                <Link to={ROUTES.PERSONALIZED_GIFTS}>Clocks</Link>
                 <Link to={ROUTES.PERSONALIZED_GIFTS}>Wooden Photo Engraving</Link>
               </div>
             )}
@@ -188,26 +181,10 @@ const Header = () => {
           </NavLink>
         </nav>
 
-        {/* Search Bar */}
-        <form onSubmit={handleSearchSubmit} className={styles.searchForm}>
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={styles.searchInput}
-          />
-          <button type="submit" className={styles.searchBtn} aria-label="Search">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </button>
-        </form>
 
-        {/* Action Icons */}
+        {/* Action Icons: Wishlist, Cart, Profile */}
         <div className={styles.actions}>
-          {/* Wishlist */}
+          {/* 1. Wishlist */}
           <Link to={ROUTES.WISHLIST} className={styles.iconBtn} aria-label="Wishlist">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -215,39 +192,72 @@ const Header = () => {
             {wishlistCount > 0 && <span className={styles.iconBadge}>{wishlistCount}</span>}
           </Link>
 
-          {/* Account / User Menu */}
-          <div className={styles.userMenu}>
-            <Link to={isAuthenticated ? ROUTES.PROFILE : ROUTES.LOGIN} className={styles.iconBtn} aria-label="Account">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-            </Link>
-            {isAuthenticated && (
-              <div className={styles.accountDropdown}>
-                <div className={styles.accountName}>{user?.name || 'User Account'}</div>
-                <Link to={ROUTES.PROFILE}>My Profile</Link>
-                <Link to={ROUTES.ORDERS}>My Orders</Link>
-                <Link to={ROUTES.WISHLIST}>Wishlist</Link>
-                {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
-                  <Link to={ROUTES.DASHBOARD} style={{ color: '#dfa843', fontWeight: 'bold' }}>
-                    {user?.role === 'SUPER_ADMIN' ? '👑 Super Admin Panel' : '💼 Admin Dashboard'}
-                  </Link>
-                )}
-                <button onClick={() => dispatch(logout())}>Logout</button>
-              </div>
-            )}
-          </div>
-
-          {/* Cart with Gold Badge */}
-          <button className={styles.cartBtn} onClick={toggleCart} aria-label="Cart">
+          {/* 2. Cart with Gold Badge */}
+          <Link to={ROUTES.CART} className={styles.cartBtn} aria-label="Cart">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="9" cy="21" r="1"></circle>
               <circle cx="20" cy="21" r="1"></circle>
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
             </svg>
             <span className={styles.cartBadge}>{cartCount}</span>
-          </button>
+          </Link>
+
+          {/* 3. Account / User Profile */}
+          <div className={styles.userMenu}>
+            <Link to={isAuthenticated ? ROUTES.PROFILE : ROUTES.LOGIN} className={styles.profileTriggerBtn} aria-label="Account">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              {isAuthenticated ? (
+                <div className={styles.profileTriggerContent}>
+                  <span className={styles.profileTriggerName}>{user?.name || 'User'}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.profileChevron}>
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                  </svg>
+                </div>
+              ) : (
+                <span className={styles.profileTriggerName}>Sign In</span>
+              )}
+            </Link>
+            {isAuthenticated && (
+              <div className={styles.accountDropdown}>
+                <div className={styles.accountHeader}>Your Account</div>
+                <Link to={ROUTES.PROFILE} className={styles.dropdownOption}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  <span>My Profile</span>
+                </Link>
+                <Link to={ROUTES.ORDERS} className={styles.dropdownOption}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                  </svg>
+                  <span>Orders</span>
+                </Link>
+                {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
+                  <Link to={ROUTES.DASHBOARD} className={styles.dropdownOption} style={{ color: '#dfa843', fontWeight: 'bold' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dfa843" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span>{user?.role === 'SUPER_ADMIN' ? 'Super Admin Panel' : 'Admin Dashboard'}</span>
+                  </Link>
+                )}
+                <button onClick={() => dispatch(logout())} className={styles.dropdownOption}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                  </svg>
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

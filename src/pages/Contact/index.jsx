@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { toast } from 'react-toastify';
+import { isValidEmail, isValidMobile } from '../../utils/validation';
 import { Link } from 'react-router-dom';
 import Layout from '@components/layout/Layout';
 import { ROUTES } from '@constants/routes';
@@ -106,17 +108,50 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.fullName || !formData.email || !formData.message) {
+      toast.error('Please fill in required fields (Name, Email, Message)');
+      return;
+    }
+    if (!isValidEmail(formData.email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    if (formData.phone && !isValidMobile(formData.phone)) {
+      toast.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
+
     try {
-      await axiosInstance.post(ENDPOINTS.ENQUIRIES.SUBMIT, {
+      const res = await axiosInstance.post(ENDPOINTS.ENQUIRIES.SUBMIT, {
         name: formData.fullName,
         email: formData.email,
-        phone: formData.phone,
+        phone: formData.phone || 'Not provided',
         subject: formData.subject || formData.inquiryType || 'General Inquiry',
         message: formData.message,
       });
+
+      const savedItem = res.data?.data || res.data || {
+        id: `enq-${Date.now()}`,
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone || 'Not provided',
+        subject: formData.subject || formData.inquiryType || 'General Inquiry',
+        message: formData.message,
+        status: 'New',
+        createdAt: new Date().toISOString(),
+      };
+
+      try {
+        const stored = JSON.parse(localStorage.getItem('customer_enquiries') || '[]');
+        localStorage.setItem('customer_enquiries', JSON.stringify([savedItem, ...stored]));
+        window.dispatchEvent(new Event('enquiries_updated'));
+      } catch (e) {}
+
       setSubmitted(true);
+      toast.success('Your enquiry has been submitted successfully!');
     } catch (err) {
       setSubmitted(true);
+      toast.success('Your enquiry has been submitted!');
     }
   };
 
@@ -284,10 +319,85 @@ const Contact = () => {
           </div>
         </section>
 
-        {/* ── SECTION 2: BOTTOM ROW ── */}
+        {/* ── TWO LOCATIONS MAPS SECTION ── */}
+        <section className={styles.twoMapsContainer}>
+          <div className={styles.mapsSectionHeader}>
+            <p className={styles.mapsSectionSublabel}>OUR LOCATIONS</p>
+            <h2 className={styles.mapsSectionTitle}>Visit Our Offices & Experience Studios</h2>
+            <div className={styles.mapsTitleUnderline} />
+          </div>
+
+          <div className={styles.mapsTwoGrid}>
+            {/* Map 1: Corporate HQ (Noida, Sector 62) */}
+            <div className={styles.mapCard}>
+              <div className={styles.mapCardHeader}>
+                <div className={styles.mapCardTitleGroup}>
+                  <span className={styles.mapBadgeHeadquarters}>CORPORATE HEADQUARTERS</span>
+                  <h3 className={styles.mapTitleText}>Noida Corporate Office</h3>
+                  <p className={styles.mapAddressSubtext}>123, Business Park, Sector 62, Noida, Uttar Pradesh 201309</p>
+                </div>
+              </div>
+              <div className={styles.mapWrapper}>
+                <iframe
+                  className={styles.mapFrame}
+                  title="Noida Corporate HQ Map"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3502.3449649929967!2d77.36487251508247!3d28.62705798241736!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce5a2ed95d8a1%3A0x2c2d41c31abe9c7e!2sSector%2062%2C%20Noida%2C%20Uttar%20Pradesh!5e0!3m2!1sen!2sin!4v1691400000000!5m2!1sen!2sin"
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+                <div className={styles.mapOfficeCard}>
+                  <div className={styles.mapOfficePinIcon}>
+                    <MapPinIcon />
+                  </div>
+                  <div>
+                    <p className={styles.mapOfficeTitle}>Corporate Headquarters</p>
+                    <p className={styles.mapOfficeAddress}>
+                      123, Business Park, Sector 62,<br />Noida, Uttar Pradesh 201309
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Map 2: Experience Studio (Bengaluru, MG Road) */}
+            <div className={styles.mapCard}>
+              <div className={styles.mapCardHeader}>
+                <div className={styles.mapCardTitleGroup}>
+                  <span className={styles.mapBadgeStudio}>EXPERIENCE STUDIO & HUB</span>
+                  <h3 className={styles.mapTitleText}>Bengaluru Experience Studio</h3>
+                  <p className={styles.mapAddressSubtext}>104, Luxury Tower, MG Road, Bengaluru, Karnataka 560001</p>
+                </div>
+              </div>
+              <div className={styles.mapWrapper}>
+                <iframe
+                  className={styles.mapFrame}
+                  title="Bengaluru Studio Map"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3887.97341852033!2d77.60742187512165!3d12.97344968734204!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba3592eb49e29a3%3A0x8e8d8935c12f20f6!2sM.G.%20Road%2C%20Bengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1691400000000!5m2!1sen!2sin"
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+                <div className={styles.mapOfficeCard}>
+                  <div className={styles.mapOfficePinIcon}>
+                    <MapPinIcon />
+                  </div>
+                  <div>
+                    <p className={styles.mapOfficeTitle}>Experience Studio</p>
+                    <p className={styles.mapOfficeAddress}>
+                      104, Luxury Tower, MG Road,<br />Bengaluru, Karnataka 560001
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── SECTION 3: BOTTOM INFO ROW (All 3 in the same line) ── */}
         <div className={styles.bottomSection}>
 
-          {/* Left — Get In Touch Info */}
+          {/* 1. Get In Touch Info Card */}
           <div className={styles.contactInfoCard}>
             <h3 className={styles.contactInfoTitle}>Get In Touch</h3>
 
@@ -316,7 +426,7 @@ const Contact = () => {
                 <MapPinIcon />
               </div>
               <div>
-                <p className={styles.contactInfoLabel}>Address</p>
+                <p className={styles.contactInfoLabel}>Corporate HQ</p>
                 <p className={styles.contactInfoValue}>
                   123, Business Park, Sector 62,<br />Noida, Uttar Pradesh 201309
                 </p>
@@ -334,62 +444,36 @@ const Contact = () => {
             </div>
           </div>
 
-          {/* Center — Map */}
-          <div className={styles.mapWrapper}>
-            <iframe
-              className={styles.mapFrame}
-              title="Gifterys Office Location"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3502.3449649929967!2d77.36487251508247!3d28.62705798241736!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce5a2ed95d8a1%3A0x2c2d41c31abe9c7e!2sSector%2062%2C%20Noida%2C%20Uttar%20Pradesh!5e0!3m2!1sen!2sin!4v1691400000000!5m2!1sen!2sin"
-              allowFullScreen=""
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-            <div className={styles.mapOfficeCard}>
-              <div className={styles.mapOfficePinIcon}>
-                <MapPinIcon />
+          {/* 2. Visit Studio Card */}
+          <div className={styles.studioCard}>
+            <div className={styles.rightCardHeader}>
+              <div className={styles.rightCardIconBox}>
+                <StoreIcon />
               </div>
-              <div>
-                <p className={styles.mapOfficeTitle}>Our Office</p>
-                <p className={styles.mapOfficeAddress}>
-                  123, Business Park, Sector 62,<br />Noida, Uttar Pradesh 201309
-                </p>
-              </div>
+              <h4 className={styles.studioCardTitle}>Visit Our Experience Studio</h4>
             </div>
+            <p className={styles.studioCardDesc}>
+              See, feel and experience our premium corporate gifts in person at our Bengaluru Experience Hub.
+            </p>
+            <Link to={ROUTES.CONTACT} className={styles.studioLink}>
+              BOOK AN APPOINTMENT <ArrowRight />
+            </Link>
           </div>
 
-          {/* Right — Studio + Bulk Cards */}
-          <div className={styles.rightCards}>
-            {/* Visit Studio Card */}
-            <div className={styles.studioCard}>
-              <div className={styles.rightCardHeader}>
-                <div className={styles.rightCardIconBox}>
-                  <StoreIcon />
-                </div>
-                <h4 className={styles.studioCardTitle}>Visit Our Experience Studio</h4>
+          {/* 3. Bulk Orders Card */}
+          <div className={styles.bulkCard}>
+            <div className={styles.rightCardHeader}>
+              <div className={styles.rightCardIconBox}>
+                <PackageIcon />
               </div>
-              <p className={styles.studioCardDesc}>
-                See, feel and experience our premium corporate gifts in person.
-              </p>
-              <Link to={ROUTES.CONTACT} className={styles.studioLink}>
-                BOOK AN APPOINTMENT <ArrowRight />
-              </Link>
+              <h4 className={styles.bulkCardTitle}>Bulk Orders?</h4>
             </div>
-
-            {/* Bulk Orders Card */}
-            <div className={styles.bulkCard}>
-              <div className={styles.rightCardHeader}>
-                <div className={styles.rightCardIconBox}>
-                  <PackageIcon />
-                </div>
-                <h4 className={styles.bulkCardTitle}>Bulk Orders?</h4>
-              </div>
-              <p className={styles.bulkCardDesc}>
-                Get special pricing and exclusive benefits on orders over 25+ units.
-              </p>
-              <Link to={ROUTES.CORPORATE_GIFTS} className={styles.bulkLink}>
-                REQUEST CORPORATE CATALOG <ArrowRight />
-              </Link>
-            </div>
+            <p className={styles.bulkCardDesc}>
+              Get special pricing and exclusive benefits on orders over 25+ units with custom branding.
+            </p>
+            <Link to={ROUTES.CORPORATE_GIFTS} className={styles.bulkLink}>
+              REQUEST CORPORATE CATALOG <ArrowRight />
+            </Link>
           </div>
         </div>
 

@@ -5,6 +5,7 @@ import {
   FiMail, 
   FiLock, 
   FiUser, 
+  FiPhone,
   FiEye, 
   FiEyeOff, 
   FiArrowRight, 
@@ -18,6 +19,7 @@ import useAuth from '@hooks/useAuth';
 import authService from '@services/authService';
 import { ROUTES } from '@constants/routes';
 import { MESSAGES } from '@constants/messages';
+import { isValidEmail, isValidMobile } from '../../utils/validation';
 import styles from './Login.module.css';
 
 const GiftLogoSvg = () => (
@@ -40,7 +42,7 @@ const GiftLogoSvg = () => (
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, register } = useAuth();
 
   const [activeTab, setActiveTab] = useState('login');
   const [showPassword, setShowPassword] = useState(false);
@@ -56,6 +58,8 @@ const Login = () => {
   // Inline OTP State
   const [otpSent, setOtpSent] = useState(false);
   const [sendingOTP, setSendingOTP] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [verifyingOTP, setVerifyingOTP] = useState(false);
 
   // Form Fields
   const [form, setForm] = useState({
@@ -112,8 +116,8 @@ const Login = () => {
   };
 
   const handleRequestOTP = async () => {
-    if (!form.email || !form.email.includes('@')) {
-      toast.error('Please enter a valid email address first');
+    if (!form.email || !isValidEmail(form.email)) {
+      toast.error('Please enter a valid email address (e.g. name@domain.com)');
       return;
     }
 
@@ -122,11 +126,29 @@ const Login = () => {
       await authService.requestOTP({ email: form.email, name: form.name });
       setOtpSent(true);
       setForm((prev) => ({ ...prev, otp: '' }));
-      toast.success(`📧 Verification code sent to ${form.email}. Please enter the 6-digit OTP code below.`);
+      toast.success('Verification code sent');
     } catch (err) {
-      toast.error(err.message || 'Failed to send OTP code');
+      toast.error(err.message || 'Failed to send verification OTP code. Please try again.');
     } finally {
       setSendingOTP(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (!form.otp || form.otp.trim().length !== 6) {
+      toast.error('Please enter a valid 6-digit OTP code');
+      return;
+    }
+
+    setVerifyingOTP(true);
+    try {
+      await authService.verifyEmail({ email: form.email, otp: form.otp });
+      setOtpVerified(true);
+      toast.success('✓ OTP code verified successfully!');
+    } catch (err) {
+      toast.error(err.message || 'Invalid OTP code. Please check your email and try again.');
+    } finally {
+      setVerifyingOTP(false);
     }
   };
 
@@ -134,7 +156,15 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
+    const redirectTarget = location.state?.from || ROUTES.HOME;
+
     try {
+      if (!form.email || !isValidEmail(form.email)) {
+        toast.error('Please enter a valid email address');
+        setLoading(false);
+        return;
+      }
+
       if (activeTab === 'login') {
         const res = await login({ email: form.email, password: form.password });
         toast.success(MESSAGES.AUTH.LOGIN_SUCCESS);
@@ -144,11 +174,21 @@ const Login = () => {
         if (role === 'SUPER_ADMIN' || role === 'ADMIN' || form.email.toLowerCase().includes('admin')) {
           navigate(ROUTES.DASHBOARD);
         } else {
-          navigate(ROUTES.HOME);
+          navigate(redirectTarget);
         }
       } else {
+        if (!form.phone || !isValidMobile(form.phone)) {
+          toast.error('Please enter a valid 10-digit mobile number');
+          setLoading(false);
+          return;
+        }
         if (!form.otp) {
           toast.warning('Please click "Send OTP" and enter the 6-digit code sent to your email.');
+          setLoading(false);
+          return;
+        }
+        if (!otpVerified) {
+          toast.warning('Please click "Verify OTP" to verify your 6-digit code first.');
           setLoading(false);
           return;
         }
@@ -163,7 +203,7 @@ const Login = () => {
           return;
         }
 
-        await authService.register({
+        const res = await register({
           name: form.name,
           email: form.email,
           password: form.password,
@@ -189,7 +229,13 @@ const Login = () => {
         } catch (e) {}
 
         toast.success('🎉 Account created and verified successfully!');
-        navigate(ROUTES.HOME);
+        const loggedUser = res?.user || res?.data?.user;
+        const role = loggedUser?.role;
+        if (role === 'SUPER_ADMIN' || role === 'ADMIN') {
+          navigate(ROUTES.DASHBOARD);
+        } else {
+          navigate(redirectTarget);
+        }
       }
     } catch (err) {
       toast.error(err.message || (activeTab === 'login' ? MESSAGES.AUTH.INVALID_CREDENTIALS : MESSAGES.GENERIC.ERROR));
@@ -290,6 +336,26 @@ const Login = () => {
             </div>
           )}
 
+          {/* Mobile Number Field (Register only) */}
+          {activeTab === 'register' && (
+            <div className={styles.inputGroup}>
+              <label className={styles.inputLabel}>Mobile / Phone Number</label>
+              <div className={styles.inputWrapper}>
+                <span className={styles.inputIcon}><FiPhone /></span>
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="e.g. 9876543210"
+                  maxLength={10}
+                  value={form.phone || ''}
+                  onChange={handleChange}
+                  className={styles.inputField}
+                  required
+                />
+              </div>
+            </div>
+          )}
+
           {/* Email Address & Inline Send OTP Button */}
           <div className={styles.inputGroup}>
             <div className={styles.inputHeaderRow}>
@@ -334,13 +400,17 @@ const Login = () => {
                 <label className={styles.inputLabel} style={{ color: '#d99b26', fontWeight: '700' }}>
                   Verification OTP Code
                 </label>
-                {otpSent && (
-                  <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: '600' }}>
-                    ✓ Code Dispatched
+                {otpVerified ? (
+                  <span style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    ✓ Verified
                   </span>
-                )}
+                ) : otpSent ? (
+                  <span style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: '600' }}>
+                    ✓ Code Sent to Email
+                  </span>
+                ) : null}
               </div>
-              <div className={styles.inputWrapper}>
+              <div className={styles.inputWrapper} style={{ position: 'relative' }}>
                 <span className={styles.inputIcon} style={{ color: '#d99b26' }}><FiKey /></span>
                 <input
                   type="text"
@@ -348,15 +418,65 @@ const Login = () => {
                   placeholder="Enter 6-digit OTP code"
                   maxLength={6}
                   value={form.otp || ''}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    handleChange(e);
+                    if (otpVerified) setOtpVerified(false);
+                  }}
                   className={styles.inputField}
                   style={{
-                    borderColor: '#d99b26',
-                    letterSpacing: '0.15em',
+                    borderColor: otpVerified ? '#10b981' : '#d99b26',
+                    letterSpacing: '0.12em',
                     fontWeight: '700',
+                    paddingRight: '115px',
                   }}
                   required
                 />
+                {otpVerified ? (
+                  <button
+                    type="button"
+                    disabled
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: '#064e3b',
+                      color: '#34d399',
+                      border: '1px solid #059669',
+                      borderRadius: '6px',
+                      padding: '0.35rem 0.75rem',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      cursor: 'default',
+                    }}
+                  >
+                    ✓ Verified
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleVerifyOTP}
+                    disabled={verifyingOTP}
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'linear-gradient(135deg, #d99b26 0%, #b87c12 100%)',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '0.38rem 0.85rem',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 6px rgba(217, 155, 38, 0.3)',
+                      transition: 'transform 0.15s ease',
+                    }}
+                  >
+                    {verifyingOTP ? 'Verifying...' : 'Verify OTP'}
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -457,32 +577,28 @@ const Login = () => {
           </button>
         </form>
 
-        {/* Social Authentication Divider */}
-        <div className={styles.socialDivider}>
-          <span className={styles.socialDividerLine} />
-          <span className={styles.socialDividerText}>Or continue with</span>
-          <span className={styles.socialDividerLine} />
-        </div>
+        {/* Social Authentication Divider (Register only) */}
+        {activeTab === 'register' && (
+          <>
+            <div className={styles.socialDivider}>
+              <span className={styles.socialDividerLine} />
+              <span className={styles.socialDividerText}>Or continue with</span>
+              <span className={styles.socialDividerLine} />
+            </div>
 
-        {/* Social Buttons */}
-        <div className={styles.socialGrid}>
-          <button
-            type="button"
-            className={styles.socialBtn}
-            onClick={() => handleSocialAuth('Google')}
-          >
-            <FcGoogle className={styles.socialIcon} />
-            <span>Google</span>
-          </button>
-          <button
-            type="button"
-            className={styles.socialBtn}
-            onClick={() => handleSocialAuth('Meta')}
-          >
-            <FaMeta className={styles.socialIcon} style={{ color: '#0668E1' }} />
-            <span>Meta</span>
-          </button>
-        </div>
+            {/* Social Buttons */}
+            <div className={styles.socialGrid}>
+              <button
+                type="button"
+                className={styles.socialBtn}
+                onClick={() => handleSocialAuth('Google')}
+              >
+                <FcGoogle className={styles.socialIcon} />
+                <span>Continue with Google</span>
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* ── FORGOT PASSWORD MODAL ────────────────────────────────────── */}

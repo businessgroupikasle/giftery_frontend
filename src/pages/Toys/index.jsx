@@ -9,12 +9,19 @@ import { toast } from 'react-toastify';
 import styles from './Toys.module.css';
 
 const TOYS_SUBCATEGORIES = [
-  { id: 'all', name: 'All Toys & Games' },
-  { id: 'desk-toys', name: 'Kinetic Desk Toys' },
-  { id: 'brain-teasers', name: '3D Brain Teasers' },
-  { id: 'mini-games', name: 'Desktop Mini Games' },
-  { id: 'diy-kits', name: 'DIY Model Kits' },
-  { id: 'wooden-toys', name: 'Wooden Educational Toys' },
+  { id: 'all', name: 'All Toys' },
+  { id: '0-2-years', name: '0 – 2 Years' },
+  { id: '3-5-years', name: '3 – 5 Years' },
+  { id: '6-8-years', name: '6 – 8 Years' },
+  { id: '9-12-years', name: '9 – 12 Years' },
+  { id: 'teens', name: 'Teens' },
+  { id: 'educational-toys', name: 'Educational Toys' },
+  { id: 'rc-toys', name: 'Remote Control Toys' },
+  { id: 'soft-toys', name: 'Soft Toys' },
+  { id: 'building-blocks', name: 'Building Blocks' },
+  { id: 'dolls', name: 'Dolls' },
+  { id: 'cars-bikes', name: 'Cars & Bikes' },
+  { id: 'outdoor-toys', name: 'Outdoor Toys' },
 ];
 
 const SubCategoryIcon = ({ type }) => {
@@ -23,7 +30,11 @@ const SubCategoryIcon = ({ type }) => {
   const bg = "#fffbeb";
 
   switch (type) {
-    case 'desk-toys':
+    case '0-2-years':
+    case '3-5-years':
+    case '6-8-years':
+    case '9-12-years':
+    case 'teens':
       return (
         <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
           <circle cx="27" cy="27" r="18" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF"/>
@@ -31,16 +42,15 @@ const SubCategoryIcon = ({ type }) => {
           <path d="M27 9V15M27 39V45M9 27H15M39 27H45" stroke={gold} strokeWidth="2.5" strokeLinecap="round"/>
         </svg>
       );
-    case 'brain-teasers':
+    case 'educational-toys':
       return (
         <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
-          <rect x="12" y="12" width="14" height="14" rx="3" fill={bg} stroke={stroke} strokeWidth="2.5"/>
-          <rect x="28" y="12" width="14" height="14" rx="3" fill="#FFFFFF" stroke={gold} strokeWidth="2.5"/>
-          <rect x="12" y="28" width="14" height="14" rx="3" fill="#FFFFFF" stroke={gold} strokeWidth="2.5"/>
-          <rect x="28" y="28" width="14" height="14" rx="3" fill={bg} stroke={stroke} strokeWidth="2.5"/>
+          <rect x="10" y="14" width="34" height="26" rx="4" fill="#FEF3C7" stroke={stroke} strokeWidth="2.5"/>
+          <path d="M18 20L27 34L36 20" stroke={gold} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       );
-    case 'mini-games':
+    case 'rc-toys':
+    case 'cars-bikes':
       return (
         <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
           <path d="M14 38L22 14H32L40 38H14Z" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF"/>
@@ -49,19 +59,31 @@ const SubCategoryIcon = ({ type }) => {
           <circle cx="32" cy="33" r="2.5" fill={stroke}/>
         </svg>
       );
-    case 'diy-kits':
+    case 'building-blocks':
+      return (
+        <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
+          <rect x="12" y="12" width="14" height="14" rx="3" fill={bg} stroke={stroke} strokeWidth="2.5"/>
+          <rect x="28" y="12" width="14" height="14" rx="3" fill="#FFFFFF" stroke={gold} strokeWidth="2.5"/>
+          <rect x="12" y="28" width="14" height="14" rx="3" fill="#FFFFFF" stroke={gold} strokeWidth="2.5"/>
+          <rect x="28" y="28" width="14" height="14" rx="3" fill={bg} stroke={stroke} strokeWidth="2.5"/>
+        </svg>
+      );
+    case 'soft-toys':
+    case 'dolls':
+      return (
+        <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
+          <circle cx="27" cy="22" r="10" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF"/>
+          <circle cx="20" cy="12" r="4" fill={gold}/>
+          <circle cx="34" cy="12" r="4" fill={gold}/>
+          <path d="M17 32C17 38 22 42 27 42C32 42 37 38 37 32" fill={bg} stroke={stroke} strokeWidth="2.5"/>
+        </svg>
+      );
+    case 'outdoor-toys':
       return (
         <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
           <circle cx="27" cy="27" r="14" stroke={stroke} strokeWidth="2.5" fill={bg}/>
           <path d="M27 10V14M27 40V44M10 27H14M40 27H44M15 15L18 18M36 36L39 39M15 39L18 36M36 18L39 15" stroke={gold} strokeWidth="2.5" strokeLinecap="round"/>
           <circle cx="27" cy="27" r="5" fill={gold}/>
-        </svg>
-      );
-    case 'wooden-toys':
-      return (
-        <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
-          <rect x="10" y="14" width="34" height="26" rx="4" fill="#FEF3C7" stroke={stroke} strokeWidth="2.5"/>
-          <path d="M18 20L27 34L36 20" stroke={gold} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       );
     default:
@@ -74,12 +96,19 @@ const SubCategoryIcon = ({ type }) => {
 };
 
 const TOYS_CATEGORIES_SIDEBAR = [
-  { id: 'kinetic', name: 'Kinetic Desk Sculptures', count: 36 },
-  { id: 'puzzles', name: '3D Wooden Puzzles', count: 42 },
-  { id: 'desktop-games', name: 'Desktop Mini Games', count: 28 },
-  { id: 'diy-models', name: 'DIY Mechanical Kits', count: 31 },
-  { id: 'fidget', name: 'Fidget & Stress Relief', count: 25 },
-  { id: 'novelty', name: 'Novelty & Collectibles', count: 19 },
+  { id: 'all', name: 'All Toys', count: 180 },
+  { id: '0-2-years', name: '0 – 2 Years', count: 35 },
+  { id: '3-5-years', name: '3 – 5 Years', count: 42 },
+  { id: '6-8-years', name: '6 – 8 Years', count: 38 },
+  { id: '9-12-years', name: '9 – 12 Years', count: 29 },
+  { id: 'teens', name: 'Teens', count: 24 },
+  { id: 'educational-toys', name: 'Educational Toys', count: 48 },
+  { id: 'rc-toys', name: 'Remote Control Toys', count: 31 },
+  { id: 'soft-toys', name: 'Soft Toys', count: 26 },
+  { id: 'building-blocks', name: 'Building Blocks', count: 37 },
+  { id: 'dolls', name: 'Dolls', count: 22 },
+  { id: 'cars-bikes', name: 'Cars & Bikes', count: 33 },
+  { id: 'outdoor-toys', name: 'Outdoor Toys', count: 20 },
 ];
 
 const TARGET_AUDIENCE_DATA = [
@@ -188,12 +217,12 @@ const Toys = () => {
   const fetchedProducts = data?.data || [];
   const products = fetchedProducts.length > 0 ? fetchedProducts : TOYS_MOCK_PRODUCTS;
 
-  // Filter States (Replicated from PersonalizedGifts)
-  const [activeSubCategory, setActiveSubCategory] = useState('desk-toys');
-  const [selectedCategory, setSelectedCategory] = useState('kinetic');
+  // Filter States
+  const [activeSubCategory, setActiveSubCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [minPrice, setMinPrice] = useState('100');
   const [maxPrice, setMaxPrice] = useState('5000');
-  const [selectedAudience, setSelectedAudience] = useState(['executive']);
+  const [selectedAudience, setSelectedAudience] = useState([]);
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
@@ -208,6 +237,11 @@ const Toys = () => {
     quantity: '25-50',
     notes: '',
   });
+
+  const handleCategorySelect = (catId) => {
+    setSelectedCategory(catId);
+    setActiveSubCategory(catId);
+  };
 
   const handleQuoteSubmit = (e) => {
     e.preventDefault();
@@ -252,12 +286,54 @@ const Toys = () => {
     );
   };
 
+  const handleApplyFilters = () => {
+    toast.success('Filters applied successfully! 🔍');
+  };
+
   const handleClearAll = () => {
-    setSelectedCategory('kinetic');
+    setSelectedCategory('all');
+    setActiveSubCategory('all');
     setMinPrice('100');
     setMaxPrice('5000');
     setSelectedAudience([]);
+    toast.info('Filters cleared');
   };
+
+  // Filtered & Sorted Products computation
+  const displayProducts = products
+    .filter((prod) => {
+      // 1. Price Filter
+      const price = Number(prod.price) || 0;
+      const minP = Number(minPrice) || 0;
+      const maxP = Number(maxPrice) || Infinity;
+      if (price < minP || price > maxP) return false;
+
+      // 2. Category / Subcategory Filter
+      const activeCat = selectedCategory !== 'all' ? selectedCategory : activeSubCategory;
+      if (activeCat !== 'all') {
+        const catObj = TOYS_CATEGORIES_SIDEBAR.find((c) => c.id === activeCat) || TOYS_SUBCATEGORIES.find((s) => s.id === activeCat);
+        if (catObj) {
+          const catName = catObj.name.toLowerCase();
+          const pName = (prod.name || '').toLowerCase();
+          const pSlug = (prod.slug || '').toLowerCase();
+
+          const words = catName.split(' ').filter(w => w.length > 2 && w !== 'toys');
+          const isMatch = words.some(w => pName.includes(w) || pSlug.includes(w));
+
+          if (!isMatch && prod.categoryId !== activeCat) {
+            // soft match
+          }
+        }
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'price_asc') return a.price - b.price;
+      if (sortBy === 'price_desc') return b.price - a.price;
+      if (sortBy === 'newest') return (b.id || '').localeCompare(a.id || '');
+      return (b.rating || 0) - (a.rating || 0);
+    });
 
   return (
     <Layout>
@@ -285,26 +361,7 @@ const Toys = () => {
           </div>
         </section>
 
-        {/* Sub-Category Icon Bar Section (Replicated from PersonalizedGifts) */}
-        <div className={styles.subCategorySection}>
-          <div className={styles.subCategoryContainer}>
-            {TOYS_SUBCATEGORIES.map((sub) => {
-              const isActive = activeSubCategory === sub.id;
-              return (
-                <button
-                  key={sub.id}
-                  onClick={() => setActiveSubCategory(sub.id)}
-                  className={`${styles.subCategoryCard} ${isActive ? styles.subCategoryActive : ''}`}
-                >
-                  <div className={styles.subCategoryIconWrapper}>
-                    <SubCategoryIcon type={sub.id} />
-                  </div>
-                  <p className={styles.subCategoryName}>{sub.name}</p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+
 
         {/* Main Workspace (Replicated Sidebar + Product Listing Grid) */}
         <div className={styles.workspace}>
@@ -330,7 +387,7 @@ const Toys = () => {
                     <div
                       key={cat.id}
                       className={`${styles.categoryItem} ${isActive ? styles.categoryActive : ''}`}
-                      onClick={() => setSelectedCategory(cat.id)}
+                      onClick={() => handleCategorySelect(cat.id)}
                     >
                       <div className={styles.categoryLeft}>
                         {isActive && <span className={styles.goldDot} />}
@@ -350,16 +407,53 @@ const Toys = () => {
                 <span className={styles.toggleIcon}>−</span>
               </div>
               <div className={styles.priceSliderWrapper}>
-                <div className={styles.priceTrack}>
-                  <div className={styles.priceRangeFill} />
-                  <div className={`${styles.priceThumb} ${styles.thumbMin}`} />
-                  <div className={`${styles.priceThumb} ${styles.thumbMax}`} />
+                <div style={{ position: 'relative', width: '100%', marginBottom: '1.25rem', height: '24px', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10000"
+                    step="50"
+                    value={minPrice}
+                    onChange={(e) => {
+                      const val = Math.min(Number(e.target.value), Number(maxPrice) - 50);
+                      setMinPrice(val.toString());
+                    }}
+                    className={styles.rangeInput}
+                  />
+                  <input
+                    type="range"
+                    min="0"
+                    max="10000"
+                    step="50"
+                    value={maxPrice}
+                    onChange={(e) => {
+                      const val = Math.max(Number(e.target.value), Number(minPrice) + 50);
+                      setMaxPrice(val.toString());
+                    }}
+                    className={styles.rangeInput}
+                  />
+                  <div style={{ position: 'relative', width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px' }}>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: `${Math.min(100, Math.max(0, (Number(minPrice) / 10000) * 100))}%`,
+                        right: `${Math.min(100, Math.max(0, 100 - (Number(maxPrice) / 10000) * 100))}%`,
+                        top: 0,
+                        bottom: 0,
+                        background: '#d99b26',
+                        borderRadius: '3px',
+                      }}
+                    />
+                  </div>
                 </div>
+
                 <div className={styles.priceInputs}>
                   <div className={styles.priceInputBox}>
                     <span>₹</span>
                     <input
                       type="number"
+                      min="0"
+                      max="10000"
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
                     />
@@ -369,6 +463,8 @@ const Toys = () => {
                     <span>₹</span>
                     <input
                       type="number"
+                      min="0"
+                      max="10000"
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
                     />
@@ -401,7 +497,7 @@ const Toys = () => {
               </div>
             </div>
 
-            <button className={styles.applyFiltersBtn}>Apply Filters</button>
+            <button type="button" onClick={handleApplyFilters} className={styles.applyFiltersBtn}>Apply Filters</button>
           </aside>
 
           {/* Right Product Grid Area */}
@@ -410,7 +506,7 @@ const Toys = () => {
             <div className={styles.contentHeader}>
               <div className={styles.titleGroup}>
                 <h2>Toys & Games Catalog</h2>
-                <p>Showing 1–12 of 148 products</p>
+                <p>Showing 1–{displayProducts.length} of {displayProducts.length} products</p>
               </div>
 
               <div className={styles.controlGroup}>
@@ -459,31 +555,10 @@ const Toys = () => {
               </div>
             </div>
 
-            {/* Custom Corporate Toys & Games Bulk Order Banner */}
-            <div className={styles.bulkBanner}>
-              <div className={styles.bulkContent}>
-                <div className={styles.bulkBadgeIcon}>🎮</div>
-                <div className={styles.bulkText}>
-                  <h3>Ordering Corporate Desk Games & Toys in Bulk?</h3>
-                  <p>Get exclusive volume discounts on custom-branded desk toys, puzzles & event favors.</p>
-                  <button
-                    onClick={() => setShowQuoteModal(true)}
-                    className={styles.quoteBtn}
-                  >
-                    REQUEST B2B QUOTE ➔
-                  </button>
-                </div>
-              </div>
 
-              <img
-                src="/images/cat_tech.png"
-                alt="Corporate Toys and Games Bulk Quote"
-                className={styles.bulkImagePreview}
-              />
-            </div>
 
             {/* Product Cards Grid */}
-            <ProductGrid products={products} loading={loading} viewMode={viewMode === 'list' ? 'list' : 'grid-4'} />
+            <ProductGrid products={displayProducts} loading={loading} viewMode={viewMode === 'list' ? 'list' : 'grid-4'} />
 
             {/* Square Pagination Controls (Replicated from PersonalizedGifts) */}
             <div className={styles.pagination}>

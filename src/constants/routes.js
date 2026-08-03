@@ -3,7 +3,7 @@
  */
 export const ROUTES = {
   HOME: '/',
-  SHOP: '/shop',
+  SHOP: '/corporate-gifts',
   PRODUCT: '/product/:slug',
   PRODUCT_PATH: (slug) => `/product/${slug}`,
   CATEGORIES: '/categories',
