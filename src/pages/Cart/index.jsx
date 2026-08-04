@@ -24,8 +24,13 @@ const Cart = () => {
       let apiProducts = [];
       try {
         const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
-        const resData = res.data?.products || res.data?.data || res.data || [];
-        if (Array.isArray(resData)) apiProducts = resData;
+        let extracted = [];
+        if (Array.isArray(res)) extracted = res;
+        else if (res?.data && Array.isArray(res.data)) extracted = res.data;
+        else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
+        else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
+        else if (res?.products && Array.isArray(res.products)) extracted = res.products;
+        apiProducts = extracted;
       } catch (err) {}
 
       const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
@@ -56,20 +61,35 @@ const Cart = () => {
   }, [cartItems.length]);
 
   const [couponCode, setCouponCode] = useState('');
-  const [discountPercent, setDiscountPercent] = useState(10); // 10% discount enabled by default matching design (₹279.70)
+  const [discountPercent, setDiscountPercent] = useState(0); // 0% discount by default
+
+  const [storeSettings] = useState(() => {
+    try {
+      const stored = localStorage.getItem('store_basic_settings');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return {
+          freeShippingThreshold: parsed.freeShippingThreshold !== undefined && parsed.freeShippingThreshold !== '' ? Number(parsed.freeShippingThreshold) : 5000,
+          standardShippingFee: parsed.standardShippingFee !== undefined && parsed.standardShippingFee !== '' ? Number(parsed.standardShippingFee) : 99,
+        };
+      }
+    } catch (e) {}
+    return { freeShippingThreshold: 5000, standardShippingFee: 99 };
+  });
 
   // Calculations
   const itemCount = cartItems.length;
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0);
   const discountAmount = (subtotal * discountPercent) / 100;
-  const shippingFee = 0; // FREE
-  const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
 
   // Free shipping threshold logic
-  const freeShippingThreshold = 2999;
+  const freeShippingThreshold = storeSettings.freeShippingThreshold;
   const isFreeShipping = subtotal >= freeShippingThreshold;
   const amountNeededForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
   const progressPercent = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
+
+  const shippingFee = (isFreeShipping || subtotal === 0) ? 0 : storeSettings.standardShippingFee;
+  const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
 
   const handleQtyChange = (id, newQty) => {
     if (newQty < 1) return;
@@ -267,7 +287,9 @@ const Cart = () => {
 
                     <div className={styles.summaryRow}>
                       <span>Shipping</span>
-                      <span className={styles.freeText}>FREE</span>
+                      <span className={shippingFee === 0 ? styles.freeText : styles.rowValBold}>
+                        {shippingFee === 0 ? 'FREE' : `₹${shippingFee}`}
+                      </span>
                     </div>
 
                     <div className={styles.dividerLine} />
@@ -305,7 +327,7 @@ const Cart = () => {
               <span className={styles.featureIcon}>🚚</span>
               <div>
                 <strong>Free Shipping</strong>
-                <p>On orders above ₹2,999</p>
+                <p>On orders above ₹{freeShippingThreshold.toLocaleString('en-IN')}</p>
               </div>
             </div>
             <div className={styles.featureCard}>

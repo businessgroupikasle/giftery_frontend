@@ -211,6 +211,16 @@ const Login = () => {
           setLoading(false);
           return;
         }
+
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(form.password)) {
+          const errorMsg = 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.';
+          setAuthError(errorMsg);
+          toast.error(errorMsg);
+          setLoading(false);
+          return;
+        }
+
         if (!termsAgreed) {
           const errorMsg = 'Please agree to the Terms & Privacy Policy';
           setAuthError(errorMsg);

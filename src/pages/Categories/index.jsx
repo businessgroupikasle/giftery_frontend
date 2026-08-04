@@ -97,7 +97,7 @@ const Categories = () => {
     : null;
 
   const { data, loading } = useFetch(ENDPOINTS.PRODUCTS.LIST + '?limit=12');
-  const products = data?.data || [];
+  const products = Array.isArray(data?.data) ? data.data : (data?.data?.data || []);
 
   return (
     <Layout>

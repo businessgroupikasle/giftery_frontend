@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '@components/layout/Layout';
 import ProductGrid from '@components/product/ProductGrid';
+import Pagination from '@components/common/Pagination';
 import useFetch from '@hooks/useFetch';
 import useDebounce from '@hooks/useDebounce';
 import { ENDPOINTS } from '@api/endpoints';
@@ -33,8 +34,8 @@ const Shop = () => {
   }).toString();
 
   const { data, loading } = useFetch(`${ENDPOINTS.PRODUCTS.LIST}?${query}`);
-  const products = data?.data || [];
-  const meta = data?.meta;
+  const products = Array.isArray(data?.data) ? data.data : (data?.data?.data || []);
+  const meta = data?.data?.meta || data?.meta;
 
   const setParam = (key, val) => {
     setSearchParams((prev) => { prev.set(key, val); return prev; });
@@ -89,11 +90,11 @@ const Shop = () => {
 
         {/* Pagination */}
         {meta && meta.totalPages > 1 && (
-          <div className={styles.pagination}>
-            <button disabled={!meta.hasPrev} onClick={() => setParam('page', String(meta.page - 1))} className={styles.pageBtn}>← Prev</button>
-            <span className={styles.pageInfo}>Page {meta.page} of {meta.totalPages}</span>
-            <button disabled={!meta.hasNext} onClick={() => setParam('page', String(meta.page + 1))} className={styles.pageBtn}>Next →</button>
-          </div>
+          <Pagination
+            currentPage={meta.page}
+            totalPages={meta.totalPages}
+            onPageChange={(p) => setParam('page', String(p))}
+          />
         )}
       </div>
     </Layout>

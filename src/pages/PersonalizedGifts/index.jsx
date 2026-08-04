@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import Layout from '@components/layout/Layout';
+import Pagination from '../../components/common/Pagination';
+import ProductCard from '@components/product/ProductCard';
 import { addToCart } from '@store/slices/cartSlice';
 import { addToWishlist } from '@store/slices/wishlistSlice';
 import { ROUTES } from '@constants/routes';
@@ -126,8 +128,13 @@ const PersonalizedGifts = () => {
       let apiProducts = [];
       try {
         const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
-        const data = res.data?.products || res.data?.data || res.data || [];
-        if (Array.isArray(data)) apiProducts = data;
+        let extracted = [];
+        if (Array.isArray(res)) extracted = res;
+        else if (res?.data && Array.isArray(res.data)) extracted = res.data;
+        else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
+        else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
+        else if (res?.products && Array.isArray(res.products)) extracted = res.products;
+        apiProducts = extracted;
       } catch (err) {
         console.warn('Fallback to catalog products:', err.message);
       }
@@ -196,6 +203,25 @@ const PersonalizedGifts = () => {
 
   // Base raw products catalog
   const rawProducts = liveProducts.length > 0 ? liveProducts : PRODUCTS_LIST;
+
+  // ── Dynamic Categories built from real DB products ──────────────
+  const dynamicCategories = (() => {
+    if (liveProducts.length === 0) return CATEGORIES_DATA;
+    const catMap = new Map();
+    liveProducts.forEach(p => {
+      // Use subCategoryId for granular filtering, or categoryId if no sub
+      const filterId = p.subCategoryId || p.categoryId;
+      const filterName = p.subCategoryName || p.categoryName;
+      if (filterId && filterName) {
+        const existing = catMap.get(filterId);
+        if (existing) existing.count += 1;
+        else catMap.set(filterId, { id: filterId, name: filterName, count: 1 });
+      }
+    });
+    return [{ id: 'all', name: 'All Products', count: liveProducts.length }, ...Array.from(catMap.values())];
+  })();
+
+  const categoriesForFilter = dynamicCategories;
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -276,19 +302,32 @@ const PersonalizedGifts = () => {
       // 2. Category / Subcategory Filter
       const activeCat = selectedCategory !== 'all' ? selectedCategory : activeSubCategory;
       if (activeCat !== 'all') {
-        const catObj = CATEGORIES_DATA.find((c) => c.id === activeCat) || SUBCATEGORIES_DATA.find((s) => s.id === activeCat);
+        if (prod.categoryId === activeCat || prod.subCategoryId === activeCat) return true;
+        
+        const catObj = categoriesForFilter.find(c => c.id === activeCat);
         if (catObj) {
           const catName = catObj.name.toLowerCase();
           const pName = (prod.name || '').toLowerCase();
           const pSlug = (prod.slug || '').toLowerCase();
-
+          const pCat = (prod.categoryName || '').toLowerCase();
+          
           const words = catName.split(' ').filter(w => w.length > 3 && w !== 'gifts' && w !== 'personalized');
-          const isMatch = words.some(w => pName.includes(w) || pSlug.includes(w));
-
-          if (!isMatch && prod.categoryId !== activeCat) {
-            // soft match
-          }
+          return words.some(w => pName.includes(w) || pSlug.includes(w) || pCat.includes(w));
         }
+        return false;
+      }
+      
+      // 3. Occasion Filter
+      if (selectedOccasions.length > 0) {
+        const pOccasions = Array.isArray(prod.occasions) ? prod.occasions.map(o => o.toLowerCase()) : [];
+        const pTags = Array.isArray(prod.tags) ? prod.tags.map(t => t.toLowerCase()) : [];
+        const pStr = `${(prod.name || '').toLowerCase()} ${(prod.description || '').toLowerCase()}`;
+        
+        const hasMatch = selectedOccasions.some(occ => {
+          const occLower = occ.toLowerCase();
+          return pOccasions.includes(occLower) || pTags.includes(occLower) || pStr.includes(occLower);
+        });
+        if (!hasMatch) return false;
       }
 
       return true;
@@ -345,6 +384,10 @@ const PersonalizedGifts = () => {
     }, 2500);
   };
 
+  const ITEMS_PER_PAGE = 20;
+  const totalPages = Math.max(1, Math.ceil(displayProducts.length / ITEMS_PER_PAGE));
+  const paginatedProducts = displayProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   return (
     <Layout>
       <div className={styles.pageContainer}>
@@ -394,7 +437,7 @@ const PersonalizedGifts = () => {
                 <span className={styles.toggleIcon}>−</span>
               </div>
               <div className={styles.categoryList}>
-                {CATEGORIES_DATA.map((cat) => {
+                {categoriesForFilter.map((cat) => {
                   const isActive = selectedCategory === cat.id;
                   return (
                     <div
@@ -519,7 +562,7 @@ const PersonalizedGifts = () => {
             <div className={styles.contentHeader}>
               <div className={styles.titleGroup}>
                 <h2>All Products</h2>
-                <p>Showing 1–{displayProducts.length} of {displayProducts.length} products</p>
+                <p>Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, displayProducts.length)} of {displayProducts.length} products</p>
               </div>
 
               <div className={styles.controlGroup}>
@@ -594,149 +637,13 @@ const PersonalizedGifts = () => {
 
             {/* Product Cards Grid */}
             <div className={`${styles.productGrid} ${viewMode === 'list' ? styles.productListMode : ''}`}>
-              {displayProducts.map((prod) => (
-                <div key={prod.id} className={styles.card}>
-                  <div className={styles.cardImageWrapper}>
-                    <Link to={ROUTES.PRODUCT_PATH(prod.slug)} className={styles.imageLink}>
-                      <img src={prod.image} alt={prod.name} className={styles.cardImage} />
-                    </Link>
-                    {prod.discount && (
-                      <span className={styles.discountBadge}>-{prod.discount}</span>
-                    )}
-                    {/* Floating Top Right Wishlist Button */}
-                    <button
-                      className={styles.topRightWishlistBtn}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        dispatch(addToWishlist({ id: prod.id, name: prod.name, price: prod.price, image: prod.image, slug: prod.slug }));
-                      }}
-                      aria-label="Add to wishlist"
-                      title="Add to Wishlist"
-                    >
-                      ♡
-                    </button>
-                  </div>
-
-                  <div className={styles.cardContent}>
-                    <Link to={ROUTES.PRODUCT_PATH(prod.slug)} className={styles.cardTitle}>
-                      {prod.name}
-                    </Link>
-
-                    <div className={styles.cardRatingRow}>
-                      <span className={styles.stars}>★★★★★</span>
-                      <span className={styles.reviewsCount}>({prod.reviewsCount})</span>
-                    </div>
-
-                    <div className={styles.cardPriceRow}>
-                      <span className={styles.cardPrice}>₹{prod.price.toLocaleString('en-IN')}.00</span>
-                      {prod.comparePrice && (
-                        <span className={styles.comparePrice}>₹{prod.comparePrice.toLocaleString('en-IN')}.00</span>
-                      )}
-                    </div>
-
-                    <div className={styles.cardActionsRow}>
-                      <button
-                        className={styles.cardCartBtn}
-                        onClick={() =>
-                          dispatch(
-                            addToCart({
-                              id: prod.id,
-                              name: prod.name,
-                              price: prod.price,
-                              image: prod.image,
-                              slug: prod.slug,
-                            })
-                          )
-                        }
-                        aria-label="Add to cart"
-                      >
-                        Add to Cart
-                      </button>
-                      <button
-                        className={styles.buyNowBtn}
-                        onClick={() => {
-                          dispatch(
-                            addToCart({
-                              id: prod.id,
-                              name: prod.name,
-                              price: prod.price,
-                              image: prod.image,
-                              slug: prod.slug,
-                              quantity: 1,
-                            })
-                          );
-                          toast.success(`Proceeding to checkout with ${prod.name}...`);
-                          navigate('/checkout');
-                        }}
-                        aria-label="Buy Now"
-                      >
-                        Buy Now
-                      </button>
-                      <ThreeDotMenu
-                        productUrl={ROUTES.PRODUCT_PATH(prod.slug)}
-                        productName={prod.name}
-                        productImage={prod.image}
-                      />
-                    </div>
-                  </div>
-                </div>
+              {paginatedProducts.map((prod) => (
+                <ProductCard key={prod.id} product={prod} />
               ))}
             </div>
 
             {/* Pagination Controls */}
-            <div className={styles.pagination}>
-              <button
-                className={styles.pageSquareBtn}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                ‹
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 1 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(1)}
-              >
-                1
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 2 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(2)}
-              >
-                2
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 3 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(3)}
-              >
-                3
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 4 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(4)}
-              >
-                4
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 5 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(5)}
-              >
-                5
-              </button>
-              <span className={styles.pageEllipsis}>...</span>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 14 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(14)}
-              >
-                14
-              </button>
-              <button
-                className={styles.pageSquareBtn}
-                onClick={() => setCurrentPage((p) => Math.min(14, p + 1))}
-              >
-                ›
-              </button>
-            </div>
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
           </main>
         </div>
       </div>

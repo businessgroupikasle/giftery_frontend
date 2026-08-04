@@ -187,8 +187,13 @@ const Product = () => {
       let apiProducts = [];
       try {
         const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
-        const resData = res.data?.products || res.data?.data || res.data || [];
-        if (Array.isArray(resData)) apiProducts = resData;
+        let extracted = [];
+        if (Array.isArray(res)) extracted = res;
+        else if (res?.data && Array.isArray(res.data)) extracted = res.data;
+        else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
+        else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
+        else if (res?.products && Array.isArray(res.products)) extracted = res.products;
+        apiProducts = extracted;
       } catch (err) {}
 
       const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');

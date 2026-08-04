@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import Layout from '@components/layout/Layout';
+import Pagination from '../../components/common/Pagination';
 import { addToCart } from '@store/slices/cartSlice';
 import { addToWishlist } from '@store/slices/wishlistSlice';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { ROUTES } from '@constants/routes';
 import { toast } from 'react-toastify';
+import ProductCard from '@components/product/ProductCard';
 import ThreeDotMenu from '@components/product/ThreeDotMenu';
 import styles from './Toys.module.css';
 
@@ -138,8 +140,13 @@ const Toys = () => {
       let apiProducts = [];
       try {
         const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
-        const data = res.data?.products || res.data?.data || res.data || [];
-        if (Array.isArray(data)) apiProducts = data;
+        let extracted = [];
+        if (Array.isArray(res)) extracted = res;
+        else if (res?.data && Array.isArray(res.data)) extracted = res.data;
+        else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
+        else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
+        else if (res?.products && Array.isArray(res.products)) extracted = res.products;
+        apiProducts = extracted;
       } catch (err) {
         console.warn('Fallback to catalog products:', err.message);
       }
@@ -206,7 +213,27 @@ const Toys = () => {
     return () => window.removeEventListener('products_updated', fetchLiveProducts);
   }, []);
 
+  // Base raw products catalog
   const products = liveProducts.length > 0 ? liveProducts : TOYS_MOCK_PRODUCTS;
+
+  // ── Dynamic Categories built from real DB products ──────────────
+  const dynamicCategories = (() => {
+    if (liveProducts.length === 0) return TOYS_CATEGORIES_SIDEBAR;
+    const catMap = new Map();
+    liveProducts.forEach(p => {
+      // Use subCategoryId for granular filtering, or categoryId if no sub
+      const filterId = p.subCategoryId || p.categoryId;
+      const filterName = p.subCategoryName || p.categoryName;
+      if (filterId && filterName) {
+        const existing = catMap.get(filterId);
+        if (existing) existing.count += 1;
+        else catMap.set(filterId, { id: filterId, name: filterName, count: 1 });
+      }
+    });
+    return [{ id: 'all', name: 'All Toys', count: liveProducts.length }, ...Array.from(catMap.values())];
+  })();
+
+  const categoriesForFilter = dynamicCategories;
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -324,19 +351,34 @@ const Toys = () => {
       // 2. Category / Subcategory Filter
       const activeCat = selectedCategory !== 'all' ? selectedCategory : activeSubCategory;
       if (activeCat !== 'all') {
-        const catObj = TOYS_CATEGORIES_SIDEBAR.find((c) => c.id === activeCat) || TOYS_SUBCATEGORIES.find((s) => s.id === activeCat);
+        if (prod.categoryId === activeCat || prod.subCategoryId === activeCat) return true;
+        
+        const catObj = categoriesForFilter.find(c => c.id === activeCat);
         if (catObj) {
           const catName = catObj.name.toLowerCase();
           const pName = (prod.name || '').toLowerCase();
           const pSlug = (prod.slug || '').toLowerCase();
-
-          const words = catName.split(' ').filter(w => w.length > 2 && w !== 'toys');
-          const isMatch = words.some(w => pName.includes(w) || pSlug.includes(w));
-
-          if (!isMatch && prod.categoryId !== activeCat) {
-            // soft match
-          }
+          const pCat = (prod.categoryName || '').toLowerCase();
+          
+          const words = catName.split(' ').filter(w => w.length > 2 && w !== 'toys' && w !== 'games');
+          return words.some(w => pName.includes(w) || pSlug.includes(w) || pCat.includes(w));
         }
+        return false;
+      }
+      
+      // 3. Audience Filter
+      if (selectedAudience.length > 0) {
+        const pAudience = Array.isArray(prod.audience) ? prod.audience.map(a => a.toLowerCase()) : [];
+        const pTags = Array.isArray(prod.tags) ? prod.tags.map(t => t.toLowerCase()) : [];
+        const pStr = `${(prod.name || '').toLowerCase()} ${(prod.description || '').toLowerCase()}`;
+        
+        // Match things like "Toddlers (2-4 Yrs)" to "toddler" or "2-4"
+        const hasMatch = selectedAudience.some(aud => {
+          const audLower = aud.toLowerCase();
+          const cleanAud = audLower.split(' (')[0].trim(); // "toddlers"
+          return pAudience.includes(audLower) || pTags.includes(cleanAud) || pStr.includes(cleanAud);
+        });
+        if (!hasMatch) return false;
       }
 
       return true;
@@ -347,6 +389,10 @@ const Toys = () => {
       if (sortBy === 'newest') return (b.id || '').localeCompare(a.id || '');
       return (b.rating || 0) - (a.rating || 0);
     });
+
+  const ITEMS_PER_PAGE = 20;
+  const totalPages = Math.max(1, Math.ceil(displayProducts.length / ITEMS_PER_PAGE));
+  const paginatedProducts = displayProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <Layout>
@@ -394,7 +440,7 @@ const Toys = () => {
                 <span className={styles.toggleIcon}>−</span>
               </div>
               <div className={styles.categoryList}>
-                {TOYS_CATEGORIES_SIDEBAR.map((cat) => {
+                {categoriesForFilter.map((cat) => {
                   const isActive = selectedCategory === cat.id;
                   return (
                     <div
@@ -519,7 +565,7 @@ const Toys = () => {
             <div className={styles.contentHeader}>
               <div className={styles.titleGroup}>
                 <h2>Toys & Games Catalog</h2>
-                <p>Showing 1–{displayProducts.length} of {displayProducts.length} products</p>
+                <p>Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, displayProducts.length)} of {displayProducts.length} products</p>
               </div>
 
               <div className={styles.controlGroup}>
@@ -594,154 +640,13 @@ const Toys = () => {
 
             {/* Product Cards Grid */}
             <div className={`${styles.productGrid} ${viewMode === 'list' ? styles.productListMode : ''}`}>
-              {displayProducts.map((prod) => {
-                const prodImage = Array.isArray(prod.images) && prod.images[0] ? prod.images[0] : (prod.image || '/images/cat_corporate.png');
-                const reviewsCount = prod._count?.reviews || prod.reviewsCount || 18;
-                return (
-                  <div key={prod.id} className={styles.card}>
-                    <div className={styles.cardImageWrapper}>
-                      <Link to={ROUTES.PRODUCT_PATH(prod.slug || prod.id)} className={styles.imageLink}>
-                        <img src={prodImage} alt={prod.name} className={styles.cardImage} />
-                      </Link>
-                      {prod.discount && (
-                        <span className={styles.discountBadge}>-{prod.discount}</span>
-                      )}
-                      <button
-                        className={styles.topRightWishlistBtn}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          dispatch(addToWishlist({ id: prod.id, name: prod.name, price: prod.price, image: prodImage, slug: prod.slug }));
-                          toast.success(`${prod.name} added to wishlist! ❤️`);
-                        }}
-                        aria-label="Add to wishlist"
-                        title="Add to Wishlist"
-                      >
-                        ♡
-                      </button>
-                    </div>
-
-                    <div className={styles.cardContent}>
-                      <Link to={ROUTES.PRODUCT_PATH(prod.slug || prod.id)} className={styles.cardTitle}>
-                        {prod.name}
-                      </Link>
-
-                      <div className={styles.cardRatingRow}>
-                        <span className={styles.stars}>★★★★★</span>
-                        <span className={styles.reviewsCount}>({reviewsCount})</span>
-                      </div>
-
-                      <div className={styles.cardPriceRow}>
-                        <span className={styles.cardPrice}>₹{(prod.price || 0).toLocaleString('en-IN')}.00</span>
-                        {prod.comparePrice && (
-                          <span className={styles.comparePrice}>₹{(prod.comparePrice || 0).toLocaleString('en-IN')}.00</span>
-                        )}
-                      </div>
-
-                      <div className={styles.cardActionsRow}>
-                        <button
-                          className={styles.cardCartBtn}
-                          onClick={() => {
-                            dispatch(
-                              addToCart({
-                                id: prod.id,
-                                name: prod.name,
-                                price: prod.price,
-                                image: prodImage,
-                                slug: prod.slug,
-                              })
-                            );
-                            toast.success(`${prod.name} added to cart! 🛍️`);
-                          }}
-                          aria-label="Add to cart"
-                        >
-                          Add to Cart
-                        </button>
-                        <button
-                          className={styles.buyNowBtn}
-                          onClick={() => {
-                            dispatch(
-                              addToCart({
-                                id: prod.id,
-                                name: prod.name,
-                                price: prod.price,
-                                image: prodImage,
-                                slug: prod.slug,
-                                quantity: 1,
-                              })
-                            );
-                            toast.success(`Proceeding to checkout with ${prod.name}...`);
-                            navigate('/checkout');
-                          }}
-                          aria-label="Buy Now"
-                        >
-                          Buy Now
-                        </button>
-                        <ThreeDotMenu
-                          productUrl={ROUTES.PRODUCT_PATH(prod.slug || prod.id)}
-                          productName={prod.name}
-                          productImage={prodImage}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {paginatedProducts.map((prod) => (
+                <ProductCard key={prod.id} product={prod} />
+              ))}
             </div>
 
-            {/* Square Pagination Controls (Replicated from PersonalizedGifts) */}
-            <div className={styles.pagination}>
-              <button
-                className={styles.pageSquareBtn}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                ‹
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 1 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(1)}
-              >
-                1
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 2 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(2)}
-              >
-                2
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 3 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(3)}
-              >
-                3
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 4 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(4)}
-              >
-                4
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 5 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(5)}
-              >
-                5
-              </button>
-              <span className={styles.pageEllipsis}>...</span>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 14 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(14)}
-              >
-                14
-              </button>
-              <button
-                className={styles.pageSquareBtn}
-                onClick={() => setCurrentPage((p) => Math.min(14, p + 1))}
-              >
-                ›
-              </button>
-            </div>
+            {/* Pagination Controls */}
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
           </main>
         </div>
 

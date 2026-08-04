@@ -1,7 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { FiHeart } from 'react-icons/fi';
+import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '@store/slices/cartSlice';
-import { addToWishlist } from '@store/slices/wishlistSlice';
+import { addToWishlist, removeFromWishlist, selectIsWishlisted } from '@store/slices/wishlistSlice';
 import StarRating from './StarRating';
 import { formatCurrency } from '@utils/formatters';
 import { ROUTES } from '@constants/routes';
@@ -19,6 +20,7 @@ const ProductCard = ({ product }) => {
   } = product;
 
   const discount = comparePrice ? Math.round(((comparePrice - price) / comparePrice) * 100) : null;
+  const isWishlisted = useSelector(selectIsWishlisted(id));
   
   let image = '/placeholder.jpg';
   if (Array.isArray(images) && images.length > 0) {
@@ -50,7 +52,13 @@ const ProductCard = ({ product }) => {
   const handleWishlist = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    dispatch(addToWishlist({ id, name, price, comparePrice, image, slug }));
+    if (isWishlisted) {
+      dispatch(removeFromWishlist(id));
+      toast.info(`Removed ${name} from wishlist`);
+    } else {
+      dispatch(addToWishlist({ id, name, price, comparePrice, image, slug }));
+      toast.success(`Added ${name} to wishlist`);
+    }
   };
 
   return (
@@ -65,10 +73,10 @@ const ProductCard = ({ product }) => {
         <button
           className={styles.topRightWishlistBtn}
           onClick={handleWishlist}
-          aria-label={`Add ${name} to wishlist`}
-          title="Add to Wishlist"
+          aria-label={isWishlisted ? `Remove ${name} from wishlist` : `Add ${name} to wishlist`}
+          title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
         >
-          ♡
+          <FiHeart fill={isWishlisted ? '#ef4444' : 'transparent'} color={isWishlisted ? '#ef4444' : 'currentColor'} />
         </button>
       </div>
 

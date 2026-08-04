@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+// import { Helmet } from 'react-helmet';
 import Layout from '@components/layout/Layout';
+import Pagination from '../../components/common/Pagination';
+import ProductCard from '@components/product/ProductCard';
 import { addToCart } from '@store/slices/cartSlice';
 import { addToWishlist } from '@store/slices/wishlistSlice';
 import { ROUTES } from '@constants/routes';
@@ -221,8 +224,13 @@ const CorporateGifts = () => {
       let apiProducts = [];
       try {
         const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
-        const data = res.data?.products || res.data?.data || res.data || [];
-        if (Array.isArray(data)) apiProducts = data;
+        let extracted = [];
+        if (Array.isArray(res)) extracted = res;
+        else if (res?.data && Array.isArray(res.data)) extracted = res.data;
+        else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
+        else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
+        else if (res?.products && Array.isArray(res.products)) extracted = res.products;
+        apiProducts = extracted;
       } catch (err) {
         console.warn('Fallback to catalog products:', err.message);
       }
@@ -241,6 +249,8 @@ const CorporateGifts = () => {
             const imgList = Array.isArray(p.images)
               ? p.images
               : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
+            const catName = (p.category?.name || p.categoryName || '').toLowerCase();
+            const catSlug = (p.category?.slug || p.categorySlug || '').toLowerCase();
             const subCatName = (p.subCategory?.name || p.subCategoryName || '').toLowerCase();
             return {
               id: p.id,
@@ -392,6 +402,20 @@ const CorporateGifts = () => {
         }
         return false;
       }
+      
+      // 3. Occasion Filter
+      if (selectedOccasions.length > 0) {
+        const pOccasions = Array.isArray(prod.occasions) ? prod.occasions.map(o => o.toLowerCase()) : [];
+        const pTags = Array.isArray(prod.tags) ? prod.tags.map(t => t.toLowerCase()) : [];
+        const pStr = `${(prod.name || '').toLowerCase()} ${(prod.description || '').toLowerCase()}`;
+        
+        const hasMatch = selectedOccasions.some(occ => {
+          const occLower = occ.toLowerCase();
+          return pOccasions.includes(occLower) || pTags.includes(occLower) || pStr.includes(occLower);
+        });
+        if (!hasMatch) return false;
+      }
+      
       return true;
     })
     .sort((a, b) => {
@@ -465,6 +489,10 @@ const CorporateGifts = () => {
       setQuoteForm({ name: '', company: '', email: '', phone: '', quantity: '50-100', notes: '' });
     }, 2500);
   };
+
+  const ITEMS_PER_PAGE = 20;
+  const totalPages = Math.max(1, Math.ceil(displayProducts.length / ITEMS_PER_PAGE));
+  const paginatedProducts = displayProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <Layout>
@@ -642,7 +670,7 @@ const CorporateGifts = () => {
             <div className={styles.contentHeader}>
               <div className={styles.titleGroup}>
                 <h2>All Products</h2>
-                <p>Showing 1–{displayProducts.length} of {displayProducts.length} products</p>
+                <p>Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, displayProducts.length)} of {displayProducts.length} products</p>
               </div>
 
               <div className={styles.controlGroup}>
@@ -717,148 +745,14 @@ const CorporateGifts = () => {
 
             {/* Product Cards Grid */}
             <div className={`${styles.productGrid} ${viewMode === 'list' ? styles.productListMode : ''}`}>
-              {displayProducts.map((prod) => (
-                <div key={prod.id} className={styles.card}>
-                  <div className={styles.cardImageWrapper}>
-                    <Link to={ROUTES.PRODUCT_PATH(prod.slug)} className={styles.imageLink}>
-                      <img src={prod.image} alt={prod.name} className={styles.cardImage} />
-                    </Link>
-                    {prod.discount && (
-                      <span className={styles.discountBadge}>-{prod.discount}</span>
-                    )}
-                    {/* Floating Top Right Wishlist Button */}
-                    <button
-                      className={styles.topRightWishlistBtn}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        dispatch(addToWishlist({ id: prod.id, name: prod.name, price: prod.price, image: prod.image, slug: prod.slug }));
-                      }}
-                      aria-label="Add to wishlist"
-                      title="Add to Wishlist"
-                    >
-                      ♡
-                    </button>
-                  </div>
-
-                  <div className={styles.cardContent}>
-                    <Link to={ROUTES.PRODUCT_PATH(prod.slug)} className={styles.cardTitle}>
-                      {prod.name}
-                    </Link>
-
-                    <div className={styles.cardRatingRow}>
-                      <span className={styles.stars}>★★★★★</span>
-                      <span className={styles.reviewsCount}>({prod.reviewsCount})</span>
-                    </div>
-
-                    <div className={styles.cardPriceRow}>
-                      <span className={styles.cardPrice}>₹{prod.price.toLocaleString('en-IN')}.00</span>
-                      {prod.comparePrice && (
-                        <span className={styles.comparePrice}>₹{prod.comparePrice.toLocaleString('en-IN')}.00</span>
-                      )}
-                    </div>
-
-                    <div className={styles.cardActionsRow}>
-                      <button
-                        className={styles.cardCartBtn}
-                        onClick={() =>
-                          dispatch(
-                            addToCart({
-                              id: prod.id,
-                              name: prod.name,
-                              price: prod.price,
-                              image: prod.image,
-                              slug: prod.slug,
-                            })
-                          )
-                        }
-                        aria-label="Add to cart"
-                      >
-                        Add to Cart
-                      </button>
-                      <button
-                        className={styles.buyNowBtn}
-                        onClick={() => {
-                          dispatch(
-                            addToCart({
-                              id: prod.id,
-                              name: prod.name,
-                              price: prod.price,
-                              image: prod.image,
-                              slug: prod.slug,
-                              quantity: 1,
-                            })
-                          );
-                          toast.success(`Proceeding to checkout with ${prod.name}...`);
-                          navigate('/checkout');
-                        }}
-                        aria-label="Buy Now"
-                      >
-                        Buy Now
-                      </button>
-                      <ThreeDotMenu
-                        productUrl={ROUTES.PRODUCT_PATH(prod.slug)}
-                        productName={prod.name}
-                        productImage={prod.image}
-                      />
-                    </div>
-                  </div>
-                </div>
+              {paginatedProducts.map((prod) => (
+                <ProductCard key={prod.id} product={prod} />
               ))}
             </div>
 
             {/* Pagination Controls */}
             <div className={styles.pagination}>
-              <button
-                className={styles.pageSquareBtn}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                ‹
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 1 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(1)}
-              >
-                1
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 2 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(2)}
-              >
-                2
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 3 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(3)}
-              >
-                3
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 4 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(4)}
-              >
-                4
-              </button>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 5 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(5)}
-              >
-                5
-              </button>
-              <span className={styles.pageEllipsis}>...</span>
-              <button
-                className={`${styles.pageSquareBtn} ${currentPage === 14 ? styles.pageSquareActive : ''}`}
-                onClick={() => setCurrentPage(14)}
-              >
-                14
-              </button>
-              <button
-                className={styles.pageSquareBtn}
-                onClick={() => setCurrentPage((p) => Math.min(14, p + 1))}
-              >
-                ›
-              </button>
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
             </div>
           </main>
         </div>

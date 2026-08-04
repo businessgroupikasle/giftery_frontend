@@ -47,11 +47,26 @@ const Checkout = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderCompleted, setOrderCompleted] = useState(null);
 
+  const [storeSettings] = useState(() => {
+    try {
+      const stored = localStorage.getItem('store_basic_settings');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return {
+          freeShippingThreshold: parsed.freeShippingThreshold !== undefined && parsed.freeShippingThreshold !== '' ? Number(parsed.freeShippingThreshold) : 5000,
+          standardShippingFee: parsed.standardShippingFee !== undefined && parsed.standardShippingFee !== '' ? Number(parsed.standardShippingFee) : 99,
+        };
+      }
+    } catch (e) {}
+    return { freeShippingThreshold: 5000, standardShippingFee: 99 };
+  });
+
   // Totals
   const itemCount = cartItems.length;
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0);
-  const discountAmount = Math.round(subtotal * 0.1); // 10% discount
-  const shippingFee = 0; // FREE
+  const discountAmount = 0; // No default discount
+  const isFreeShipping = subtotal >= storeSettings.freeShippingThreshold;
+  const shippingFee = (isFreeShipping || subtotal === 0) ? 0 : storeSettings.standardShippingFee;
   const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
 
   // Dynamically load Razorpay SDK script
@@ -604,7 +619,9 @@ const Checkout = () => {
                   </div>
                   <div className={styles.sidebarRow}>
                     <span>Delivery Charges</span>
-                    <span style={{ color: '#16a34a', fontWeight: 700 }}>FREE</span>
+                    <span style={{ color: shippingFee === 0 ? '#16a34a' : 'inherit', fontWeight: 700 }}>
+                      {shippingFee === 0 ? 'FREE' : `₹${shippingFee}`}
+                    </span>
                   </div>
                   <div className={styles.sidebarDivider} />
                   <div className={styles.sidebarTotalRow}>

@@ -433,9 +433,13 @@ const Dashboard = () => {
     let apiProducts = [];
     try {
       const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200&showAll=true');
-      const data = res.data || res;
-      if (data && Array.isArray(data.data)) apiProducts = data.data;
-      else if (Array.isArray(data)) apiProducts = data;
+      let extracted = [];
+      if (Array.isArray(res)) extracted = res;
+      else if (res?.data && Array.isArray(res.data)) extracted = res.data;
+      else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
+      else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
+      else if (res?.products && Array.isArray(res.products)) extracted = res.products;
+      apiProducts = extracted;
     } catch (err) {
       console.warn('Products fetch error:', err.message);
     } finally {
@@ -601,7 +605,7 @@ const Dashboard = () => {
       price: product.price?.toString() || '',
       comparePrice: product.comparePrice?.toString() || '',
       stock: product.stock?.toString() || '0',
-      images: (product.images || []).join('|||'),
+      images: Array.isArray(product.images) ? product.images.join('|||') : (product.images || ''),
       sku: product.sku || '',
       weight: product.weight?.toString() || '',
       featured: product.featured || false,

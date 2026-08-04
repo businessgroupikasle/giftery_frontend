@@ -1,7 +1,9 @@
-import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import useAuth from '@hooks/useAuth';
 import ProtectedRoute from '@routes/ProtectedRoute';
 import { ROUTES } from '@constants/routes';
+import Maintenance from '@pages/Maintenance';
 
 // ── Lazy-loaded Pages ─────────────────────────────────────────
 const Home        = lazy(() => import('@pages/Home'));
@@ -34,6 +36,45 @@ const PageLoader = () => (
 );
 
 const App = () => {
+  const { user } = useAuth();
+  const location = useLocation();
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(() => {
+    try {
+      const stored = localStorage.getItem('store_basic_settings');
+      if (stored) {
+        return JSON.parse(stored).maintenanceMode === true;
+      }
+    } catch(e) {}
+    return false;
+  });
+
+  useEffect(() => {
+    const handleSettingsUpdate = () => {
+      try {
+        const stored = localStorage.getItem('store_basic_settings');
+        if (stored) {
+          setIsMaintenanceMode(JSON.parse(stored).maintenanceMode === true);
+        }
+      } catch(e) {}
+    };
+    
+    window.addEventListener('store_settings_updated', handleSettingsUpdate);
+    return () => window.removeEventListener('store_settings_updated', handleSettingsUpdate);
+  }, []);
+
+  const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'STORE_ADMIN');
+  const isAuthRoute = location.pathname.includes('/login') || location.pathname.includes('/register');
+
+  if (isMaintenanceMode && !isAdmin && !isAuthRoute) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="*" element={<Maintenance />} />
+        </Routes>
+      </Suspense>
+    );
+  }
+
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
