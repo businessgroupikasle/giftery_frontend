@@ -5,7 +5,23 @@ import styles from '../Dashboard.module.css';
 const parseImages = (imgs) => {
   if (!imgs) return [];
   if (Array.isArray(imgs)) return imgs.map((s) => String(s).trim()).filter(Boolean);
-  if (typeof imgs === 'string') return imgs.split(',').map((s) => s.trim()).filter(Boolean);
+  if (typeof imgs === 'string') {
+    const trimmed = imgs.trim();
+    if (!trimmed) return [];
+    if (trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) return parsed.map((s) => String(s).trim()).filter(Boolean);
+      } catch (e) {}
+    }
+    if (trimmed.includes('|||')) {
+      return trimmed.split('|||').map((s) => s.trim()).filter(Boolean);
+    }
+    if (trimmed.startsWith('data:')) {
+      return [trimmed];
+    }
+    return trimmed.split(',').map((s) => s.trim()).filter(Boolean);
+  }
   return [];
 };
 
@@ -24,7 +40,13 @@ const ProductsSection = ({
   handleProductSubmit,
   handleDeleteProduct,
 }) => {
-  const [maxSlots, setMaxSlots] = useState(2);
+  const [maxSlots, setMaxSlots] = useState(1);
+
+  const handleCloseModal = () => {
+    setMaxSlots(1);
+    resetProductForm();
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Products Header Row */}
@@ -37,7 +59,10 @@ const ProductsSection = ({
           <button
             type="button"
             className={styles.viewAllBtn}
-            onClick={handleOpenAddProduct}
+            onClick={() => {
+              setMaxSlots(1);
+              handleOpenAddProduct();
+            }}
             style={{
               background: 'linear-gradient(135deg, #d99b26 0%, #b87c12 100%)',
               color: '#ffffff',
@@ -95,7 +120,7 @@ const ProductsSection = ({
                 <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700', color: '#1e293b' }}>
                   {editingProduct ? `Edit Product — ${editingProduct.name}` : 'Add New Product'}
                 </h4>
-                <button type="button" onClick={resetProductForm} style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', fontSize: '1rem', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                <button type="button" onClick={handleCloseModal} style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', fontSize: '1rem', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
               </div>
 
               {/* Row 1: Name + SKU */}
@@ -216,39 +241,7 @@ const ProductsSection = ({
                   />
                 </div>
 
-                {/* 3. Customization */}
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
-                    Customization
-                  </label>
-                  <textarea
-                    name="customization"
-                    rows={3}
-                    value={productForm.customization || ''}
-                    onChange={handleProductFormChange}
-                    placeholder="Logo Printing: Yes (Vector / PNG upload)&#10;Engraving: Custom Name & Employee ID"
-                    className={styles.searchInput}
-                    style={{ padding: '0.65rem 0.85rem', width: '100%', resize: 'vertical', fontFamily: 'inherit', borderRadius: '8px' }}
-                  />
-                </div>
-
-                {/* 4. Shipping & Returns */}
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
-                    Shipping & Returns
-                  </label>
-                  <textarea
-                    name="shippingReturns"
-                    rows={3}
-                    value={productForm.shippingReturns || ''}
-                    onChange={handleProductFormChange}
-                    placeholder="Dispatch: Ships within 3-5 business days&#10;Return Policy: 7-day replacement"
-                    className={styles.searchInput}
-                    style={{ padding: '0.65rem 0.85rem', width: '100%', resize: 'vertical', fontFamily: 'inherit', borderRadius: '8px' }}
-                  />
-                </div>
-
-                {/* 5. Reviews & Rating */}
+                {/* 3. Reviews & Rating */}
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
@@ -433,7 +426,7 @@ const ProductsSection = ({
                                             if (dataUrl) {
                                               const updated = [...imageList];
                                               updated[idx] = dataUrl;
-                                              handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join(', ') } });
+                                              handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
                                             }
                                           };
                                           reader.readAsDataURL(file);
@@ -447,7 +440,7 @@ const ProductsSection = ({
                                       onClick={() => {
                                         const updated = [...imageList];
                                         updated.splice(idx, 1);
-                                        handleProductFormChange({ target: { name: 'images', value: updated.join(', ') } });
+                                        handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
                                       }}
                                       style={{
                                         background: 'none',
@@ -495,7 +488,7 @@ const ProductsSection = ({
                                         if (dataUrl) {
                                           const updated = [...imageList];
                                           updated[idx] = dataUrl;
-                                          handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join(', ') } });
+                                          handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
                                         }
                                       };
                                       reader.readAsDataURL(file);
@@ -530,7 +523,7 @@ const ProductsSection = ({
 
               {/* Form Actions without icon */}
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                <button type="button" onClick={resetProductForm} style={{ padding: '0.65rem 1.4rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', color: '#475569' }}>Cancel</button>
+                <button type="button" onClick={handleCloseModal} style={{ padding: '0.65rem 1.4rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', color: '#475569' }}>Cancel</button>
                 <button
                   type="submit"
                   disabled={savingProduct}
@@ -562,7 +555,6 @@ const ProductsSection = ({
                   <th>Price</th>
                   <th>Stock</th>
                   <th>Status</th>
-                  <th>Featured</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -592,9 +584,6 @@ const ProductsSection = ({
                       <span className={`${styles.pillStatus} ${product.isActive ? styles.pillDelivered : styles.pillCancelled}`}>
                         {product.isActive ? 'Active' : 'Inactive'}
                       </span>
-                    </td>
-                    <td>
-                      {product.featured ? <span style={{ fontSize: '1.1rem' }}>⭐</span> : <span style={{ color: '#cbd5e1' }}>—</span>}
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>

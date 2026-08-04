@@ -21,6 +21,8 @@ const Profile     = lazy(() => import('@pages/Profile'));
 const Contact     = lazy(() => import('@pages/Contact'));
 const About       = lazy(() => import('@pages/About'));
 const FAQ         = lazy(() => import('@pages/FAQ'));
+const TermsAndConditions = lazy(() => import('@pages/TermsAndConditions'));
+const PrivacyPolicy = lazy(() => import('@pages/PrivacyPolicy'));
 const NotFound    = lazy(() => import('@pages/NotFound'));
 const Dashboard   = lazy(() => import('@pages/Dashboard'));
 
@@ -59,6 +61,10 @@ const App = () => {
         <Route path={ROUTES.CONTACT}    element={<Contact />} />
         <Route path={ROUTES.ABOUT}      element={<About />} />
         <Route path={ROUTES.FAQ}        element={<FAQ />} />
+        <Route path={ROUTES.TERMS}      element={<TermsAndConditions />} />
+        <Route path="/terms"            element={<Navigate to={ROUTES.TERMS} replace />} />
+        <Route path={ROUTES.PRIVACY}    element={<PrivacyPolicy />} />
+        <Route path="/privacy"          element={<Navigate to={ROUTES.PRIVACY} replace />} />
 
         {/* Protected */}
         <Route path={ROUTES.ORDERS}    element={<ProtectedRoute><Orders /></ProtectedRoute>} />

@@ -496,6 +496,58 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ── Search Input Bar ──────────────────────────────────── */
+.searchBoxWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 240px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.searchInputBar {
+  width: 100%;
+  padding: 0.45rem 2rem 0.45rem 2.2rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.searchInputBar:focus {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+
+.clearSearchBtn {
+  position: absolute;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clearSearchBtn:hover {
+  color: #0f172a;
 }
 
 .sortSelectWrapper {
@@ -622,6 +674,13 @@
   object-fit: contain;
 }
 
+/* ── 5-Column Product Grid ─────────────────────────────── */
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.25rem;
+}
+
 /* List View Mode Layout */
 .productListMode {
   grid-template-columns: 1fr !important;
@@ -650,6 +709,232 @@
   justify-content: center;
   align-items: flex-start;
   text-align: left;
+}
+
+@media (max-width: 1400px) {
+  .productGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .productGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .productGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .productGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Product Card */
+.card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  position: relative;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04);
+  border-color: #cbd5e1;
+}
+
+.cardImageWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #f8fafc;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imageLink {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.card:hover .cardImage {
+  transform: scale(1.05);
+}
+
+.discountBadge {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  background: rgba(15, 23, 42, 0.75);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+  z-index: 2;
+}
+
+.topRightWishlistBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+}
+
+.topRightWishlistBtn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+  transform: scale(1.12);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+.cardContent {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.cardTitle {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.4rem 0;
+  text-decoration: none;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.5rem;
+  transition: color 0.2s ease;
+}
+
+.cardTitle:hover {
+  color: #dfa843;
+}
+
+.cardRatingRow {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem;
+}
+
+.stars {
+  color: #f59e0b;
+  letter-spacing: 0.05em;
+}
+
+.reviewsCount {
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.cardPriceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+  margin-top: auto;
+}
+
+.cardPrice {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.comparePrice {
+  font-size: 0.82rem;
+  color: #a1a1aa;
+  text-decoration: line-through;
+}
+
+.cardActionsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  position: relative;
+}
+
+.cardCartBtn {
+  flex: 1;
+  padding: 0.6rem 0.35rem;
+  background: #dfa843;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.cardCartBtn:hover {
+  background: #b8832a;
+  transform: translateY(-1px);
+}
+
+.buyNowBtn {
+  flex: 1;
+  padding: 0.6rem 0.35rem;
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2);
+}
+
+.buyNowBtn:hover {
+  background: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
 }
 
 /* ── Square Pagination Controls ────────────────────────── */

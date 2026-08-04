@@ -49,6 +49,7 @@ const Login = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
 
   // Forgot Password Modal State
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -103,6 +104,7 @@ const Login = () => {
   }, []);
 
   const handleTabSwitch = (tab) => {
+    setAuthError('');
     setActiveTab(tab);
     if (tab === 'login' && location.pathname !== ROUTES.LOGIN) {
       navigate(ROUTES.LOGIN, { replace: true });
@@ -112,6 +114,7 @@ const Login = () => {
   };
 
   const handleChange = (e) => {
+    setAuthError('');
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -155,12 +158,15 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setAuthError('');
 
     const redirectTarget = location.state?.from || ROUTES.HOME;
 
     try {
       if (!form.email || !isValidEmail(form.email)) {
-        toast.error('Please enter a valid email address');
+        const errorMsg = 'Please enter a valid email address';
+        setAuthError(errorMsg);
+        toast.error(errorMsg);
         setLoading(false);
         return;
       }
@@ -178,27 +184,37 @@ const Login = () => {
         }
       } else {
         if (!form.phone || !isValidMobile(form.phone)) {
-          toast.error('Please enter a valid 10-digit mobile number');
+          const errorMsg = 'Please enter a valid 10-digit mobile number';
+          setAuthError(errorMsg);
+          toast.error(errorMsg);
           setLoading(false);
           return;
         }
         if (!form.otp) {
-          toast.warning('Please click "Send OTP" and enter the 6-digit code sent to your email.');
+          const errorMsg = 'Please click "Send OTP" and enter the 6-digit code sent to your email.';
+          setAuthError(errorMsg);
+          toast.warning(errorMsg);
           setLoading(false);
           return;
         }
         if (!otpVerified) {
-          toast.warning('Please click "Verify OTP" to verify your 6-digit code first.');
+          const errorMsg = 'Please click "Verify OTP" to verify your 6-digit code first.';
+          setAuthError(errorMsg);
+          toast.warning(errorMsg);
           setLoading(false);
           return;
         }
         if (form.password !== form.confirmPassword) {
-          toast.error('Passwords do not match');
+          const errorMsg = 'Passwords do not match';
+          setAuthError(errorMsg);
+          toast.error(errorMsg);
           setLoading(false);
           return;
         }
         if (!termsAgreed) {
-          toast.error('Please agree to the Terms & Privacy Policy');
+          const errorMsg = 'Please agree to the Terms & Privacy Policy';
+          setAuthError(errorMsg);
+          toast.error(errorMsg);
           setLoading(false);
           return;
         }
@@ -238,7 +254,9 @@ const Login = () => {
         }
       }
     } catch (err) {
-      toast.error(err.message || (activeTab === 'login' ? MESSAGES.AUTH.INVALID_CREDENTIALS : MESSAGES.GENERIC.ERROR));
+      const errText = err.message || (activeTab === 'login' ? 'Invalid username or password. Please check your credentials.' : MESSAGES.GENERIC.ERROR);
+      setAuthError(errText);
+      toast.error(errText);
     } finally {
       setLoading(false);
     }
@@ -317,6 +335,17 @@ const Login = () => {
 
         {/* Auth Form */}
         <form onSubmit={handleSubmit} className={styles.authForm}>
+          {/* Validation Error Alert Banner */}
+          {authError && (
+            <div className={styles.errorAlertBanner}>
+              <span className={styles.errorAlertIcon}>⚠️</span>
+              <div className={styles.errorAlertText}>
+                <strong>Authentication Failed</strong>
+                <p>{authError}</p>
+              </div>
+              <button type="button" onClick={() => setAuthError('')} className={styles.errorAlertClose}>✕</button>
+            </div>
+          )}
           {/* Full Name Field (Register only) */}
           {activeTab === 'register' && (
             <div className={styles.inputGroup}>

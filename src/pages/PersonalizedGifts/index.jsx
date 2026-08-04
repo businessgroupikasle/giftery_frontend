@@ -111,94 +111,7 @@ const OCCASIONS_DATA = [
 ];
 
 const PRODUCTS_LIST = [
-  {
-    id: 'pg-101',
-    name: 'Laser Engraved Custom Photo Frame',
-    price: 1499,
-    comparePrice: 1999,
-    rating: 4.9,
-    reviewsCount: 49,
-    discount: '25%',
-    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&auto=format&fit=crop&q=80',
-    slug: 'laser-engraved-custom-photo-frame',
-  },
-  {
-    id: 'pg-102',
-    name: '3D Acrylic Photo Standee with LED Base',
-    price: 2199,
-    comparePrice: 2799,
-    rating: 4.8,
-    reviewsCount: 81,
-    discount: '21%',
-    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500&auto=format&fit=crop&q=80',
-    slug: '3d-acrylic-photo-standee-led-base',
-  },
-  {
-    id: 'pg-103',
-    name: 'Custom Name Engraved Stainless Hydro Bottle',
-    price: 1299,
-    comparePrice: 1699,
-    rating: 4.7,
-    reviewsCount: 38,
-    discount: '24%',
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=80',
-    slug: 'custom-name-engraved-stainless-hydro-bottle',
-  },
-  {
-    id: 'pg-104',
-    name: 'Handcrafted Wooden IQ Teaser Lock Box Set',
-    price: 1799,
-    comparePrice: 2299,
-    rating: 4.8,
-    reviewsCount: 57,
-    discount: '22%',
-    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=80',
-    slug: 'handcrafted-wooden-iq-teaser-lock-box-set',
-  },
-  {
-    id: 'pg-105',
-    name: 'Personalized Leather Notebook & Metallic Pen Set',
-    price: 2499,
-    comparePrice: 3199,
-    rating: 4.9,
-    reviewsCount: 84,
-    discount: '22%',
-    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=80',
-    slug: 'personalized-leather-notebook-metallic-pen-set',
-  },
-  {
-    id: 'pg-106',
-    name: 'Laser Etched Wooden Desk Photo Clock',
-    price: 899,
-    comparePrice: 1199,
-    rating: 4.6,
-    reviewsCount: 42,
-    discount: '25%',
-    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500&auto=format&fit=crop&q=80',
-    slug: 'laser-etched-wooden-desk-photo-clock',
-  },
-  {
-    id: 'pg-107',
-    name: 'Precision Engraved Executive Diary Gift Set',
-    price: 1599,
-    comparePrice: 1999,
-    rating: 4.7,
-    reviewsCount: 31,
-    discount: '20%',
-    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&auto=format&fit=crop&q=80',
-    slug: 'precision-engraved-executive-diary-gift-set',
-  },
-  {
-    id: 'pg-108',
-    name: 'Custom Wood Monogram Keepsake Box',
-    price: 999,
-    comparePrice: 1399,
-    rating: 4.8,
-    reviewsCount: 53,
-    discount: '29%',
-    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=80',
-    slug: 'custom-wood-monogram-keepsake-box',
-  },
+  
 ];
 
 const PersonalizedGifts = () => {
@@ -228,23 +141,50 @@ const PersonalizedGifts = () => {
       });
 
       if (combined.length > 0) {
-        const formatted = combined.map((p) => {
-          const imgList = Array.isArray(p.images)
-            ? p.images
-            : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
-          return {
-            id: p.id,
-            name: p.name,
-            price: p.price,
-            comparePrice: p.comparePrice,
-            rating: p.rating || 4.8,
-            reviewsCount: p.reviewsCount || p._count?.reviews || 24,
-            discount: p.comparePrice ? `${Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100)}%` : null,
-            images: imgList,
-            image: imgList[0] || '/placeholder.jpg',
-            slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          };
-        });
+        const formatted = combined
+          .map((p) => {
+            const imgList = Array.isArray(p.images)
+              ? p.images
+              : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
+            const catName = (p.category?.name || p.categoryName || '').toLowerCase();
+            const catSlug = (p.category?.slug || p.categorySlug || '').toLowerCase();
+            const subCatName = (p.subCategory?.name || p.subCategoryName || '').toLowerCase();
+            return {
+              id: p.id,
+              name: p.name,
+              price: p.price,
+              comparePrice: p.comparePrice,
+              rating: p.rating || 4.8,
+              reviewsCount: p.reviewsCount || p._count?.reviews || 24,
+              discount: p.comparePrice ? `${Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100)}%` : null,
+              images: imgList,
+              image: imgList[0] || '/placeholder.jpg',
+              slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+              categoryId: p.categoryId || null,
+              subCategoryId: p.subCategoryId || null,
+              categoryName: p.category?.name || p.categoryName || '',
+              categorySlug: p.category?.slug || p.categorySlug || '',
+              subCategoryName: p.subCategory?.name || p.subCategoryName || '',
+              _catName: catName,
+              _catSlug: catSlug,
+              _subCatName: subCatName,
+            };
+          })
+          // ── PAGE RESTRICTION: Only show Personalized Gifts products ──
+          .filter(p => {
+            const c = `${p._catName} ${p._catSlug} ${p._subCatName}`.trim();
+            if ((c.includes('corporate') || c.includes('toy')) && !c.includes('personal')) {
+              return false;
+            }
+            if (c) {
+              return c.includes('personal') || c.includes('photo') || c.includes('frame') || c.includes('acrylic') ||
+                     c.includes('caricature') || c.includes('clock') || c.includes('engrav') || c.includes('custom') ||
+                     c.includes('monogram') || c.includes('keepsake');
+            }
+            const n = (p.name || '').toLowerCase();
+            if (n.includes('corporate') || n.includes('onboarding') || n.includes('desk gyro')) return false;
+            return true;
+          });
         setLiveProducts(formatted);
       }
     };
@@ -258,6 +198,7 @@ const PersonalizedGifts = () => {
   const rawProducts = liveProducts.length > 0 ? liveProducts : PRODUCTS_LIST;
 
   // Filter States
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeSubCategory, setActiveSubCategory] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [minPrice, setMinPrice] = useState('100');
@@ -294,6 +235,7 @@ const PersonalizedGifts = () => {
   };
 
   const handleClearAll = () => {
+    setSearchQuery('');
     setSelectedCategory('all');
     setActiveSubCategory('all');
     setMinPrice('100');
@@ -305,6 +247,26 @@ const PersonalizedGifts = () => {
   // Filtered & Sorted Products computation
   const displayProducts = rawProducts
     .filter((prod) => {
+      // 0. Keyword / Name / Tags Search Filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        const name = (prod.name || '').toLowerCase();
+        const desc = (prod.description || '').toLowerCase();
+        const catName = (prod.categoryName || prod.category?.name || '').toLowerCase();
+        const subCatName = (prod.subCategoryName || prod.subCategory?.name || '').toLowerCase();
+        const tagsStr = Array.isArray(prod.tags) ? prod.tags.join(' ').toLowerCase() : (prod.tags || '').toLowerCase();
+        const slug = (prod.slug || '').toLowerCase();
+
+        const matches =
+          name.includes(query) ||
+          desc.includes(query) ||
+          catName.includes(query) ||
+          subCatName.includes(query) ||
+          tagsStr.includes(query) ||
+          slug.includes(query);
+
+        if (!matches) return false;
+      }
       // 1. Price Filter
       const price = Number(prod.price) || 0;
       const minP = Number(minPrice) || 0;
@@ -561,6 +523,28 @@ const PersonalizedGifts = () => {
               </div>
 
               <div className={styles.controlGroup}>
+                <div className={styles.searchBoxWrapper}>
+                  <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search by name, tag, category..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className={styles.searchInputBar}
+                  />
+                  {searchQuery && (
+                    <button type="button" onClick={() => setSearchQuery('')} className={styles.clearSearchBtn} aria-label="Clear Search">
+                      ✕
+                    </button>
+                  )}
+                </div>
+
                 <div className={styles.sortSelectWrapper}>
                   <span>Sort by:</span>
                   <select

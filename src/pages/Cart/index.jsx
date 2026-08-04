@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -6,67 +6,60 @@ import Layout from '@components/layout/Layout';
 import { removeFromCart, updateQuantity, clearCart, addToCart } from '@store/slices/cartSlice';
 import { formatCurrency } from '@utils/formatters';
 import { ROUTES } from '@constants/routes';
+import axiosInstance from '@api/axiosInstance';
+import { ENDPOINTS } from '@api/endpoints';
 import styles from './Cart.module.css';
-
-/* ── Default Demo Items (Matching User's Screenshot Design) ── */
-const DEFAULT_CART_ITEMS = [
-  {
-    id: 'cart-1',
-    name: 'Premium Welcome Kit',
-    variant: 'Black Edition',
-    isCustomized: true,
-    logoName: 'company_logo.png',
-    price: 1599,
-    quantity: 1,
-    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&auto=format&fit=crop&q=80',
-    slug: 'executive-kinetic-desk-gyro-sculpture',
-  },
-  {
-    id: 'cart-2',
-    name: 'Stainless Steel Bottle',
-    variant: '750ml / Black',
-    isCustomized: true,
-    logoName: 'company_logo.png',
-    price: 699,
-    quantity: 1,
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=80',
-    slug: 'custom-name-engraved-stainless-hydro-bottle',
-  },
-  {
-    id: 'cart-3',
-    name: 'Premium Leather Notebook',
-    variant: 'A5 / Black',
-    isCustomized: true,
-    logoName: 'company_logo.png',
-    price: 499,
-    quantity: 1,
-    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=80',
-    slug: 'personalized-leather-notebook-metallic-pen-set',
-  },
-];
-
-/* ── Related Products Dataset ("You May Also Like") ── */
-const SUGGESTED_PRODUCTS = [
-  { id: 's-1', name: 'Executive Desk Set', price: 2199, image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&auto=format&fit=crop&q=80', slug: '3d-wooden-mechanical-gear-clock-puzzle' },
-  { id: 's-2', name: 'Wireless Charger', price: 1299, image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=400&auto=format&fit=crop&q=80', slug: '3d-acrylic-photo-standee-led-base' },
-  { id: 's-3', name: 'Premium Pen', price: 299, image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&auto=format&fit=crop&q=80', slug: 'personalized-leather-notebook-metallic-pen-set' },
-  { id: 's-4', name: 'Copper Bottle', price: 899, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&auto=format&fit=crop&q=80', slug: 'custom-name-engraved-stainless-hydro-bottle' },
-  { id: 's-5', name: 'Leather Card Holder', price: 399, image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&auto=format&fit=crop&q=80', slug: 'precision-engraved-executive-diary-gift-set' },
-  { id: 's-6', name: 'Black Mug', price: 299, image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=400&auto=format&fit=crop&q=80', slug: 'handcrafted-wooden-iq-teaser-lock-box-set' },
-];
 
 const Cart = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const reduxItems = useSelector((state) => state.cart.items) || [];
-  const cartItems = reduxItems.length > 0 ? reduxItems : DEFAULT_CART_ITEMS;
+  const cartItems = reduxItems;
+
+  const [suggestedProducts, setSuggestedProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchLiveProducts = async () => {
+      let apiProducts = [];
+      try {
+        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
+        const resData = res.data?.products || res.data?.data || res.data || [];
+        if (Array.isArray(resData)) apiProducts = resData;
+      } catch (err) {}
+
+      const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+      const combined = [...localProducts];
+      apiProducts.forEach(ap => {
+        if (!combined.find(c => c.id === ap.id || c.slug === ap.slug)) combined.push(ap);
+      });
+
+      if (combined.length > 0) {
+        const cartIds = new Set(cartItems.map(i => i.id));
+        const filtered = combined
+          .filter(p => !cartIds.has(p.id))
+          .slice(0, 6)
+          .map(p => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            image: Array.isArray(p.images) ? p.images[0] : (p.image || '/placeholder.jpg'),
+            slug: p.slug,
+          }));
+        setSuggestedProducts(filtered);
+      }
+    };
+
+    fetchLiveProducts();
+    window.addEventListener('products_updated', fetchLiveProducts);
+    return () => window.removeEventListener('products_updated', fetchLiveProducts);
+  }, [cartItems.length]);
 
   const [couponCode, setCouponCode] = useState('');
   const [discountPercent, setDiscountPercent] = useState(10); // 10% discount enabled by default matching design (₹279.70)
 
   // Calculations
-  const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const itemCount = cartItems.length;
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0);
   const discountAmount = (subtotal * discountPercent) / 100;
   const shippingFee = 0; // FREE
@@ -339,40 +332,42 @@ const Cart = () => {
           </div>
 
           {/* ── 4. "YOU MAY ALSO LIKE" RELATED PRODUCTS GRID ── */}
-          <div className={styles.relatedProductsSection}>
-            <div className={styles.relatedHeaderRow}>
-              <h2 className={styles.relatedSectionTitle}>You May Also Like</h2>
-              <Link to={ROUTES.CORPORATE_GIFTS} className={styles.viewAllLink}>View All →</Link>
-            </div>
+          {suggestedProducts.length > 0 && (
+            <div className={styles.relatedProductsSection}>
+              <div className={styles.relatedHeaderRow}>
+                <h2 className={styles.relatedSectionTitle}>You May Also Like</h2>
+                <Link to={ROUTES.CORPORATE_GIFTS} className={styles.viewAllLink}>View All →</Link>
+              </div>
 
-            <div className={styles.suggestedGrid}>
-              {SUGGESTED_PRODUCTS.map((prod) => (
-                <div key={prod.id} className={styles.suggestedCard} onClick={() => navigate(ROUTES.PRODUCT_PATH(prod.slug))}>
-                  <div className={styles.suggestedImgBox}>
-                    <img src={prod.image} alt={prod.name} />
-                  </div>
-                  <div className={styles.suggestedInfo}>
-                    <h4 className={styles.suggestedName}>{prod.name}</h4>
-                    <div className={styles.suggestedPriceRow}>
-                      <span className={styles.suggestedPrice}>₹{prod.price?.toLocaleString('en-IN')}.00</span>
-                      <button
-                        type="button"
-                        className={styles.miniCartBtn}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          dispatch(addToCart({ id: prod.id, name: prod.name, price: prod.price, image: prod.image, slug: prod.slug }));
-                          toast.success(`Added ${prod.name} to cart 🛒`);
-                        }}
-                        aria-label="Add to cart"
-                      >
-                        🛒
-                      </button>
+              <div className={styles.suggestedGrid}>
+                {suggestedProducts.map((prod) => (
+                  <div key={prod.id} className={styles.suggestedCard} onClick={() => navigate(ROUTES.PRODUCT_PATH(prod.slug))}>
+                    <div className={styles.suggestedImgBox}>
+                      <img src={prod.image} alt={prod.name} />
+                    </div>
+                    <div className={styles.suggestedInfo}>
+                      <h4 className={styles.suggestedName}>{prod.name}</h4>
+                      <div className={styles.suggestedPriceRow}>
+                        <span className={styles.suggestedPrice}>₹{prod.price?.toLocaleString('en-IN')}.00</span>
+                        <button
+                          type="button"
+                          className={styles.miniCartBtn}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch(addToCart({ id: prod.id, name: prod.name, price: prod.price, image: prod.image, slug: prod.slug }));
+                            toast.success(`Added ${prod.name} to cart 🛒`);
+                          }}
+                          aria-label="Add to cart"
+                        >
+                          🛒
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
         </div>
       </div>

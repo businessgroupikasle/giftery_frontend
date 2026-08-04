@@ -10,50 +10,20 @@ import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import styles from './Checkout.module.css';
 
-/* Default cart items fallback */
-const DEFAULT_CART_ITEMS = [
-  {
-    id: 'cart-1',
-    name: 'Premium Welcome Kit',
-    variant: 'Black Edition',
-    isCustomized: true,
-    logoName: 'company_logo.png',
-    price: 1599,
-    quantity: 1,
-    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&auto=format&fit=crop&q=80',
-    slug: 'executive-kinetic-desk-gyro-sculpture',
-  },
-  {
-    id: 'cart-2',
-    name: 'Stainless Steel Bottle',
-    variant: '750ml / Black',
-    isCustomized: true,
-    logoName: 'company_logo.png',
-    price: 699,
-    quantity: 1,
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=80',
-    slug: 'custom-name-engraved-stainless-hydro-bottle',
-  },
-  {
-    id: 'cart-3',
-    name: 'Premium Leather Notebook',
-    variant: 'A5 / Black',
-    isCustomized: true,
-    logoName: 'company_logo.png',
-    price: 499,
-    quantity: 1,
-    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=80',
-    slug: 'personalized-leather-notebook-metallic-pen-set',
-  },
-];
-
 const Checkout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const reduxItems = useSelector((state) => state.cart.items) || [];
   const { user, isAuthenticated } = useSelector((state) => state.auth);
-  const cartItems = reduxItems.length > 0 ? reduxItems : DEFAULT_CART_ITEMS;
+  const cartItems = reduxItems;
+
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      toast.info('Your cart is empty. Please add products to checkout.');
+      navigate(ROUTES.CART);
+    }
+  }, [cartItems.length, navigate]);
 
   // Active step: 1 = Shopping Cart, 2 = Delivery, 3 = Payment
   const [currentStep, setCurrentStep] = useState(2);
@@ -78,7 +48,7 @@ const Checkout = () => {
   const [orderCompleted, setOrderCompleted] = useState(null);
 
   // Totals
-  const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const itemCount = cartItems.length;
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0);
   const discountAmount = Math.round(subtotal * 0.1); // 10% discount
   const shippingFee = 0; // FREE

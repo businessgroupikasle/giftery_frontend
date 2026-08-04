@@ -1,0 +1,267 @@
+/* ────────────────────────────────────────────────────────
+   Terms & Conditions Page — Luxury Header & Clean White Sections
+──────────────────────────────────────────────────────── */
+
+.termsPage {
+  background-color: #ffffff;
+  color: #111827;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ── Hero Banner Header ──────────────────────────────── */
+.heroHeader {
+  position: relative;
+  background: linear-gradient(135deg, #111318 0%, #07080a 100%);
+  padding: 3.5rem 2rem 3rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(229, 193, 88, 0.2);
+}
+
+/* Breadcrumb Navigation */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  margin-bottom: 1.25rem;
+}
+
+.breadcrumb a {
+  color: #e5c158;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+.breadcrumbSeparator {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.breadcrumbActive {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* Quick Hero Nav Tabs */
+.heroNavTabs {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(229, 193, 88, 0.25);
+  padding: 0.35rem;
+  border-radius: 50px;
+}
+
+.heroNavTab {
+  padding: 0.45rem 1.15rem;
+  border-radius: 50px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #d1d5db;
+  text-decoration: none;
+  transition: all 0.22s ease;
+}
+
+.heroNavTab:hover {
+  color: #ffffff;
+  background: rgba(229, 193, 88, 0.18);
+}
+
+.heroNavTabActive {
+  background: #c58b29 !important;
+  color: #0b0c0e !important;
+  box-shadow: 0 4px 12px rgba(197, 139, 41, 0.35);
+}
+
+.topSubheading {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #e5c158;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.heroTitle {
+  font-size: clamp(2.2rem, 4vw, 3.25rem);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.15;
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.02em;
+}
+
+.goldText {
+  color: #e5c158;
+  font-family: 'Cinzel', Georgia, serif;
+}
+
+.heroSubtext {
+  font-size: 0.95rem;
+  color: #9ca3af;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ── Content Body Container ──────────────────────────── */
+.contentContainer {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 4rem 2rem 6rem;
+  background-color: #ffffff;
+}
+
+.introBox {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #c58b29;
+  padding: 1.5rem 1.75rem;
+  border-radius: 0 12px 12px 0;
+  margin-bottom: 3rem;
+}
+
+.introText {
+  font-size: 1.05rem;
+  color: #1e293b;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ── Article / Section Cards ─────────────────────────── */
+.sectionCard {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 2.25rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sectionCard:hover {
+  border-color: #c58b29;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.sectionNumber {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(197, 139, 41, 0.1);
+  border: 1.5px solid #c58b29;
+  color: #c58b29;
+  font-weight: 800;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sectionTitle {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.paragraph {
+  font-size: 0.95rem;
+  color: #4b5563;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.bulletList {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.bulletItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.93rem;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.bulletDot {
+  color: #c58b29;
+  font-weight: bold;
+  font-size: 1.1rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+/* Contact Assistance Footer Box */
+.contactSupportBox {
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 2.5rem;
+  text-align: center;
+  margin-top: 3.5rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+}
+
+.supportTitle {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.supportDesc {
+  font-size: 0.92rem;
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.supportBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #e5c158 0%, #c58b29 100%);
+  color: #0b0c0e;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 0.85rem 2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.supportBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(229, 193, 88, 0.4);
+}

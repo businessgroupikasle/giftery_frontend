@@ -27,12 +27,15 @@ const SuperAdminLogin = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
 
   const handleChange = (e) => {
+    setAuthError('');
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleQuickFill = () => {
+    setAuthError('');
     setForm({
       email: 'superadmin@giftery.com',
       password: 'SuperAdmin@123',
@@ -43,13 +46,16 @@ const SuperAdminLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setAuthError('');
 
     try {
       const res = await login({ email: form.email, password: form.password });
       toast.success('👑 Welcome, Super Administrator');
       navigate(ROUTES.DASHBOARD);
     } catch (err) {
-      toast.error(err.message || 'Invalid Super Admin credentials');
+      const errMsg = err.message || 'Invalid Super Admin credentials. Please check your username & password.';
+      setAuthError(errMsg);
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -98,6 +104,17 @@ const SuperAdminLogin = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className={styles.form}>
+          {/* Validation Error Alert Banner */}
+          {authError && (
+            <div className={styles.errorAlertBanner}>
+              <span className={styles.errorAlertIcon}>⚠️</span>
+              <div className={styles.errorAlertText}>
+                <strong>Authentication Failed</strong>
+                <p>{authError}</p>
+              </div>
+              <button type="button" onClick={() => setAuthError('')} className={styles.errorAlertClose}>✕</button>
+            </div>
+          )}
           <div className={styles.inputGroup}>
             <label className={styles.inputLabel} htmlFor="super-email">
               Super Admin Email

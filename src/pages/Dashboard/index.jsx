@@ -71,9 +71,9 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState(() => {
     try {
       const hashTab = window.location.hash.replace('#', '');
-      if (hashTab && hashTab !== 'corporate-quotes') return hashTab;
+      if (hashTab) return hashTab;
       const storedTab = localStorage.getItem('admin_dashboard_active_tab');
-      if (storedTab && storedTab !== 'corporate-quotes') return storedTab;
+      if (storedTab) return storedTab;
     } catch (e) {}
     return 'dashboard';
   });
@@ -340,129 +340,161 @@ const Dashboard = () => {
   const [backendStats, setBackendStats] = useState(null);
 
   // Fetch API Data
+  const fetchDashboardStats = async () => {
+    try {
+      const res = await axiosInstance.get(ENDPOINTS.DASHBOARD.STATS);
+      const data = res.data?.data || res.data || res;
+      if (data && typeof data === 'object') setBackendStats(data);
+    } catch (err) {
+      console.warn('Dashboard stats fetch warning:', err.message);
+    }
+  };
+
+  const fetchOrders = async () => {
+    let apiOrders = [];
+    try {
+      const res = await axiosInstance.get(ENDPOINTS.ORDERS.LIST);
+      const data = res.data?.data || res.data || res;
+      if (Array.isArray(data)) apiOrders = data;
+    } catch (err) {
+      console.warn('Orders fetch warning:', err.message);
+    }
+
+    const localOrders = JSON.parse(localStorage.getItem('giftery_orders') || '[]');
+    const combined = [...localOrders];
+    apiOrders.forEach(ao => {
+      if (!combined.find(c => c.id === ao.id || c.orderId === ao.id)) {
+        combined.push(ao);
+      }
+    });
+
+    if (combined.length > 0) {
+      const formatted = combined.map(o => ({
+        id: o.id?.toString().startsWith('ORD-') ? o.id : `ORD-${o.id}`,
+        customer: o.customerName || o.user?.name || o.shippingAddress?.fullName || 'Customer',
+        date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Recent',
+        itemsCount: o.items?.length || 1,
+        amount: `₹${(o.totalAmount || 0).toLocaleString('en-IN')}`,
+        rawAmount: o.totalAmount || 0,
+        status: o.status ? (o.status === 'DELIVERED' ? 'Delivered' : o.status === 'PROCESSING' ? 'Processing' : o.status === 'CANCELLED' ? 'Cancelled' : 'Pending') : 'Pending',
+      }));
+      setOrdersList(formatted);
+    }
+  };
+
+  const fetchEnquiries = async () => {
+    let backendEnquiries = [];
+    try {
+      const res = await axiosInstance.get(ENDPOINTS.ENQUIRIES.LIST);
+      const responseData = res.data || res;
+      const arr = Array.isArray(responseData)
+        ? responseData
+        : (Array.isArray(responseData?.data) ? responseData.data : []);
+      backendEnquiries = arr;
+    } catch (err) {
+      console.warn('Backend enquiry fetch warning:', err.message);
+    }
+
+    let localEnquiries = [];
+    try {
+      const stored = localStorage.getItem('customer_enquiries');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) localEnquiries = parsed;
+      }
+    } catch (e) {}
+
+    const merged = [...backendEnquiries];
+    localEnquiries.forEach((le) => {
+      if (!merged.find((e) => e.id === le.id || (e.email === le.email && e.message === le.message))) {
+        merged.push(le);
+      }
+    });
+
+    const finalEnquiries = merged.length > 0
+      ? [...merged, ...INITIAL_ENQUIRIES.filter((ie) => !merged.find((m) => m.id === ie.id))]
+      : INITIAL_ENQUIRIES;
+
+    setEnquiriesList(finalEnquiries);
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const res = await axiosInstance.get(ENDPOINTS.SETTINGS.GET);
+      const data = res.data || res;
+      if (data && typeof data === 'object') setSettingsForm(prev => ({ ...prev, ...data }));
+    } catch (err) {
+      console.warn('Settings API fetch warning:', err.message);
+    }
+  };
+
+  const fetchProducts = async () => {
+    setLoadingProducts(true);
+    let apiProducts = [];
+    try {
+      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200&showAll=true');
+      const data = res.data || res;
+      if (data && Array.isArray(data.data)) apiProducts = data.data;
+      else if (Array.isArray(data)) apiProducts = data;
+    } catch (err) {
+      console.warn('Products fetch error:', err.message);
+    } finally {
+      const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+      const merged = [...localProducts];
+      apiProducts.forEach(ap => {
+        if (!merged.find(m => m.id === ap.id || m.slug === ap.slug)) {
+          merged.push(ap);
+        }
+      });
+      setProductsList(merged);
+      setLoadingProducts(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    let apiCats = [];
+    try {
+      const res = await axiosInstance.get(ENDPOINTS.CATEGORIES.LIST);
+      const data = res.data || res;
+      if (data && Array.isArray(data.categories)) apiCats = data.categories;
+      else if (Array.isArray(data.data)) apiCats = data.data;
+      else if (Array.isArray(data)) apiCats = data;
+    } catch (err) {
+      console.warn('Categories fetch error:', err.message);
+    } finally {
+      const localCats = JSON.parse(localStorage.getItem('giftery_categories') || '[]');
+      const merged = [...localCats];
+      apiCats.forEach(ac => {
+        if (!merged.find(m => m.id === ac.id || m.slug === ac.slug)) {
+          merged.push(ac);
+        }
+      });
+      setCategories(merged);
+    }
+  };
+
+  const fetchAllDashboardData = async () => {
+    setIsRefreshing(true);
+    toast.info('Refreshing store data...', { autoClose: 1200 });
+    try {
+      await Promise.allSettled([
+        fetchDashboardStats(),
+        fetchOrders(),
+        fetchEnquiries(),
+        fetchSettings(),
+        fetchProducts(),
+        fetchCategories(),
+        loadCustomers(),
+      ]);
+      toast.success('🔄 Dashboard data refreshed successfully!');
+    } catch (err) {
+      toast.error('Failed to refresh store data');
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
+
   useEffect(() => {
-    const fetchDashboardStats = async () => {
-      try {
-        const res = await axiosInstance.get(ENDPOINTS.DASHBOARD.STATS);
-        const data = res.data?.data || res.data || res;
-        if (data && typeof data === 'object') setBackendStats(data);
-      } catch (err) {
-        console.warn('Dashboard stats fetch warning:', err.message);
-      }
-    };
-
-    const fetchOrders = async () => {
-      let apiOrders = [];
-      try {
-        const res = await axiosInstance.get(ENDPOINTS.ORDERS.LIST);
-        const data = res.data?.data || res.data || res;
-        if (Array.isArray(data)) apiOrders = data;
-      } catch (err) {
-        console.warn('Orders fetch warning:', err.message);
-      }
-
-      const localOrders = JSON.parse(localStorage.getItem('giftery_orders') || '[]');
-      const combined = [...localOrders];
-      apiOrders.forEach(ao => {
-        if (!combined.find(c => c.id === ao.id || c.orderId === ao.id)) {
-          combined.push(ao);
-        }
-      });
-
-      if (combined.length > 0) {
-        const formatted = combined.map(o => ({
-          id: o.id?.toString().startsWith('ORD-') ? o.id : `ORD-${o.id}`,
-          customer: o.customerName || o.user?.name || o.shippingAddress?.fullName || 'Customer',
-          date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Recent',
-          itemsCount: o.items?.length || 1,
-          amount: `₹${(o.totalAmount || 0).toLocaleString('en-IN')}`,
-          rawAmount: o.totalAmount || 0,
-          status: o.status ? (o.status === 'DELIVERED' ? 'Delivered' : o.status === 'PROCESSING' ? 'Processing' : o.status === 'CANCELLED' ? 'Cancelled' : 'Pending') : 'Pending',
-        }));
-        setOrdersList(formatted);
-      }
-    };
-
-    const fetchEnquiries = async () => {
-      let backendEnquiries = [];
-      try {
-        const res = await axiosInstance.get(ENDPOINTS.ENQUIRIES.LIST);
-        const responseData = res.data || res;
-        const arr = Array.isArray(responseData)
-          ? responseData
-          : (Array.isArray(responseData?.data) ? responseData.data : []);
-        backendEnquiries = arr;
-      } catch (err) {
-        console.warn('Backend enquiry fetch warning:', err.message);
-      }
-
-      let localEnquiries = [];
-      try {
-        const stored = localStorage.getItem('customer_enquiries');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) localEnquiries = parsed;
-        }
-      } catch (e) {}
-
-      const merged = [...backendEnquiries];
-      localEnquiries.forEach((le) => {
-        if (!merged.find((e) => e.id === le.id || (e.email === le.email && e.message === le.message))) {
-          merged.push(le);
-        }
-      });
-
-      const finalEnquiries = merged.length > 0
-        ? [...merged, ...INITIAL_ENQUIRIES.filter((ie) => !merged.find((m) => m.id === ie.id))]
-        : INITIAL_ENQUIRIES;
-
-      setEnquiriesList(finalEnquiries);
-    };
-
-    const fetchSettings = async () => {
-      try {
-        const res = await axiosInstance.get(ENDPOINTS.SETTINGS.GET);
-        const data = res.data || res;
-        if (data && typeof data === 'object') setSettingsForm(prev => ({ ...prev, ...data }));
-      } catch (err) {
-        console.warn('Settings API fetch warning:', err.message);
-      }
-    };
-
-    const fetchProducts = async () => {
-      setLoadingProducts(true);
-      let apiProducts = [];
-      try {
-        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200&showAll=true');
-        const data = res.data || res;
-        if (data && Array.isArray(data.data)) apiProducts = data.data;
-        else if (Array.isArray(data)) apiProducts = data;
-      } catch (err) {
-        console.warn('Products fetch error:', err.message);
-      } finally {
-        const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-        const merged = [...localProducts];
-        apiProducts.forEach(ap => {
-          if (!merged.find(m => m.id === ap.id || m.slug === ap.slug)) {
-            merged.push(ap);
-          }
-        });
-        setProductsList(merged);
-        setLoadingProducts(false);
-      }
-    };
-
-    const fetchCategories = async () => {
-      try {
-        const res = await axiosInstance.get(ENDPOINTS.CATEGORIES.LIST);
-        const data = res.data || res;
-        if (data && Array.isArray(data.categories)) setCategories(data.categories);
-        else if (Array.isArray(data)) setCategories(data);
-      } catch (err) {
-        console.warn('Categories fetch error:', err.message);
-      }
-    };
-
     fetchDashboardStats();
     fetchOrders();
     fetchEnquiries();
@@ -569,7 +601,7 @@ const Dashboard = () => {
       price: product.price?.toString() || '',
       comparePrice: product.comparePrice?.toString() || '',
       stock: product.stock?.toString() || '0',
-      images: (product.images || []).join(', '),
+      images: (product.images || []).join('|||'),
       sku: product.sku || '',
       weight: product.weight?.toString() || '',
       featured: product.featured || false,
@@ -598,11 +630,29 @@ const Dashboard = () => {
       return;
     }
     setSavingProduct(true);
-    const imagesArr = Array.isArray(productForm.images)
-      ? productForm.images.map(s => String(s).trim()).filter(Boolean)
-      : typeof productForm.images === 'string'
-      ? productForm.images.split(',').map(s => s.trim()).filter(Boolean)
-      : [];
+    const parseFormImages = (imgs) => {
+      if (!imgs) return [];
+      if (Array.isArray(imgs)) return imgs.map((s) => String(s).trim()).filter(Boolean);
+      if (typeof imgs === 'string') {
+        const trimmed = imgs.trim();
+        if (!trimmed) return [];
+        if (trimmed.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) return parsed.map((s) => String(s).trim()).filter(Boolean);
+          } catch (err) {}
+        }
+        if (trimmed.includes('|||')) {
+          return trimmed.split('|||').map((s) => s.trim()).filter(Boolean);
+        }
+        if (trimmed.startsWith('data:')) {
+          return [trimmed];
+        }
+        return trimmed.split(',').map((s) => s.trim()).filter(Boolean);
+      }
+      return [];
+    };
+    const imagesArr = parseFormImages(productForm.images);
     if (imagesArr.length === 0) {
       toast.error('At least one image is required');
       setSavingProduct(false);
@@ -632,7 +682,9 @@ const Dashboard = () => {
       isActive: productForm.isActive,
     };
     // Save locally to localStorage so it works offline & syncs immediately across all pages!
-    const generatedSlug = payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const generatedSlug = payload.name ? payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : `prod-${Date.now()}`;
+    const selectedCatObj = categories.find(c => c.id === payload.categoryId);
+    const selectedSubCatObj = categories.find(c => c.id === payload.subCategoryId);
     const savedProduct = {
       id: editingProduct ? editingProduct.id : `prod-${Date.now()}`,
       slug: (editingProduct && editingProduct.slug) || generatedSlug,
@@ -651,6 +703,11 @@ const Dashboard = () => {
       featured: payload.featured,
       categoryId: payload.categoryId,
       subCategoryId: payload.subCategoryId,
+      categoryName: selectedCatObj ? selectedCatObj.name : (editingProduct ? editingProduct.categoryName : ''),
+      categorySlug: selectedCatObj ? selectedCatObj.slug : (editingProduct ? editingProduct.categorySlug : ''),
+      category: selectedCatObj ? { id: selectedCatObj.id, name: selectedCatObj.name, slug: selectedCatObj.slug } : undefined,
+      subCategoryName: selectedSubCatObj ? selectedSubCatObj.name : (editingProduct ? editingProduct.subCategoryName : ''),
+      subCategorySlug: selectedSubCatObj ? selectedSubCatObj.slug : (editingProduct ? editingProduct.subCategorySlug : ''),
       isActive: payload.isActive,
       createdAt: editingProduct ? editingProduct.createdAt : new Date().toISOString(),
     };
@@ -740,34 +797,63 @@ const Dashboard = () => {
 
   const handleCategorySubmit = async (e) => {
     e.preventDefault();
-    if (!categoryForm.name.trim()) {
+    if (!categoryForm.name || !categoryForm.name.trim()) {
       toast.error('Category Name is required');
       return;
     }
     setSavingCategory(true);
+
+    const generatedSlug = categoryForm.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const payload = {
       name: categoryForm.name.trim(),
-      description: categoryForm.description.trim() || undefined,
-      image: categoryForm.image.trim() || undefined,
+      description: categoryForm.description ? categoryForm.description.trim() : undefined,
+      image: categoryForm.image ? categoryForm.image.trim() : undefined,
       sortOrder: parseInt(categoryForm.sortOrder) || 0,
       isActive: categoryForm.isActive,
       parentId: categoryForm.parentId || undefined,
     };
+
+    const savedCat = {
+      id: editingCategory ? editingCategory.id : `cat-${Date.now()}`,
+      name: payload.name,
+      slug: (editingCategory && editingCategory.slug) || generatedSlug,
+      description: payload.description || '',
+      image: payload.image || '/images/cat_corporate.png',
+      sortOrder: payload.sortOrder || 0,
+      isActive: payload.isActive !== false,
+      parentId: payload.parentId || null,
+      createdAt: editingCategory ? editingCategory.createdAt : new Date().toISOString(),
+    };
+
+    // Save locally to localStorage so it syncs immediately & works offline
+    const existingCustomCats = JSON.parse(localStorage.getItem('giftery_categories') || '[]');
+    let updatedCustomCats;
+    if (editingCategory) {
+      updatedCustomCats = existingCustomCats.map(c => (c.id === editingCategory.id || c.slug === savedCat.slug) ? { ...c, ...savedCat } : c);
+    } else {
+      updatedCustomCats = [savedCat, ...existingCustomCats.filter(c => c.id !== savedCat.id)];
+    }
+    localStorage.setItem('giftery_categories', JSON.stringify(updatedCustomCats));
+    window.dispatchEvent(new Event('categories_updated'));
+
     try {
       if (editingCategory) {
         const res = await axiosInstance.put(ENDPOINTS.CATEGORIES.UPDATE(editingCategory.id), payload);
         const updated = (res.data || res).category || (res.data || res);
-        setCategories(prev => prev.map(c => c.id === editingCategory.id ? { ...c, ...updated } : c));
-        toast.success('✅ Category updated successfully!');
+        setCategories(prev => prev.map(c => c.id === editingCategory.id ? { ...c, ...savedCat, ...updated } : c));
+        toast.success('Category updated successfully!');
       } else {
         const res = await axiosInstance.post(ENDPOINTS.CATEGORIES.CREATE, payload);
         const created = (res.data || res).category || (res.data || res);
-        setCategories(prev => [...prev, created]);
-        toast.success('✅ Category created successfully!');
+        setCategories(prev => [...prev.filter(c => c.id !== savedCat.id), created || savedCat]);
+        toast.success('Category created successfully!');
       }
       resetCategoryForm();
     } catch (err) {
-      toast.error(err?.response?.data?.message || err.message || 'Failed to save category');
+      console.warn('Backend API category save warning, category saved to store:', err.message);
+      setCategories(prev => [...prev.filter(c => c.id !== savedCat.id), savedCat]);
+      toast.success('Category saved to store!');
+      resetCategoryForm();
     } finally {
       setSavingCategory(false);
     }
@@ -775,12 +861,20 @@ const Dashboard = () => {
 
   const handleDeleteCategory = async (catId, catName) => {
     if (!window.confirm(`Delete category "${catName}"? This cannot be undone.`)) return;
+
+    const existingCustomCats = JSON.parse(localStorage.getItem('giftery_categories') || '[]');
+    const updatedCustomCats = existingCustomCats.filter(c => c.id !== catId);
+    localStorage.setItem('giftery_categories', JSON.stringify(updatedCustomCats));
+    window.dispatchEvent(new Event('categories_updated'));
+
+    setCategories(prev => prev.filter(c => c.id !== catId));
+
     try {
       await axiosInstance.delete(ENDPOINTS.CATEGORIES.DELETE(catId));
-      setCategories(prev => prev.filter(c => c.id !== catId));
       toast.success('Category deleted successfully');
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Failed to delete category');
+      console.warn('Backend API category delete warning:', err.message);
+      toast.success('Category removed from store');
     }
   };
 
@@ -815,11 +909,14 @@ const Dashboard = () => {
 
   const handleExportOrdersCSV = () => {
     const headers = ['Order ID', 'Customer Name', 'Total Amount (INR)', 'Items Count', 'Order Date', 'Status'];
-    const rows = [
-      ['ORD-1256', 'Tech Solutions Pvt Ltd', '45600', '4', '18 May 2025', 'Delivered'],
-      ['ORD-1255', 'Rahul Verma', '12450', '1', '18 May 2025', 'Processing'],
-      ['ORD-1254', 'ABC Corporation', '78900', '15', '17 May 2025', 'Pending'],
-    ];
+    const rows = (ordersList || []).map(o => [
+      o.id,
+      o.customer || 'Customer',
+      o.rawAmount || (o.amount || '0').replace(/[^0-9.]/g, ''),
+      o.itemsCount || 1,
+      o.date || '',
+      o.status || 'Pending',
+    ]);
     downloadCSV('Store_Orders_Sales_Report', headers, rows);
   };
 
@@ -845,6 +942,24 @@ const Dashboard = () => {
       c.id, c.name, c.email, c.phone || 'N/A', c.role || 'CUSTOMER', c.ordersCount || 0, c.totalSpent || 0, c.joinedDate || 'Recent', c.status || 'Active',
     ]);
     downloadCSV('Customer_Database_Report', headers, rows);
+  };
+
+  const handleHeaderExport = () => {
+    if (activeTab === 'products') {
+      handleExportProductsCSV();
+    } else if (activeTab === 'customers') {
+      handleExportCustomersCSV();
+    } else if (activeTab === 'corporate-quotes') {
+      handleExportQuotesCSV();
+    } else if (activeTab === 'enquiries') {
+      const headers = ['Enquiry ID', 'Name', 'Email', 'Phone', 'Category', 'Subject', 'Status', 'Date'];
+      const rows = (enquiriesList || []).map(e => [
+        e.id, e.name, e.email, e.phone || '', e.category || '', e.subject || '', e.status || 'New', e.createdAt || ''
+      ]);
+      downloadCSV('Enquiries_Report', headers, rows);
+    } else {
+      handleExportOrdersCSV();
+    }
   };
 
   return (
@@ -943,11 +1058,7 @@ const Dashboard = () => {
               {/* Refresh Button */}
               <button
                 className={`${styles.headerActionBtn} ${styles.refreshBtn} ${isRefreshing ? styles.refreshSpinning : ''}`}
-                onClick={() => {
-                  setIsRefreshing(true);
-                  toast.info('Refreshing data...', { autoClose: 1200 });
-                  setTimeout(() => setIsRefreshing(false), 1500);
-                }}
+                onClick={fetchAllDashboardData}
                 title="Refresh data"
                 disabled={isRefreshing}
               >
@@ -957,10 +1068,8 @@ const Dashboard = () => {
               {/* Export Excel Button */}
               <button
                 className={`${styles.headerActionBtn} ${styles.excelBtn}`}
-                onClick={() => {
-                  toast.success('📊 Excel report generated! Downloading...', { autoClose: 2000 });
-                }}
-                title="Export to Excel"
+                onClick={handleHeaderExport}
+                title="Export to Excel / CSV"
               >
                 <FiDownload />
                 <span>Export</span>

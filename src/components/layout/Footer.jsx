@@ -59,18 +59,8 @@ const Footer = () => (
             <li><Link to={ROUTES.HOME}>Home</Link></li>
             <li><Link to={ROUTES.ABOUT}>About Us</Link></li>
             <li><Link to={ROUTES.CONTACT}>Contact Us</Link></li>
-            <li><a href="#terms">Terms &amp; Conditions</a></li>
-            <li><a href="#privacy">Privacy Policy</a></li>
-          </ul>
-        </div>
-
-        {/* Useful Link Column */}
-        <div className={styles.col}>
-          <h3 className={styles.colTitle}>Useful Link</h3>
-          <ul className={styles.linkList}>
-            <li><Link to={ROUTES.ORDERS}>Your Order</Link></li>
-            <li><Link to={ROUTES.PROFILE}>Your Account</Link></li>
-            <li><Link to={ROUTES.FAQ}>FAQs</Link></li>
+            <li><Link to={ROUTES.TERMS}>Terms &amp; Conditions</Link></li>
+            <li><Link to={ROUTES.PRIVACY}>Privacy Policy</Link></li>
           </ul>
         </div>
 

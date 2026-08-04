@@ -10,7 +10,7 @@ const loadCartFromStorage = () => {
       if (Array.isArray(parsed.items) && parsed.items.length > 0) {
         return {
           items: parsed.items,
-          totalQuantity: parsed.items.reduce((acc, i) => acc + (Number(i.quantity) || 1), 0),
+          totalQuantity: parsed.items.length,
           totalPrice: parsed.items.reduce(
             (acc, i) => acc + (Number(i.quantity) || 1) * Number(i.price || i.salePrice || i.product?.price || 0),
             0
@@ -40,7 +40,7 @@ const saveCartToStorage = (state) => {
 };
 
 const recalculateCart = (state) => {
-  state.totalQuantity = state.items.reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
+  state.totalQuantity = state.items.length;
   state.totalPrice = state.items.reduce(
     (sum, i) => sum + (Number(i.quantity) || 1) * Number(i.price || i.salePrice || i.product?.salePrice || i.product?.price || 0),
     0
@@ -177,6 +177,6 @@ export const removeFromCart = removeItem;
 // Selectors
 export const selectCartItems = (state) => state.cart.items;
 export const selectCartTotal = (state) => state.cart.totalPrice;
-export const selectCartCount = (state) => state.cart.totalQuantity;
+export const selectCartCount = (state) => state.cart.items.length;
 
 export default cartSlice.reducer;

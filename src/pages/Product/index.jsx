@@ -182,17 +182,44 @@ const Product = () => {
       }
     };
 
+    // Related Products from Live Catalog
+    const fetchLiveRelated = async () => {
+      let apiProducts = [];
+      try {
+        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
+        const resData = res.data?.products || res.data?.data || res.data || [];
+        if (Array.isArray(resData)) apiProducts = resData;
+      } catch (err) {}
+
+      const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+      const combined = [...localProducts];
+      apiProducts.forEach(ap => {
+        if (!combined.find(c => c.id === ap.id || c.slug === ap.slug)) combined.push(ap);
+      });
+
+      if (combined.length > 0 && isMounted) {
+        const normalizedSlug = slug ? slug.toLowerCase().trim() : '';
+        const filtered = combined
+          .filter(p => p.slug !== normalizedSlug && p.id !== slug)
+          .slice(0, 4)
+          .map(p => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            image: Array.isArray(p.images) ? p.images[0] : (p.image || '/placeholder.jpg'),
+            slug: p.slug,
+          }));
+        setRelatedProducts(filtered);
+      }
+    };
+
     fetchProduct();
+    fetchLiveRelated();
 
-    // Related Products
-    setRelatedProducts([
-      { id: 'rel-1', name: 'Executive Desk Set', price: 2199, image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&auto=format&fit=crop&q=80', slug: '3d-wooden-mechanical-gear-clock-puzzle' },
-      { id: 'rel-2', name: 'Leather Notebook', price: 599, image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&auto=format&fit=crop&q=80', slug: 'personalized-leather-notebook-metallic-pen-set' },
-      { id: 'rel-3', name: 'Copper Bottle', price: 899, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&auto=format&fit=crop&q=80', slug: 'custom-name-engraved-stainless-hydro-bottle' },
-      { id: 'rel-4', name: 'Wireless Charger', price: 1299, image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=400&auto=format&fit=crop&q=80', slug: '3d-acrylic-photo-standee-led-base' },
-    ]);
-
-    window.addEventListener('products_updated', fetchProduct);
+    window.addEventListener('products_updated', () => {
+      fetchProduct();
+      fetchLiveRelated();
+    });
     return () => {
       isMounted = false;
       window.removeEventListener('products_updated', fetchProduct);
@@ -557,7 +584,7 @@ const Product = () => {
             <div className={styles.tabContentCard}>
               {/* Tab Headers */}
               <div className={styles.tabsHeaderNav}>
-                {['description', 'specifications', 'customization', 'shipping & returns', 'reviews'].map(tab => (
+                {['description', 'specifications', 'reviews'].map(tab => (
                   <button
                     key={tab}
                     type="button"
@@ -587,20 +614,6 @@ const Product = () => {
                   <div className={styles.tabSectionBox}>
                     <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>Detailed Product Specifications</h4>
                     {renderFormattedText(specifications)}
-                  </div>
-                )}
-
-                {activeTab === 'customization' && (
-                  <div className={styles.tabSectionBox}>
-                    <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>Custom Logo & Branding Options</h4>
-                    {renderFormattedText(customization)}
-                  </div>
-                )}
-
-                {activeTab === 'shipping & returns' && (
-                  <div className={styles.tabSectionBox}>
-                    <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>Shipping & Return Policies</h4>
-                    {renderFormattedText(shippingReturns)}
                   </div>
                 )}
 

@@ -215,22 +215,22 @@
 }
 
 .subCategoryCard:hover .subCategoryName {
-  color: #7e22ce;
+  color: #b45309;
 }
 
 .subCategoryActive {
-  background: #faf5ff !important;
-  border-color: #a855f7 !important;
-  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.15) !important;
+  background: #fefce8 !important;
+  border-color: #fde047 !important;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.15) !important;
 }
 
 .subCategoryActive .subCategoryIconWrapper {
   background: #ffffff !important;
-  border-color: #a855f7 !important;
+  border-color: #fde047 !important;
 }
 
 .subCategoryActive .subCategoryName {
-  color: #6b21a8 !important;
+  color: #854d0e !important;
   font-weight: 800 !important;
 }
 
@@ -345,9 +345,10 @@
 }
 
 .categoryActive {
-  background: #fdf4ff !important;
-  color: #7e22ce !important;
+  background: #fefce8 !important;
+  color: #854d0e !important;
   font-weight: 700;
+  border-color: #fef08a !important;
 }
 
 .categoryLeft {
@@ -360,7 +361,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #a855f7;
+  background: #d97706;
   display: inline-block;
 }
 
@@ -479,13 +480,13 @@
   height: 16px;
   border-radius: 4px;
   border: 1px solid #cbd5e1;
-  accent-color: #7e22ce;
+  accent-color: #0f172a;
   cursor: pointer;
 }
 
 .applyFiltersBtn {
   width: 100%;
-  background: #581c87;
+  background: #0f172a;
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -500,7 +501,7 @@
 }
 
 .applyFiltersBtn:hover {
-  background: #6b21a8;
+  background: #1e293b;
 }
 
 /* ── Right Content Section ─────────────────────────────── */
@@ -536,6 +537,58 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ── Search Input Bar ──────────────────────────────────── */
+.searchBoxWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 240px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.searchInputBar {
+  width: 100%;
+  padding: 0.45rem 2rem 0.45rem 2.2rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.searchInputBar:focus {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+
+.clearSearchBtn {
+  position: absolute;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clearSearchBtn:hover {
+  color: #0f172a;
 }
 
 .sortSelectWrapper {
@@ -662,10 +715,10 @@
   object-fit: contain;
 }
 
-/* ── 4-Column Product Grid ─────────────────────────────── */
+/* ── 5-Column Product Grid ─────────────────────────────── */
 .productGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 1.25rem;
 }
 
@@ -697,6 +750,12 @@
   justify-content: center;
   align-items: flex-start;
   text-align: left;
+}
+
+@media (max-width: 1400px) {
+  .productGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 @media (max-width: 1200px) {
@@ -939,15 +998,15 @@
 }
 
 .pageSquareBtn:hover:not(:disabled) {
-  border-color: #7e22ce;
-  color: #7e22ce;
-  background: #faf5ff;
+  border-color: #0f172a;
+  color: #0f172a;
+  background: #f8fafc;
 }
 
 .pageSquareActive {
-  background: #1e1b4b !important;
+  background: #0f172a !important;
   color: #ffffff !important;
-  border-color: #1e1b4b !important;
+  border-color: #0f172a !important;
 }
 
 .pageSquareBtn:disabled {
@@ -1050,13 +1109,13 @@
 }
 
 .formControl:focus {
-  border-color: #a855f7;
-  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
 }
 
 .submitQuoteBtn {
-  background: #6b21a8;
-  color: #ffffff;
+  background: #eab308;
+  color: #0f172a;
   border: none;
   border-radius: 8px;
   padding: 0.85rem;
@@ -1068,5 +1127,5 @@
 }
 
 .submitQuoteBtn:hover {
-  background: #581c87;
+  background: #facc15;
 }

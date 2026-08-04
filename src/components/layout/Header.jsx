@@ -46,7 +46,7 @@ const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useSelector((s) => s.auth);
-  const cartCount = useSelector((s) => s.cart.items.reduce((n, i) => n + i.quantity, 0));
+  const cartCount = useSelector((s) => s.cart.items.length);
   const wishlistCount = useSelector((s) => s.wishlist.items.length);
   const { toggleCart } = useCartContext();
 

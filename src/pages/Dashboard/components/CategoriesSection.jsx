@@ -222,7 +222,6 @@ const CategoriesSection = ({
             <table className={styles.ordersTable}>
               <thead>
                 <tr>
-                  <th>Image</th>
                   <th>Category Name</th>
                   <th>Slug</th>
                   <th>Parent Category</th>
@@ -235,13 +234,6 @@ const CategoriesSection = ({
                   const parentCat = categories.find(c => c.id === cat.parentId);
                   return (
                     <tr key={cat.id}>
-                      <td>
-                        {cat.image ? (
-                          <img src={cat.image} alt={cat.name} style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #e2e8f0' }} onError={(e) => { e.target.style.display='none'; }} />
-                        ) : (
-                          <div style={{ width: '44px', height: '44px', background: '#f1f5f9', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '1.2rem' }}>📁</div>
-                        )}
-                      </td>
                       <td>
                         <strong>{cat.name}</strong>
                       </td>

@@ -206,94 +206,6 @@ const OCCASIONS_DATA = [
 ];
 
 const PRODUCTS_LIST = [
-  {
-    id: 'cg-101',
-    name: 'Executive Kinetic Desk Gyro Sculpture',
-    price: 1499,
-    comparePrice: 1999,
-    rating: 4.8,
-    reviewsCount: 49,
-    discount: '25%',
-    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&auto=format&fit=crop&q=80',
-    slug: 'executive-kinetic-desk-gyro-sculpture',
-  },
-  {
-    id: 'cg-102',
-    name: '3D Wooden Mechanical Gear Clock Puzzle',
-    price: 2199,
-    comparePrice: 2799,
-    rating: 4.9,
-    reviewsCount: 81,
-    discount: '21%',
-    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500&auto=format&fit=crop&q=80',
-    slug: '3d-wooden-mechanical-gear-clock-puzzle',
-  },
-  {
-    id: 'cg-103',
-    name: 'Miniature Executive Golf Putting Desk Game Set',
-    price: 1299,
-    comparePrice: 1699,
-    rating: 4.7,
-    reviewsCount: 38,
-    discount: '24%',
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=80',
-    slug: 'miniature-executive-golf-putting-desk-game-set',
-  },
-  {
-    id: 'cg-104',
-    name: 'Interactive Newton Cradle LED Balance Balls',
-    price: 1799,
-    comparePrice: 2299,
-    rating: 4.8,
-    reviewsCount: 57,
-    discount: '22%',
-    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=80',
-    slug: 'interactive-newton-cradle-led-balance-balls',
-  },
-  {
-    id: 'cg-105',
-    name: 'DIY Mechanical Automata Moving Model Kit',
-    price: 2499,
-    comparePrice: 3199,
-    rating: 4.9,
-    reviewsCount: 84,
-    discount: '22%',
-    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=80',
-    slug: 'diy-mechanical-automata-moving-model-kit',
-  },
-  {
-    id: 'cg-106',
-    name: 'Retro Wooden Desktop Bowling Alley Game',
-    price: 899,
-    comparePrice: 1199,
-    rating: 4.6,
-    reviewsCount: 42,
-    discount: '25%',
-    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500&auto=format&fit=crop&q=80',
-    slug: 'retro-wooden-desktop-bowling-alley-game',
-  },
-  {
-    id: 'cg-107',
-    name: 'Precision Metal Balance Pendulum Desk Toy',
-    price: 1599,
-    comparePrice: 1999,
-    rating: 4.7,
-    reviewsCount: 31,
-    discount: '20%',
-    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&auto=format&fit=crop&q=80',
-    slug: 'precision-metal-balance-pendulum-desk-toy',
-  },
-  {
-    id: 'cg-108',
-    name: 'Handcrafted Wooden IQ Teaser Lock Set',
-    price: 999,
-    comparePrice: 1399,
-    rating: 4.8,
-    reviewsCount: 53,
-    discount: '29%',
-    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=80',
-    slug: 'handcrafted-wooden-iq-teaser-lock-set',
-  },
 ];
 
 const CorporateGifts = () => {
@@ -324,23 +236,49 @@ const CorporateGifts = () => {
       });
 
       if (combined.length > 0) {
-        const formatted = combined.map((p) => {
-          const imgList = Array.isArray(p.images)
-            ? p.images
-            : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
-          return {
-            id: p.id,
-            name: p.name,
-            price: p.price,
-            comparePrice: p.comparePrice,
-            rating: p.rating || 4.8,
-            reviewsCount: p.reviewsCount || p._count?.reviews || 24,
-            discount: p.comparePrice ? `${Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100)}%` : null,
-            images: imgList,
-            image: imgList[0] || '/placeholder.jpg',
-            slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          };
-        });
+        const formatted = combined
+          .map((p) => {
+            const imgList = Array.isArray(p.images)
+              ? p.images
+              : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
+            const subCatName = (p.subCategory?.name || p.subCategoryName || '').toLowerCase();
+            return {
+              id: p.id,
+              name: p.name,
+              price: p.price,
+              comparePrice: p.comparePrice,
+              rating: p.rating || 4.8,
+              reviewsCount: p.reviewsCount || p._count?.reviews || 24,
+              discount: p.comparePrice ? `${Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100)}%` : null,
+              images: imgList,
+              image: imgList[0] || '/placeholder.jpg',
+              slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+              categoryId: p.categoryId || null,
+              subCategoryId: p.subCategoryId || null,
+              categoryName: p.category?.name || p.categoryName || '',
+              categorySlug: p.category?.slug || p.categorySlug || '',
+              subCategoryName: p.subCategory?.name || p.subCategoryName || '',
+              _catName: catName,
+              _catSlug: catSlug,
+              _subCatName: subCatName,
+            };
+          })
+          // ── PAGE RESTRICTION: Only show Corporate Gifts products ──
+          .filter(p => {
+            const c = `${p._catName} ${p._catSlug} ${p._subCatName}`.trim();
+            if ((c.includes('toy') || c.includes('personalized')) && !c.includes('corporate')) {
+              return false;
+            }
+            if (c) {
+              return c.includes('corporate') || c.includes('office') || c.includes('business') || c.includes('executive') ||
+                     c.includes('onboarding') || c.includes('anniversary') || c.includes('diaries') || c.includes('drinkware') ||
+                     c.includes('apparel') || c.includes('electronics') || c.includes('backpack') || c.includes('troph') ||
+                     c.includes('cap') || c.includes('umbrella') || c.includes('card') || c.includes('keychain') || c.includes('mug');
+            }
+            const n = (p.name || '').toLowerCase();
+            if (n.includes('toy') || n.includes('photo frame') || n.includes('acrylic') || n.includes('caricature')) return false;
+            return true;
+          });
         setLiveProducts(formatted);
       }
     };
@@ -350,10 +288,30 @@ const CorporateGifts = () => {
     return () => window.removeEventListener('products_updated', fetchLiveProducts);
   }, []);
 
-  // Base raw products catalog
+  // Base raw products catalog (live DB products or fallback mock)
   const rawProducts = liveProducts.length > 0 ? liveProducts : PRODUCTS_LIST;
 
+  // ── Dynamic Categories built from real DB products ──────────────
+  const dynamicCategories = (() => {
+    if (liveProducts.length === 0) return CATEGORIES_DATA;
+    const catMap = new Map();
+    liveProducts.forEach(p => {
+      // Use subCategoryId for granular filtering, or categoryId if no sub
+      const filterId = p.subCategoryId || p.categoryId;
+      const filterName = p.subCategoryName || p.categoryName;
+      if (filterId && filterName) {
+        const existing = catMap.get(filterId);
+        if (existing) existing.count += 1;
+        else catMap.set(filterId, { id: filterId, name: filterName, count: 1 });
+      }
+    });
+    return [{ id: 'all', name: 'All Products', count: liveProducts.length }, ...Array.from(catMap.values())];
+  })();
+
+  const categoriesForFilter = dynamicCategories;
+
   // Filter States
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeSubCategory, setActiveSubCategory] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [minPrice, setMinPrice] = useState('100');
@@ -379,6 +337,7 @@ const CorporateGifts = () => {
   };
 
   const handleClearAll = () => {
+    setSearchQuery('');
     setSelectedCategory('all');
     setActiveSubCategory('all');
     setMinPrice('100');
@@ -390,32 +349,49 @@ const CorporateGifts = () => {
   // Filtered & Sorted Products computation
   const displayProducts = rawProducts
     .filter((prod) => {
+      // 0. Keyword / Name / Tags Search Filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        const name = (prod.name || '').toLowerCase();
+        const desc = (prod.description || '').toLowerCase();
+        const catName = (prod.categoryName || prod.category?.name || '').toLowerCase();
+        const subCatName = (prod.subCategoryName || prod.subCategory?.name || '').toLowerCase();
+        const tagsStr = Array.isArray(prod.tags) ? prod.tags.join(' ').toLowerCase() : (prod.tags || '').toLowerCase();
+        const slug = (prod.slug || '').toLowerCase();
+
+        const matches =
+          name.includes(query) ||
+          desc.includes(query) ||
+          catName.includes(query) ||
+          subCatName.includes(query) ||
+          tagsStr.includes(query) ||
+          slug.includes(query);
+
+        if (!matches) return false;
+      }
       // 1. Price Filter
       const price = Number(prod.price) || 0;
       const minP = Number(minPrice) || 0;
       const maxP = Number(maxPrice) || Infinity;
       if (price < minP || price > maxP) return false;
 
-      // 2. Category / Subcategory Filter
+      // 2. Category / Subcategory Filter — match by real DB IDs first, then name fallback
       const activeCat = selectedCategory !== 'all' ? selectedCategory : activeSubCategory;
       if (activeCat !== 'all') {
-        const catObj = CATEGORIES_DATA.find((c) => c.id === activeCat) || SUBCATEGORIES_DATA.find((s) => s.id === activeCat);
+        // Direct ID match (works for live DB products)
+        if (prod.categoryId === activeCat || prod.subCategoryId === activeCat) return true;
+        // Name-based fallback (works for mock/static products)
+        const catObj = categoriesForFilter.find(c => c.id === activeCat);
         if (catObj) {
           const catName = catObj.name.toLowerCase();
           const pName = (prod.name || '').toLowerCase();
           const pSlug = (prod.slug || '').toLowerCase();
-          const pCategory = (prod.category?.name || prod.categoryName || '').toLowerCase();
-
-          // Check if category words match product name, slug, or category name
-          const words = catName.split(' ').filter(w => w.length > 2 && w !== 'and' && w !== 'kit' && w !== 'kits');
-          const isMatch = words.some(w => pName.includes(w) || pSlug.includes(w) || pCategory.includes(w));
-
-          if (!isMatch && prod.categoryId !== activeCat) {
-            // Soft match
-          }
+          const pCat = (prod.categoryName || '').toLowerCase();
+          const words = catName.split(' ').filter(w => w.length > 2 && !['and', 'kit', 'kits', 'all', 'products'].includes(w));
+          return words.some(w => pName.includes(w) || pSlug.includes(w) || pCat.includes(w));
         }
+        return false;
       }
-
       return true;
     })
     .sort((a, b) => {
@@ -541,7 +517,7 @@ const CorporateGifts = () => {
                 <span className={styles.toggleIcon}>−</span>
               </div>
               <div className={styles.categoryList}>
-                {CATEGORIES_DATA.map((cat) => {
+                {categoriesForFilter.map((cat) => {
                   const isActive = selectedCategory === cat.id;
                   return (
                     <div
@@ -670,6 +646,28 @@ const CorporateGifts = () => {
               </div>
 
               <div className={styles.controlGroup}>
+                <div className={styles.searchBoxWrapper}>
+                  <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search by name, tag, category..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className={styles.searchInputBar}
+                  />
+                  {searchQuery && (
+                    <button type="button" onClick={() => setSearchQuery('')} className={styles.clearSearchBtn} aria-label="Clear Search">
+                      ✕
+                    </button>
+                  )}
+                </div>
+
                 <div className={styles.sortSelectWrapper}>
                   <span>Sort by:</span>
                   <select

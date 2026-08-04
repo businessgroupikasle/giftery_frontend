@@ -36,21 +36,27 @@ axiosInstance.interceptors.response.use(
   (error) => {
     const status = error.response?.status;
     const message = error.response?.data?.message || error.message;
+    const requestUrl = error.config?.url || '';
 
-    // Token expired / unauthorized
-    if (status === 401) {
+    const isAuthRoute = requestUrl.includes('/auth/login') ||
+                        requestUrl.includes('/auth/register') ||
+                        requestUrl.includes('/auth/request-otp') ||
+                        requestUrl.includes('/auth/verify-email');
+
+    // Token expired / unauthorized on protected app routes
+    if (status === 401 && !isAuthRoute) {
       clearAuth();
       window.location.href = '/login';
     }
 
-    // Forbidden
-    if (status === 403) {
+    // Forbidden on protected app routes
+    if (status === 403 && !isAuthRoute) {
       window.location.href = '/403';
     }
 
     return Promise.reject({
       status,
-      message,
+      message: message || 'Invalid username or password. Please check your credentials.',
       errors: error.response?.data?.errors || [],
     });
   }

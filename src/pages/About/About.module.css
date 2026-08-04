@@ -357,10 +357,12 @@
   position: relative;
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: pointer;
+  z-index: 1;
 }
 
 .processStepItem:hover {
   transform: translateY(-6px);
+  z-index: 5;
 }
 
 .blackBadgeCircle {
@@ -375,7 +377,7 @@
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
   border: 1.5px solid rgba(229, 193, 88, 0.3);
   position: relative;
-  z-index: 2;
+  z-index: 3;
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -399,12 +401,13 @@
 .dashedArrowLine {
   position: absolute;
   top: 34px;
-  left: 68px;
-  width: calc(100% - 16px);
+  left: 70px;
+  width: calc(100% + 1.25rem - 82px);
   height: 2px;
   background: linear-gradient(90deg, #c58b29 55%, transparent 45%);
   background-size: 14px 2px;
-  z-index: 1;
+  z-index: 2;
+  pointer-events: none;
   animation: dashFlow 1.4s linear infinite;
   display: flex;
   align-items: center;
@@ -424,7 +427,7 @@
   font-size: 10px;
   color: #c58b29;
   margin-top: -1px;
-  margin-right: -4px;
+  margin-right: 0;
   animation: arrowPulse 1.2s ease-in-out infinite alternate;
 }
 

@@ -1,11 +1,14 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import Layout from '@components/layout/Layout';
-import ProductGrid from '@components/product/ProductGrid';
-import useFetch from '@hooks/useFetch';
+import { addToCart } from '@store/slices/cartSlice';
+import { addToWishlist } from '@store/slices/wishlistSlice';
+import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { ROUTES } from '@constants/routes';
 import { toast } from 'react-toastify';
+import ThreeDotMenu from '@components/product/ThreeDotMenu';
 import styles from './Toys.module.css';
 
 const TOYS_SUBCATEGORIES = [
@@ -120,104 +123,93 @@ const TARGET_AUDIENCE_DATA = [
 ];
 
 const TOYS_MOCK_PRODUCTS = [
-  {
-    id: 'ty-1',
-    name: 'Executive Kinetic Desk Gyro Sculpture',
-    slug: 'executive-kinetic-desk-sculpture',
-    price: 1499,
-    comparePrice: 1999,
-    rating: 4.8,
-    images: ['/images/cat_welcome.png'],
-    _count: { reviews: 49 },
-    category: 'Kinetic Desk Toys',
-    isBestseller: true,
-  },
-  {
-    id: 'ty-2',
-    name: '3D Wooden Mechanical Gear Clock Puzzle',
-    slug: '3d-wooden-gear-brain-teaser',
-    price: 2199,
-    comparePrice: 2799,
-    rating: 4.9,
-    images: ['/images/cat_eco.png'],
-    _count: { reviews: 81 },
-    category: '3D Brain Teasers',
-    isBestseller: true,
-  },
-  {
-    id: 'ty-3',
-    name: 'Miniature Executive Golf Putting Desk Game Set',
-    slug: 'miniature-desk-golf-putting-set',
-    price: 1299,
-    comparePrice: 1699,
-    rating: 4.6,
-    images: ['/images/cat_tech.png'],
-    _count: { reviews: 38 },
-    category: 'Desktop Mini Games',
-  },
-  {
-    id: 'ty-4',
-    name: 'Interactive Newton Cradle LED Balance Balls',
-    slug: 'newton-cradle-led-balance-balls',
-    price: 1799,
-    comparePrice: 2299,
-    rating: 4.7,
-    images: ['/images/cat_corporate.png'],
-    _count: { reviews: 57 },
-    category: 'Desk Toys',
-  },
-  {
-    id: 'ty-5',
-    name: 'DIY Mechanical Automata Moving Model Kit',
-    slug: 'diy-mechanical-automata-model-kit',
-    price: 2499,
-    comparePrice: 3199,
-    rating: 4.9,
-    images: ['/images/cat_merch.png'],
-    _count: { reviews: 64 },
-    category: 'DIY Model Kits',
-  },
-  {
-    id: 'ty-6',
-    name: 'Retro Wooden Desktop Bowling Alley Game',
-    slug: 'retro-wooden-desktop-bowling-game',
-    price: 899,
-    comparePrice: 1199,
-    rating: 4.5,
-    images: ['/images/cat_eco.png'],
-    _count: { reviews: 42 },
-    category: 'Desktop Games',
-  },
-  {
-    id: 'ty-7',
-    name: 'Precision Metal Balance Pendulum Desk Toy',
-    slug: 'precision-metal-balance-pendulum',
-    price: 1599,
-    comparePrice: 1999,
-    rating: 4.8,
-    images: ['/images/cat_welcome.png'],
-    _count: { reviews: 31 },
-    category: 'Kinetic Toys',
-  },
-  {
-    id: 'ty-8',
-    name: 'Handcrafted Wooden IQ Teaser Lock Set',
-    slug: 'handcrafted-wooden-iq-lock-set',
-    price: 999,
-    comparePrice: 1399,
-    rating: 4.7,
-    images: ['/images/cat_corporate.png'],
-    _count: { reviews: 53 },
-    category: 'Brain Teasers',
-  },
+
 ];
 
 const Toys = () => {
-  const { data, loading } = useFetch(ENDPOINTS.PRODUCTS.LIST + '?category=toys&limit=12');
-  const fetchedProducts = data?.data || [];
-  const products = fetchedProducts.length > 0 ? fetchedProducts : TOYS_MOCK_PRODUCTS;
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // Live Products State from Database & LocalStorage
+  const [liveProducts, setLiveProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchLiveProducts = async () => {
+      let apiProducts = [];
+      try {
+        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
+        const data = res.data?.products || res.data?.data || res.data || [];
+        if (Array.isArray(data)) apiProducts = data;
+      } catch (err) {
+        console.warn('Fallback to catalog products:', err.message);
+      }
+
+      const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+      const combined = [...localProducts];
+      apiProducts.forEach(ap => {
+        if (!combined.find(c => c.id === ap.id || c.slug === ap.slug)) {
+          combined.push(ap);
+        }
+      });
+
+      if (combined.length > 0) {
+        const formatted = combined
+          .map((p) => {
+            const imgList = Array.isArray(p.images)
+              ? p.images
+              : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
+            const catName = (p.category?.name || p.categoryName || '').toLowerCase();
+            const catSlug = (p.category?.slug || p.categorySlug || '').toLowerCase();
+            const subCatName = (p.subCategory?.name || p.subCategoryName || '').toLowerCase();
+            return {
+              id: p.id,
+              name: p.name,
+              price: p.price,
+              comparePrice: p.comparePrice,
+              rating: p.rating || 4.8,
+              reviewsCount: p.reviewsCount || p._count?.reviews || 24,
+              discount: p.comparePrice ? `${Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100)}%` : null,
+              images: imgList,
+              image: imgList[0] || '/placeholder.jpg',
+              slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+              categoryId: p.categoryId || null,
+              subCategoryId: p.subCategoryId || null,
+              categoryName: p.category?.name || p.categoryName || '',
+              categorySlug: p.category?.slug || p.categorySlug || '',
+              subCategoryName: p.subCategory?.name || p.subCategoryName || '',
+              _catName: catName,
+              _catSlug: catSlug,
+              _subCatName: subCatName,
+            };
+          })
+          // ── PAGE RESTRICTION: Only show Toys products ──
+          .filter(p => {
+            const c = `${p._catName} ${p._catSlug} ${p._subCatName}`.trim();
+            if ((c.includes('corporate') || c.includes('personalized')) && !c.includes('toy')) {
+              return false;
+            }
+            if (c) {
+              return c.includes('toy') || c.includes('game') || c.includes('puzzle') || c.includes('kid') ||
+                     c.includes('doll') || c.includes('block') || c.includes('car') || c.includes('bike') ||
+                     c.includes('year') || c.includes('robot') || c.includes('stem') || c.includes('rc');
+            }
+            const n = (p.name || '').toLowerCase();
+            if (n.includes('corporate') || n.includes('onboarding') || n.includes('photo frame')) return false;
+            return true;
+          });
+        setLiveProducts(formatted);
+      }
+    };
+
+    fetchLiveProducts();
+    window.addEventListener('products_updated', fetchLiveProducts);
+    return () => window.removeEventListener('products_updated', fetchLiveProducts);
+  }, []);
+
+  const products = liveProducts.length > 0 ? liveProducts : TOYS_MOCK_PRODUCTS;
 
   // Filter States
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeSubCategory, setActiveSubCategory] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [minPrice, setMinPrice] = useState('100');
@@ -291,6 +283,7 @@ const Toys = () => {
   };
 
   const handleClearAll = () => {
+    setSearchQuery('');
     setSelectedCategory('all');
     setActiveSubCategory('all');
     setMinPrice('100');
@@ -302,6 +295,26 @@ const Toys = () => {
   // Filtered & Sorted Products computation
   const displayProducts = products
     .filter((prod) => {
+      // 0. Keyword / Name / Tags Search Filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        const name = (prod.name || '').toLowerCase();
+        const desc = (prod.description || '').toLowerCase();
+        const catName = (prod.categoryName || prod.category?.name || prod.category || '').toLowerCase();
+        const subCatName = (prod.subCategoryName || prod.subCategory?.name || '').toLowerCase();
+        const tagsStr = Array.isArray(prod.tags) ? prod.tags.join(' ').toLowerCase() : (prod.tags || '').toLowerCase();
+        const slug = (prod.slug || '').toLowerCase();
+
+        const matches =
+          name.includes(query) ||
+          desc.includes(query) ||
+          catName.includes(query) ||
+          subCatName.includes(query) ||
+          tagsStr.includes(query) ||
+          slug.includes(query);
+
+        if (!matches) return false;
+      }
       // 1. Price Filter
       const price = Number(prod.price) || 0;
       const minP = Number(minPrice) || 0;
@@ -510,6 +523,28 @@ const Toys = () => {
               </div>
 
               <div className={styles.controlGroup}>
+                <div className={styles.searchBoxWrapper}>
+                  <svg className={styles.searchIcon} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search by name, tag, category..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className={styles.searchInputBar}
+                  />
+                  {searchQuery && (
+                    <button type="button" onClick={() => setSearchQuery('')} className={styles.clearSearchBtn} aria-label="Clear Search">
+                      ✕
+                    </button>
+                  )}
+                </div>
+
                 <div className={styles.sortSelectWrapper}>
                   <span>Sort by:</span>
                   <select
@@ -558,7 +593,101 @@ const Toys = () => {
 
 
             {/* Product Cards Grid */}
-            <ProductGrid products={displayProducts} loading={loading} viewMode={viewMode === 'list' ? 'list' : 'grid-4'} />
+            <div className={`${styles.productGrid} ${viewMode === 'list' ? styles.productListMode : ''}`}>
+              {displayProducts.map((prod) => {
+                const prodImage = Array.isArray(prod.images) && prod.images[0] ? prod.images[0] : (prod.image || '/images/cat_corporate.png');
+                const reviewsCount = prod._count?.reviews || prod.reviewsCount || 18;
+                return (
+                  <div key={prod.id} className={styles.card}>
+                    <div className={styles.cardImageWrapper}>
+                      <Link to={ROUTES.PRODUCT_PATH(prod.slug || prod.id)} className={styles.imageLink}>
+                        <img src={prodImage} alt={prod.name} className={styles.cardImage} />
+                      </Link>
+                      {prod.discount && (
+                        <span className={styles.discountBadge}>-{prod.discount}</span>
+                      )}
+                      <button
+                        className={styles.topRightWishlistBtn}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          dispatch(addToWishlist({ id: prod.id, name: prod.name, price: prod.price, image: prodImage, slug: prod.slug }));
+                          toast.success(`${prod.name} added to wishlist! ❤️`);
+                        }}
+                        aria-label="Add to wishlist"
+                        title="Add to Wishlist"
+                      >
+                        ♡
+                      </button>
+                    </div>
+
+                    <div className={styles.cardContent}>
+                      <Link to={ROUTES.PRODUCT_PATH(prod.slug || prod.id)} className={styles.cardTitle}>
+                        {prod.name}
+                      </Link>
+
+                      <div className={styles.cardRatingRow}>
+                        <span className={styles.stars}>★★★★★</span>
+                        <span className={styles.reviewsCount}>({reviewsCount})</span>
+                      </div>
+
+                      <div className={styles.cardPriceRow}>
+                        <span className={styles.cardPrice}>₹{(prod.price || 0).toLocaleString('en-IN')}.00</span>
+                        {prod.comparePrice && (
+                          <span className={styles.comparePrice}>₹{(prod.comparePrice || 0).toLocaleString('en-IN')}.00</span>
+                        )}
+                      </div>
+
+                      <div className={styles.cardActionsRow}>
+                        <button
+                          className={styles.cardCartBtn}
+                          onClick={() => {
+                            dispatch(
+                              addToCart({
+                                id: prod.id,
+                                name: prod.name,
+                                price: prod.price,
+                                image: prodImage,
+                                slug: prod.slug,
+                              })
+                            );
+                            toast.success(`${prod.name} added to cart! 🛍️`);
+                          }}
+                          aria-label="Add to cart"
+                        >
+                          Add to Cart
+                        </button>
+                        <button
+                          className={styles.buyNowBtn}
+                          onClick={() => {
+                            dispatch(
+                              addToCart({
+                                id: prod.id,
+                                name: prod.name,
+                                price: prod.price,
+                                image: prodImage,
+                                slug: prod.slug,
+                                quantity: 1,
+                              })
+                            );
+                            toast.success(`Proceeding to checkout with ${prod.name}...`);
+                            navigate('/checkout');
+                          }}
+                          aria-label="Buy Now"
+                        >
+                          Buy Now
+                        </button>
+                        <ThreeDotMenu
+                          productUrl={ROUTES.PRODUCT_PATH(prod.slug || prod.id)}
+                          productName={prod.name}
+                          productImage={prodImage}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
             {/* Square Pagination Controls (Replicated from PersonalizedGifts) */}
             <div className={styles.pagination}>

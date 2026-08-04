@@ -25,6 +25,9 @@ export const ROUTES = {
   CONTACT: '/contact',
   ABOUT: '/about',
   FAQ: '/faq',
+  TERMS: '/terms-and-conditions',
+  TERMS_AND_CONDITIONS: '/terms-and-conditions',
+  PRIVACY: '/privacy-policy',
   NOT_FOUND: '*',
 
   // Admin & Super Admin

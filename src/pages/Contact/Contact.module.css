@@ -28,10 +28,12 @@
 .heroLeft {
   position: relative;
   z-index: 2;
-  padding: 3.5rem 3rem 3.5rem 3.5rem;
+  padding: 3.5rem 3rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
+  text-align: center;
   gap: 0;
 }
 
@@ -67,6 +69,7 @@
   text-transform: uppercase;
   color: #D4AF37;
   margin-bottom: 0.85rem;
+  text-align: center;
 }
 
 .heroTitle {
@@ -75,6 +78,7 @@
   line-height: 1.15;
   color: #ffffff;
   margin: 0 0 0.85rem 0;
+  text-align: center;
 }
 
 .heroTitleGold {
@@ -82,11 +86,12 @@
 }
 
 .heroSubtitle {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   color: #a0a0a0;
   line-height: 1.65;
-  max-width: 380px;
-  margin: 0 0 2rem 0;
+  max-width: 440px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
 }
 
 /* Underline accent below title */
@@ -95,7 +100,7 @@
   height: 3px;
   background: #D4AF37;
   border-radius: 2px;
-  margin: 0.5rem 0 1.5rem;
+  margin: 0.5rem auto 1.5rem auto;
 }
 
 /* Trust badges row */
@@ -103,12 +108,15 @@
   display: flex;
   gap: 1.75rem;
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
 }
 
 .heroBadgeItem {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
   gap: 0.25rem;
 }
 
@@ -135,6 +143,7 @@
   font-weight: 700;
   color: #ffffff;
   margin: 0;
+  text-align: center;
 }
 
 .badgeDesc {
@@ -142,6 +151,7 @@
   color: #888;
   margin: 0;
   line-height: 1.4;
+  text-align: center;
 }
 
 /* ── Right Side — Message Form Card ─────────────────── */

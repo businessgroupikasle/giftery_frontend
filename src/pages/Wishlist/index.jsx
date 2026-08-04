@@ -1,79 +1,16 @@
+import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Layout from '@components/layout/Layout';
 import useFetch from '@hooks/useFetch';
+import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { ROUTES } from '@constants/routes';
 import { addToCart } from '@store/slices/cartSlice';
 import { addToWishlist, removeFromWishlist, clearWishlist } from '@store/slices/wishlistSlice';
 import { formatCurrency } from '@utils/formatters';
 import styles from './Wishlist.module.css';
-
-// Initial curated products to display as sample saved wishlist items
-const INITIAL_WISHLIST_DEMO = [
-  {
-    id: 'w-101',
-    name: 'Executive Kinetic Desk Gyro Sculpture',
-    price: 1499,
-    comparePrice: 1999,
-    discount: '25% OFF',
-    category: 'Corporate Gifts',
-    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80',
-    slug: 'executive-kinetic-desk-gyro-sculpture',
-  },
-  {
-    id: 'w-102',
-    name: '3D Wooden Mechanical Gear Clock Puzzle',
-    price: 2199,
-    comparePrice: 2799,
-    discount: '21% OFF',
-    category: 'Desk Accessories',
-    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&auto=format&fit=crop&q=80',
-    slug: '3d-wooden-mechanical-gear-clock-puzzle',
-  },
-  {
-    id: 'w-103',
-    name: 'Personalized Leather Notebook & Pen Set',
-    price: 899,
-    comparePrice: 1299,
-    discount: '30% OFF',
-    category: 'Personalized Gifts',
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80',
-    slug: 'personalized-leather-notebook-pen-set',
-  },
-];
-
-// Recommended Catalog items to quickly add to wishlist
-const RECOMMENDED_ITEMS = [
-  {
-    id: 'rec-201',
-    name: 'Custom Engraved Stainless Hydro Bottle',
-    price: 799,
-    comparePrice: 999,
-    category: 'Drinkware',
-    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&auto=format&fit=crop&q=80',
-    slug: 'custom-engraved-hydro-bottle',
-  },
-  {
-    id: 'rec-202',
-    name: '3D Acrylic Photo Standee with LED Base',
-    price: 1299,
-    comparePrice: 1699,
-    category: 'Personalized Gifts',
-    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&auto=format&fit=crop&q=80',
-    slug: '3d-acrylic-photo-standee-led-base',
-  },
-  {
-    id: 'rec-203',
-    name: 'Traditional Festive Gourmet Sweets & Snacks Box',
-    price: 1599,
-    comparePrice: 1999,
-    category: 'Traditional Sweets',
-    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&auto=format&fit=crop&q=80',
-    slug: 'traditional-festive-gourmet-box',
-  },
-];
 
 const Wishlist = () => {
   const dispatch = useDispatch();
@@ -99,19 +36,60 @@ const Wishlist = () => {
         id,
         name: item.name || 'Wishlist Product',
         price: item.price || 999,
-        comparePrice: item.comparePrice || (item.price ? Math.round(item.price * 1.25) : 1499),
-        discount: item.discount || '20% OFF',
-        category: item.category || 'Giftery Collection',
-        image: item.image || item.images?.[0] || 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80',
+        comparePrice: item.comparePrice || (item.price ? Math.round(item.price * 1.25) : null),
+        discount: item.discount || (item.comparePrice ? `${Math.round(((item.comparePrice - item.price) / item.comparePrice) * 100)}% OFF` : null),
+        category: item.category?.name || item.categoryName || item.category || 'Giftery Collection',
+        image: item.image || item.images?.[0] || '/placeholder.jpg',
         slug: item.slug || '',
       });
     }
   });
 
-  // Use stored wishlist items, or fallback to initial demo items for showcase
-  const storedItems = Array.from(itemsMap.values());
-  const wishlistItems = storedItems.length > 0 ? storedItems : INITIAL_WISHLIST_DEMO;
+  // Stored wishlist items (only real items, no fake fallback)
+  const wishlistItems = Array.from(itemsMap.values());
   const itemCount = wishlistItems.length;
+
+  // Live Recommended Catalog items from store
+  const [recommendedItems, setRecommendedItems] = useState([]);
+
+  useEffect(() => {
+    const fetchLiveProducts = async () => {
+      let apiProducts = [];
+      try {
+        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
+        const resData = res.data?.products || res.data?.data || res.data || [];
+        if (Array.isArray(resData)) apiProducts = resData;
+      } catch (err) {}
+
+      const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+      const combined = [...localProducts];
+      apiProducts.forEach(ap => {
+        if (!combined.find(c => c.id === ap.id || c.slug === ap.slug)) combined.push(ap);
+      });
+
+      if (combined.length > 0) {
+        // Exclude items already in wishlist
+        const wishlistIds = new Set(wishlistItems.map(i => i.id));
+        const filtered = combined
+          .filter(p => !wishlistIds.has(p.id))
+          .slice(0, 3)
+          .map(p => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            comparePrice: p.comparePrice,
+            category: p.category?.name || p.categoryName || 'Giftery Collection',
+            image: Array.isArray(p.images) ? p.images[0] : (p.image || '/placeholder.jpg'),
+            slug: p.slug,
+          }));
+        setRecommendedItems(filtered);
+      }
+    };
+
+    fetchLiveProducts();
+    window.addEventListener('products_updated', fetchLiveProducts);
+    return () => window.removeEventListener('products_updated', fetchLiveProducts);
+  }, [wishlistItems.length]);
 
   const handleAddToCart = (item) => {
     dispatch(addToCart({ id: item.id, name: item.name, price: item.price, image: item.image, slug: item.slug }));
@@ -173,66 +151,128 @@ const Wishlist = () => {
               <div className={styles.cardTopTitle}>
                 <span>❤️ Saved Wishlist Products</span>
               </div>
-              {storedItems.length > 0 && (
+              {wishlistItems.length > 0 && (
                 <button onClick={handleClearWishlist} className={styles.clearAllBtn}>
                   Clear All
                 </button>
               )}
             </div>
 
-            {/* Product Grid */}
-            <div className={styles.grid}>
-              {wishlistItems.map((item) => (
-                <div key={item.id} className={styles.itemCard}>
-                  <div className={styles.imageArea}>
-                    <img src={item.image} alt={item.name} className={styles.itemImg} />
-                    {item.discount && <span className={styles.discountTag}>{item.discount}</span>}
-                    <button
-                      className={styles.removeBadgeBtn}
-                      onClick={() => handleRemoveFromWishlist(item.id, item.name)}
-                      title="Remove from wishlist"
-                      aria-label="Remove item"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  <div className={styles.itemBody}>
-                    <span className={styles.categoryTag}>{item.category || 'Giftery Exclusive'}</span>
-                    <Link
-                      to={item.slug ? ROUTES.PRODUCT.replace(':slug', item.slug) : ROUTES.SHOP}
-                      className={styles.itemName}
-                    >
-                      {item.name}
-                    </Link>
-
-                    <div className={styles.priceRow}>
-                      <span className={styles.price}>{formatCurrency(item.price)}</span>
-                      {item.comparePrice && (
-                        <span className={styles.comparePrice}>{formatCurrency(item.comparePrice)}</span>
-                      )}
+            {/* Product Grid or Empty State */}
+            {wishlistItems.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💔</div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>
+                  Your Wishlist is Empty
+                </h3>
+                <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                  You haven't saved any items yet. Explore our product collections to add your favorites!
+                </p>
+                <Link
+                  to={ROUTES.SHOP}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  Explore Products →
+                </Link>
+              </div>
+            ) : (
+              <div className={styles.grid}>
+                {wishlistItems.map((item) => (
+                  <div key={item.id} className={styles.itemCard}>
+                    <div className={styles.imageArea}>
+                      <img src={item.image} alt={item.name} className={styles.itemImg} />
+                      {item.discount && <span className={styles.discountTag}>{item.discount}</span>}
+                      <button
+                        className={styles.removeBadgeBtn}
+                        onClick={() => handleRemoveFromWishlist(item.id, item.name)}
+                        title="Remove from wishlist"
+                        aria-label="Remove item"
+                      >
+                        ✕
+                      </button>
                     </div>
 
-                    {/* Dual Buy Actions: BUY NOW & ADD TO CART */}
-                    <div className={styles.actionGroup}>
+                    <div className={styles.itemBody}>
+                      <span className={styles.categoryTag}>{item.category || 'Giftery Exclusive'}</span>
+                      <Link
+                        to={item.slug ? ROUTES.PRODUCT.replace(':slug', item.slug) : ROUTES.SHOP}
+                        className={styles.itemName}
+                      >
+                        {item.name}
+                      </Link>
+
+                      <div className={styles.priceRow}>
+                        <span className={styles.price}>{formatCurrency(item.price)}</span>
+                        {item.comparePrice && (
+                          <span className={styles.comparePrice}>{formatCurrency(item.comparePrice)}</span>
+                        )}
+                      </div>
+
+                      {/* Dual Buy Actions: BUY NOW & ADD TO CART */}
+                      <div className={styles.actionGroup}>
+                        <button
+                          className={styles.buyNowBtn}
+                          onClick={() => handleBuyNow(item)}
+                        >
+                          ⚡ BUY NOW
+                        </button>
+                        <button
+                          className={styles.addToCartOutlineBtn}
+                          onClick={() => handleAddToCart(item)}
+                        >
+                          🛒 Add to Cart
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Recommended Catalog Items Section */}
+          {recommendedItems.length > 0 && (
+            <div style={{ marginTop: '2.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Recommended For You</h3>
+                <Link to={ROUTES.SHOP} style={{ color: '#d99b26', fontWeight: 700, textDecoration: 'none', fontSize: '0.9rem' }}>View All →</Link>
+              </div>
+              <div className={styles.grid}>
+                {recommendedItems.map((item) => (
+                  <div key={item.id} className={styles.itemCard}>
+                    <div className={styles.imageArea}>
+                      <img src={item.image} alt={item.name} className={styles.itemImg} />
+                    </div>
+                    <div className={styles.itemBody}>
+                      <span className={styles.categoryTag}>{item.category}</span>
+                      <Link to={item.slug ? ROUTES.PRODUCT_PATH(item.slug) : ROUTES.SHOP} className={styles.itemName}>{item.name}</Link>
+                      <div className={styles.priceRow}>
+                        <span className={styles.price}>{formatCurrency(item.price)}</span>
+                      </div>
                       <button
                         className={styles.buyNowBtn}
-                        onClick={() => handleBuyNow(item)}
+                        onClick={() => handleAddRecommendedToWishlist(item)}
+                        style={{ width: '100%', marginTop: '0.75rem' }}
                       >
-                        ⚡ BUY NOW
-                      </button>
-                      <button
-                        className={styles.addToCartOutlineBtn}
-                        onClick={() => handleAddToCart(item)}
-                      >
-                        🛒 Add to Cart
+                        ❤️ Save to Wishlist
                       </button>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
 
         </div>

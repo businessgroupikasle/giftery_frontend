@@ -203,7 +203,7 @@ const DashboardOverview = ({
       {/* ── ROW 1: 6 KPI METRICS CARDS ── */}
       <div className={styles.kpiGrid}>
         {/* Card 1: Total Revenue */}
-        <div className={styles.kpiCard}>
+        <div className={styles.kpiCard} onClick={() => handleTabChange('reports')} style={{ cursor: 'pointer' }} title="View Store Reports & Analytics">
           <div className={styles.kpiHeader}>
             <div className={`${styles.kpiIconCircle} ${styles.bgPurple}`}>
               <FiShoppingBag />
@@ -218,7 +218,7 @@ const DashboardOverview = ({
         </div>
 
         {/* Card 2: Total Orders */}
-        <div className={styles.kpiCard}>
+        <div className={styles.kpiCard} onClick={() => handleTabChange('orders')} style={{ cursor: 'pointer' }} title="View All Orders">
           <div className={styles.kpiHeader}>
             <div className={`${styles.kpiIconCircle} ${styles.bgBlue}`}>
               <FiShoppingBag />
@@ -233,7 +233,7 @@ const DashboardOverview = ({
         </div>
 
         {/* Card 3: Pending Orders */}
-        <div className={styles.kpiCard}>
+        <div className={styles.kpiCard} onClick={() => handleTabChange('orders')} style={{ cursor: 'pointer' }} title="Manage Pending Orders">
           <div className={styles.kpiHeader}>
             <div className={`${styles.kpiIconCircle} ${styles.bgOrange}`}>
               <FiClock />
@@ -248,7 +248,7 @@ const DashboardOverview = ({
         </div>
 
         {/* Card 4: Completed Orders */}
-        <div className={styles.kpiCard}>
+        <div className={styles.kpiCard} onClick={() => handleTabChange('orders')} style={{ cursor: 'pointer' }} title="View Completed Orders">
           <div className={styles.kpiHeader}>
             <div className={`${styles.kpiIconCircle} ${styles.bgGreen}`}>
               <FiCheckCircle />
@@ -263,7 +263,7 @@ const DashboardOverview = ({
         </div>
 
         {/* Card 5: Total Customers */}
-        <div className={styles.kpiCard}>
+        <div className={styles.kpiCard} onClick={() => handleTabChange('customers')} style={{ cursor: 'pointer' }} title="View Customer Database">
           <div className={styles.kpiHeader}>
             <div className={`${styles.kpiIconCircle} ${styles.bgIndigo}`}>
               <FiUsers />
@@ -278,7 +278,7 @@ const DashboardOverview = ({
         </div>
 
         {/* Card 6: New Quotes */}
-        <div className={styles.kpiCard}>
+        <div className={styles.kpiCard} onClick={() => handleTabChange('corporate-quotes')} style={{ cursor: 'pointer' }} title="View Corporate Quotes">
           <div className={styles.kpiHeader}>
             <div className={`${styles.kpiIconCircle} ${styles.bgPink}`}>
               <FiFileText />
@@ -530,7 +530,12 @@ const DashboardOverview = ({
 
           {/* Bottom 4 Mini Alert Cards Row */}
           <div className={styles.miniAlertsGrid}>
-            <div className={`${styles.miniAlertCard} ${styles.miniCardOrange}`}>
+            <div 
+              className={`${styles.miniAlertCard} ${styles.miniCardOrange}`}
+              onClick={() => handleTabChange('products')}
+              style={{ cursor: 'pointer' }}
+              title="Manage Low Stock Products"
+            >
               <div className={styles.miniIconBox} style={{ color: '#ea580c' }}>
                 <FiArchive />
               </div>
@@ -541,7 +546,12 @@ const DashboardOverview = ({
               </div>
             </div>
 
-            <div className={`${styles.miniAlertCard} ${styles.miniCardRed}`}>
+            <div 
+              className={`${styles.miniAlertCard} ${styles.miniCardRed}`}
+              onClick={() => handleTabChange('products')}
+              style={{ cursor: 'pointer' }}
+              title="Manage Out of Stock Products"
+            >
               <div className={styles.miniIconBox} style={{ color: '#dc2626' }}>
                 <FiXCircle />
               </div>
@@ -552,7 +562,12 @@ const DashboardOverview = ({
               </div>
             </div>
 
-            <div className={`${styles.miniAlertCard} ${styles.miniCardBlue}`}>
+            <div 
+              className={`${styles.miniAlertCard} ${styles.miniCardBlue}`}
+              onClick={() => handleTabChange('customers')}
+              style={{ cursor: 'pointer' }}
+              title="View Customer Database"
+            >
               <div className={styles.miniIconBox} style={{ color: '#0284c7' }}>
                 <FiUserPlus />
               </div>
@@ -563,7 +578,12 @@ const DashboardOverview = ({
               </div>
             </div>
 
-            <div className={`${styles.miniAlertCard} ${styles.miniCardGreen}`}>
+            <div 
+              className={`${styles.miniAlertCard} ${styles.miniCardGreen}`}
+              onClick={() => handleTabChange('corporate-quotes')}
+              style={{ cursor: 'pointer' }}
+              title="View Bulk Corporate Quotes"
+            >
               <div className={styles.miniIconBox} style={{ color: '#16a34a' }}>
                 <FiFileText />
               </div>
@@ -585,7 +605,7 @@ const DashboardOverview = ({
 
           <div className={styles.productsList}>
             {topProductsDisplay.map((p, idx) => (
-              <div className={styles.productRow} key={idx}>
+              <div className={styles.productRow} key={idx} onClick={() => handleTabChange('products')} style={{ cursor: 'pointer' }}>
                 <div className={styles.productLeft}>
                   <img
                     src={p.image}
@@ -613,7 +633,7 @@ const DashboardOverview = ({
             </div>
 
             <div className={styles.timelineList}>
-              <div className={styles.timelineItem}>
+              <div className={styles.timelineItem} onClick={() => handleTabChange('orders')} style={{ cursor: 'pointer' }}>
                 <span className={`${styles.timelineBadge} ${styles.bgTimelineGreen}`} />
                 <div>
                   <p className={styles.timelineText}>New order <strong>#{activeOrders[0]?.id || 'ORD-1256'}</strong> placed by {activeOrders[0]?.customer || 'Tech Solutions'}</p>
@@ -621,7 +641,7 @@ const DashboardOverview = ({
                 </div>
               </div>
 
-              <div className={styles.timelineItem}>
+              <div className={styles.timelineItem} onClick={() => handleTabChange('corporate-quotes')} style={{ cursor: 'pointer' }}>
                 <span className={`${styles.timelineBadge} ${styles.bgTimelineBlue}`} />
                 <div>
                   <p className={styles.timelineText}>Bulk quote request submitted by {corporateQuotes[0]?.company || 'Apex Infotech'}</p>
@@ -629,7 +649,7 @@ const DashboardOverview = ({
                 </div>
               </div>
 
-              <div className={styles.timelineItem}>
+              <div className={styles.timelineItem} onClick={() => handleTabChange('products')} style={{ cursor: 'pointer' }}>
                 <span className={`${styles.timelineBadge} ${styles.bgTimelineOrange}`} />
                 <div>
                   <p className={styles.timelineText}>Low stock alert for <strong>{productsList[0]?.name || 'Executive Leather Journal'}</strong></p>
@@ -637,7 +657,7 @@ const DashboardOverview = ({
                 </div>
               </div>
 
-              <div className={styles.timelineItem}>
+              <div className={styles.timelineItem} onClick={() => handleTabChange('enquiries')} style={{ cursor: 'pointer' }}>
                 <span className={`${styles.timelineBadge} ${styles.bgTimelinePurple}`} />
                 <div>
                   <p className={styles.timelineText}>New enquiry registered from {enquiriesList[0]?.name || 'Little Explorers Preschool'}</p>
