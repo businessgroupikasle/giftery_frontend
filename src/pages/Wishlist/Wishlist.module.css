@@ -523,3 +523,31 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageWrapper {
+    padding: 1.5rem 0 3rem;
+  }
+  .container {
+    padding: 0 1rem;
+  }
+  .pageTitle {
+    font-size: 1.3rem;
+  }
+  .itemCount {
+    font-size: 0.85rem;
+  }
+  .clearAllBtn {
+    font-size: 0.82rem;
+    padding: 0.45rem 0.85rem;
+  }
+}

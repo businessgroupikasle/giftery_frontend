@@ -236,3 +236,40 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 768px) {
+  .profileContainer {
+    padding: 1.5rem 1.25rem;
+  }
+  .profileHeader {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+  }
+  .twoColGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .profileContainer {
+    padding: 1.25rem 1rem;
+  }
+  .pageTitle {
+    font-size: 1.4rem;
+  }
+  .avatarCircle,
+  .avatarImg {
+    width: 72px;
+    height: 72px;
+  }
+  .cardContainer {
+    padding: 1.25rem 1rem;
+    border-radius: 12px;
+  }
+  .primaryBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}

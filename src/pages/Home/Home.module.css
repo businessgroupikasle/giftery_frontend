@@ -542,9 +542,91 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .heroContent {
+    padding: 3rem 2rem 3rem 3rem;
+    margin-left: 0;
+    max-width: 600px;
+  }
+}
+
 @media (max-width: 900px) {
   .collectionsGrid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  /* Hero Banner */
+  .heroBanner {
+    min-height: auto;
+    align-items: flex-start;
+  }
+
+  .heroOverlay {
+    background: linear-gradient(
+      to bottom,
+      rgba(4, 5, 10, 0.92) 0%,
+      rgba(4, 5, 10, 0.85) 60%,
+      rgba(4, 5, 10, 0.75) 100%
+    );
+  }
+
+  .heroContent {
+    padding: 3rem 1.5rem 3rem 1.5rem;
+    margin-left: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .heroTitle {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+    white-space: normal;
+    margin-bottom: 1rem;
+  }
+
+  .heroDescription {
+    font-size: 0.95rem;
+    margin-bottom: 1.75rem;
+    max-width: 100%;
+  }
+
+  .heroCtaGroup {
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+
+  .primaryCta,
+  .secondaryCta {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    padding: 0.85rem 1.25rem;
+    font-size: 0.82rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+    padding-top: 1.25rem;
+  }
+
+  .statVal {
+    font-size: 0.85rem;
+  }
+
+  .statLbl {
+    font-size: 0.68rem;
+  }
+
+  /* Collections Section */
+  .collectionsHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
 }
 
@@ -552,9 +634,45 @@
   .collectionsGrid {
     grid-template-columns: 1fr;
   }
+
   .collectionsHeader {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
 }
+
+@media (max-width: 480px) {
+  .heroContent {
+    padding: 2.5rem 1rem 2.5rem 1rem;
+  }
+
+  .heroTitle {
+    font-size: clamp(1.35rem, 7vw, 1.75rem);
+  }
+
+  .topSubheading {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.75rem;
+    letter-spacing: 1.5px;
+  }
+
+  .heroCtaGroup {
+    gap: 0.65rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .statItem {
+    gap: 0.5rem;
+  }
+
+  .statIcon {
+    width: 34px;
+    height: 34px;
+  }
+}
+

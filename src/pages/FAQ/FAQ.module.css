@@ -457,3 +457,43 @@
     align-items: flex-start;
   }
 }
+
+@media (max-width: 480px) {
+  .faqPage {
+    padding: 1.5rem 0 3rem;
+  }
+  .heroSection {
+    padding: 2rem 1rem 1.5rem;
+  }
+  .heroTitle {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+  .heroSubtitle {
+    font-size: 0.9rem;
+  }
+  .faqContainer {
+    padding: 0 1rem;
+  }
+  .accordionHeader {
+    padding: 1rem;
+    font-size: 0.9rem;
+    gap: 0.5rem;
+  }
+  .accordionBody {
+    padding: 0 1rem 1rem 1rem;
+    font-size: 0.88rem;
+  }
+  .contactBanner {
+    padding: 1.5rem 1.25rem;
+    border-radius: 14px;
+    text-align: center;
+  }
+  .contactBannerTitle {
+    font-size: 1.25rem;
+  }
+  .contactBannerBtn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}

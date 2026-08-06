@@ -601,3 +601,52 @@
     grid-column: span 1;
   }
 }
+
+@media (max-width: 768px) {
+  .stepperContainer {
+    padding: 1rem 1rem;
+  }
+  .stepLabel {
+    display: none;
+  }
+  .stepConnector {
+    flex: 1;
+    min-width: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .checkoutPageWrapper {
+    padding: 1rem 0 4rem;
+  }
+  .container {
+    padding: 0 1rem;
+  }
+  .stepperContainer {
+    padding: 0.75rem 0.75rem;
+    border-radius: 10px;
+  }
+  .stepNumber {
+    width: 26px;
+    height: 26px;
+    font-size: 0.78rem;
+  }
+  .sectionCard {
+    padding: 1.25rem 1rem;
+    border-radius: 12px;
+  }
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+  .placeOrderBtn,
+  .nextBtn,
+  .backBtn {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    justify-content: center;
+  }
+  .successHomeBtn {
+    width: 100%;
+    text-align: center;
+  }
+}

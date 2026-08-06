@@ -128,9 +128,36 @@
   }
 }
 
-@media (max-width: 600px) {
-  .stepsRow {
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
+@media (max-width: 768px) {
+  .processSection {
+    padding: 3.5rem 0;
+  }
+  .processTitle {
+    margin-bottom: 2.5rem;
+  }
+  .iconCircle {
+    width: 70px;
+    height: 70px;
   }
 }
+
+@media (max-width: 600px) {
+  .processSection {
+    padding: 2.5rem 0;
+  }
+  .processTitle {
+    margin-bottom: 2rem;
+  }
+  .stepsRow {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .iconCircle {
+    width: 64px;
+    height: 64px;
+  }
+  .stepDesc {
+    max-width: 100%;
+  }
+}
+

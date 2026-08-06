@@ -704,3 +704,39 @@
     padding: 2rem 1.25rem;
   }
 }
+
+@media (max-width: 480px) {
+  .heroSection {
+    padding: 2rem 1rem 1.5rem;
+  }
+  .heroTitle {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+  .heroSubtitle {
+    font-size: 0.9rem;
+  }
+  .contentSection {
+    padding: 2rem 1rem;
+  }
+  .formContainer,
+  .contactFormCard {
+    padding: 1.5rem 1.25rem;
+    border-radius: 14px;
+  }
+  .formTitle {
+    font-size: 1.2rem;
+  }
+  .infoCardsGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .infoCard {
+    padding: 1.25rem 1rem;
+  }
+  .submitBtn,
+  .sendBtn {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    justify-content: center;
+  }
+}

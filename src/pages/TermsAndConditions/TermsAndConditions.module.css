@@ -265,3 +265,45 @@
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(229, 193, 88, 0.4);
 }
+
+/* -- Mobile Responsive -- */
+@media (max-width: 768px) {
+  .heroHeader {
+    padding: 2.5rem 1.5rem 2rem;
+  }
+  .heroTitle {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+  }
+  .contentSection {
+    padding: 2.5rem 1.5rem;
+  }
+  .contentInner {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroHeader {
+    padding: 2rem 1rem 1.5rem;
+  }
+  .heroTitle {
+    font-size: clamp(1.25rem, 6vw, 1.65rem);
+  }
+  .heroSubtitle,
+  .heroDesc {
+    font-size: 0.9rem;
+  }
+  .breadcrumb {
+    font-size: 0.75rem;
+  }
+  .contentSection {
+    padding: 2rem 1rem;
+  }
+  .sectionTitle {
+    font-size: 1.15rem;
+  }
+  .sectionText,
+  .bodyText {
+    font-size: 0.9rem;
+  }
+}

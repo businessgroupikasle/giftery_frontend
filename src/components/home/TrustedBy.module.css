@@ -91,12 +91,16 @@
 }
 
 @media (max-width: 768px) {
+  .trustedSection {
+    padding: 2.5rem 0;
+  }
   .tickerTrack {
     gap: 2.5rem;
     animation-duration: 20s;
   }
   .trustedTitle {
     font-size: 1rem;
+    margin-bottom: 2rem;
   }
   .tickerFadeLeft,
   .tickerFadeRight {

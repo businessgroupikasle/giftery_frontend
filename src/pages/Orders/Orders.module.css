@@ -143,3 +143,53 @@
 .detailsBtn:hover {
   text-decoration: underline;
 }
+
+/* -- Mobile Responsive -- */
+@media (max-width: 768px) {
+  .title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .order {
+    padding: 1rem 1.25rem;
+  }
+  .orderHeader {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .orderFooter {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .modalContent {
+    width: 95%;
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+  .order {
+    padding: 0.85rem 1rem;
+  }
+  .orderId {
+    font-size: 0.85rem;
+  }
+  .orderDate {
+    font-size: 0.7rem;
+  }
+  .orderItemFull {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .itemImage {
+    width: 55px;
+    height: 55px;
+  }
+  .totalRow {
+    font-size: 1rem;
+  }
+}

@@ -928,3 +928,49 @@
     gap: 1.5rem;
   }
 }
+
+@media (max-width: 480px) {
+  .heroSection {
+    padding: 3rem 1rem 2rem;
+    min-height: auto;
+  }
+  .heroTitle {
+    font-size: clamp(1.5rem, 7vw, 2.25rem);
+  }
+  .heroSubtitle {
+    font-size: 0.9rem;
+  }
+  .heroCtaGroup {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+  .heroPrimaryBtn,
+  .heroSecondaryBtn {
+    text-align: center;
+    justify-content: center;
+    width: 100%;
+  }
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  .statsCard {
+    padding: 1.25rem 1rem;
+  }
+  .statsValue {
+    font-size: 1.75rem;
+  }
+  .teamGrid {
+    grid-template-columns: 1fr;
+  }
+  .valuesGrid {
+    grid-template-columns: 1fr;
+  }
+  .sectionTitle {
+    font-size: clamp(1.4rem, 5vw, 2rem);
+  }
+  .contentSection {
+    padding: 3rem 1rem;
+  }
+}

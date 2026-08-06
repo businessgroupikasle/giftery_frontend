@@ -175,6 +175,9 @@
   .benefitsGroup {
     justify-content: center;
   }
+  .bulkLeft {
+    padding-right: 0;
+  }
   .bulkVisual {
     margin-left: 0;
   }
@@ -185,8 +188,12 @@
 }
 
 @media (max-width: 640px) {
+  .bulkSection {
+    margin: 3rem auto;
+    padding: 0 1.5rem;
+  }
   .bulkCard {
-    padding: 2.25rem 1.25rem;
+    padding: 2.25rem 1.5rem;
     border-radius: 16px;
   }
   .actionRow {
@@ -195,7 +202,40 @@
   }
   .benefitsGroup {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 1rem;
   }
+  .bulkTitle {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+  }
 }
+
+@media (max-width: 480px) {
+  .bulkSection {
+    padding: 0 1rem;
+    margin: 2.5rem auto;
+  }
+  .bulkCard {
+    padding: 2rem 1.25rem;
+    border-radius: 14px;
+  }
+  .giftBoxImg {
+    width: 240px;
+    height: 190px;
+  }
+  .contactBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 1rem 1.5rem;
+  }
+  .benefitBadge {
+    justify-content: center;
+  }
+  .bulkTitle {
+    font-size: clamp(1.35rem, 6vw, 1.75rem);
+  }
+  .bulkSubtitle {
+    font-size: 0.9rem;
+  }
+}
+

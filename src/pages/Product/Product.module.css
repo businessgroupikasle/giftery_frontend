@@ -820,3 +820,50 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 480px) {
+  .productPageWrapper {
+    padding: 1rem 0 3rem;
+  }
+  .container {
+    padding: 0 1rem;
+  }
+  .productTitle {
+    font-size: 1.35rem;
+  }
+  .priceMain {
+    font-size: 1.5rem;
+  }
+  .thumbnailsList {
+    gap: 0.4rem;
+  }
+  .thumbImg {
+    width: 52px;
+    height: 52px;
+  }
+  .ctaButtonGroup {
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+  .addToCartBtn,
+  .buyNowBtn {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    justify-content: center;
+  }
+  .tabsNav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabsNav::-webkit-scrollbar {
+    display: none;
+  }
+  .tabBtn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .relatedGrid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -717,3 +717,42 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+@media (max-width: 480px) {
+  .cartPageWrapper {
+    padding: 1.5rem 0 4rem;
+  }
+  .pageTitle {
+    font-size: 1.4rem;
+  }
+  .cartItemRow {
+    padding: 0.85rem;
+    gap: 0.5rem;
+  }
+  .itemImage {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+  }
+  .itemName {
+    font-size: 0.88rem;
+  }
+  .qtyControl {
+    gap: 0.4rem;
+  }
+  .qtyBtn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+  }
+  .orderSummaryCard {
+    padding: 1.25rem 1rem;
+  }
+  .checkoutBtn {
+    padding: 0.9rem 1rem;
+    font-size: 0.9rem;
+  }
+  .suggestedGrid {
+    grid-template-columns: 1fr;
+  }
+}

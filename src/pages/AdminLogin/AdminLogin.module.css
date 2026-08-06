@@ -271,3 +271,47 @@
 .portalLink:hover {
   text-decoration: underline;
 }
+
+/* -- Mobile Responsive -- */
+@media (max-width: 768px) {
+  .adminAuthContainer {
+    padding: 1.5rem 1rem;
+    align-items: flex-start;
+  }
+  .adminCard {
+    padding: 2rem 1.5rem;
+    max-width: 100%;
+    width: 100%;
+    border-radius: 16px;
+  }
+  .adminTitle {
+    font-size: 1.4rem;
+  }
+  .backHomeBtn {
+    top: 1rem;
+    left: 1rem;
+    font-size: 0.78rem;
+    padding: 0.45rem 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .adminAuthContainer {
+    padding: 1rem 0.75rem;
+  }
+  .adminCard {
+    padding: 1.5rem 1.25rem;
+    border-radius: 12px;
+  }
+  .adminTitle {
+    font-size: 1.2rem;
+  }
+  .adminSubtitle {
+    font-size: 0.82rem;
+  }
+  .loginBtn,
+  .submitBtn {
+    padding: 0.9rem 1rem;
+    font-size: 0.88rem;
+  }
+}

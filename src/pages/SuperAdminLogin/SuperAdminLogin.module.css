@@ -350,3 +350,47 @@
   50% { transform: translateY(2px); }
   100% { opacity: 1; transform: translateY(0); }
 }
+
+/* -- Mobile Responsive -- */
+@media (max-width: 768px) {
+  .superAuthContainer {
+    padding: 1.5rem 1rem;
+    align-items: flex-start;
+  }
+  .superCard {
+    padding: 2rem 1.5rem;
+    max-width: 100%;
+    width: 100%;
+    border-radius: 16px;
+  }
+  .superTitle {
+    font-size: 1.4rem;
+  }
+  .backBtn {
+    top: 1rem;
+    left: 1rem;
+    font-size: 0.78rem;
+    padding: 0.45rem 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .superAuthContainer {
+    padding: 1rem 0.75rem;
+  }
+  .superCard {
+    padding: 1.5rem 1.25rem;
+    border-radius: 12px;
+  }
+  .superTitle {
+    font-size: 1.2rem;
+  }
+  .superSubtitle {
+    font-size: 0.82rem;
+  }
+  .loginBtn,
+  .submitBtn {
+    padding: 0.9rem 1rem;
+    font-size: 0.88rem;
+  }
+}
