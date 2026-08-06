@@ -61,7 +61,37 @@ const Cart = () => {
   }, [cartItems.length]);
 
   const [couponCode, setCouponCode] = useState('');
-  const [discountPercent, setDiscountPercent] = useState(0); // 0% discount by default
+  const [appliedCoupon, setAppliedCoupon] = useState(() => {
+    try {
+      const stored = localStorage.getItem('giftery_applied_coupon');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return null;
+  });
+
+  const [availableCoupons, setAvailableCoupons] = useState(() => {
+    try {
+      const stored = localStorage.getItem('admin_coupons');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [
+      { id: 'c-1', code: 'LUXURY20', discount: '20% OFF', category: 'Corporate Gifts', status: 'Active' },
+      { id: 'c-2', code: 'WELCOME10', discount: '₹100 OFF', category: 'First Purchase', status: 'Active' },
+      { id: 'c-3', code: 'GIFTERY10', discount: '10% OFF', category: 'All Products', status: 'Active' },
+      { id: 'c-4', code: 'SAVE10', discount: '₹50 OFF', category: 'Special Offer', status: 'Active' },
+    ];
+  });
+
+  useEffect(() => {
+    const handleCouponsUpdate = () => {
+      try {
+        const stored = localStorage.getItem('admin_coupons');
+        if (stored) setAvailableCoupons(JSON.parse(stored));
+      } catch (e) {}
+    };
+    window.addEventListener('admin_coupons_updated', handleCouponsUpdate);
+    return () => window.removeEventListener('admin_coupons_updated', handleCouponsUpdate);
+  }, []);
 
   const [storeSettings] = useState(() => {
     try {
@@ -80,7 +110,15 @@ const Cart = () => {
   // Calculations
   const itemCount = cartItems.length;
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0);
-  const discountAmount = (subtotal * discountPercent) / 100;
+  
+  let discountAmount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.type === 'percent') {
+      discountAmount = (subtotal * appliedCoupon.value) / 100;
+    } else if (appliedCoupon.type === 'fixed') {
+      discountAmount = Math.min(subtotal, appliedCoupon.value);
+    }
+  }
 
   // Free shipping threshold logic
   const freeShippingThreshold = storeSettings.freeShippingThreshold;
@@ -103,22 +141,65 @@ const Cart = () => {
 
   const handleClearCart = () => {
     dispatch(clearCart());
+    setAppliedCoupon(null);
+    localStorage.removeItem('giftery_applied_coupon');
     toast.info('Cart cleared');
   };
 
   const handleApplyCoupon = (e) => {
     e.preventDefault();
-    if (!couponCode) {
+    if (!couponCode || !couponCode.trim()) {
       toast.error('Please enter a coupon code');
       return;
     }
-    if (couponCode.toUpperCase() === 'GIFTERY10' || couponCode.toUpperCase() === 'SAVE10' || couponCode.toUpperCase() === 'WELCOME') {
-      setDiscountPercent(10);
-      toast.success('Coupon applied! 10% discount applied 🏷️');
-    } else {
-      setDiscountPercent(10);
-      toast.success('Coupon applied! Discount updated 🏷️');
+
+    const trimmedInput = couponCode.trim().toUpperCase();
+    const matched = availableCoupons.find(
+      (c) => c.code.toUpperCase() === trimmedInput && c.status === 'Active'
+    );
+
+    if (!matched) {
+      toast.error(`Invalid or expired coupon code "${couponCode}"`);
+      setAppliedCoupon(null);
+      try {
+        localStorage.removeItem('giftery_applied_coupon');
+      } catch (err) {}
+      return;
     }
+
+    let type = 'percent';
+    let val = 0;
+
+    if (matched.discount.includes('%')) {
+      type = 'percent';
+      val = parseFloat(matched.discount.replace(/[^0-9.]/g, '')) || 0;
+    } else {
+      type = 'fixed';
+      val = parseFloat(matched.discount.replace(/[^0-9.]/g, '')) || 0;
+    }
+
+    const newApplied = {
+      code: matched.code,
+      discountText: matched.discount,
+      type,
+      value: val,
+    };
+
+    setAppliedCoupon(newApplied);
+    try {
+      localStorage.setItem('giftery_applied_coupon', JSON.stringify(newApplied));
+    } catch (err) {}
+
+    toast.success(`Coupon "${matched.code}" applied! Discount updated`);
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    try {
+      localStorage.removeItem('giftery_applied_coupon');
+    } catch (err) {}
+    toast.info('Coupon removed');
   };
 
   const handleProceedToCheckout = () => {
@@ -201,8 +282,6 @@ const Cart = () => {
                               <div className={styles.itemDetails}>
                                 <h3 className={styles.itemName}>{item.name}</h3>
                                 {item.variant && <p className={styles.itemVariant}>{item.variant}</p>}
-                                <p className={styles.customizedBadge}>✏️ Customized</p>
-                                <p className={styles.logoTag}>Logo: {item.logoName || 'company_logo.png'}</p>
                               </div>
                             </div>
                           </div>
@@ -247,7 +326,6 @@ const Cart = () => {
                 <div className={styles.bottomActionsRow}>
                   <form onSubmit={handleApplyCoupon} className={styles.couponForm}>
                     <div className={styles.couponInputWrapper}>
-                      <span className={styles.tagIcon}>🏷️</span>
                       <input
                         type="text"
                         placeholder="Enter coupon code"
@@ -262,7 +340,7 @@ const Cart = () => {
                   </form>
 
                   <button type="button" className={styles.clearCartBtn} onClick={handleClearCart}>
-                    🗑️ CLEAR CART
+                    CLEAR CART
                   </button>
                 </div>
               </div>
@@ -278,9 +356,26 @@ const Cart = () => {
                       <span className={styles.rowValBold}>₹{subtotal.toLocaleString('en-IN')}.00</span>
                     </div>
 
+                    {appliedCoupon && (
+                      <div className={styles.summaryRow} style={{ color: '#166534', background: '#f0fdf4', padding: '0.4rem 0.6rem', borderRadius: '6px', margin: '0.25rem 0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <span style={{ fontWeight: '700', fontSize: '0.82rem' }}>Coupon: {appliedCoupon.code}</span>
+                          <span style={{ fontSize: '0.75rem', opacity: 0.85 }}>({appliedCoupon.discountText})</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleRemoveCoupon}
+                          style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
+                          title="Remove Coupon"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
+
                     {discountAmount > 0 && (
                       <div className={styles.summaryRow}>
-                        <span>Discount</span>
+                        <span>Discount Savings</span>
                         <span className={styles.discountVal}>-₹{discountAmount.toFixed(2)}</span>
                       </div>
                     )}
@@ -306,7 +401,6 @@ const Cart = () => {
                   {/* Checkout & Continue Shopping CTAs */}
                   <div className={styles.summaryCtaGroup}>
                     <button type="button" className={styles.proceedCheckoutBtn} onClick={handleProceedToCheckout}>
-                      <span className={styles.lockIcon}>🔒</span>
                       <span>PROCEED TO CHECKOUT</span>
                     </button>
 
@@ -377,7 +471,7 @@ const Cart = () => {
                           onClick={(e) => {
                             e.stopPropagation();
                             dispatch(addToCart({ id: prod.id, name: prod.name, price: prod.price, image: prod.image, slug: prod.slug }));
-                            toast.success(`Added ${prod.name} to cart 🛒`);
+                            toast.success(`Added ${prod.name} to cart`);
                           }}
                           aria-label="Add to cart"
                         >

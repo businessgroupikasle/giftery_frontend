@@ -343,7 +343,7 @@ const CorporateGifts = () => {
   };
 
   const handleApplyFilters = () => {
-    toast.success('Filters applied successfully! 🔍');
+    toast.success('Filters applied successfully!');
   };
 
   const handleClearAll = () => {

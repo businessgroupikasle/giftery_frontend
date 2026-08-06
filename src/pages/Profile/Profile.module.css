@@ -1,0 +1,238 @@
+/* =============================================================
+   Profile.module.css — Giftery User Profile Page Styling
+   ============================================================= */
+
+.pageWrapper {
+  min-height: 85vh;
+  background-color: #f8fafc;
+  padding: 2.5rem 1rem 4rem;
+  font-family: var(--font-primary, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+}
+
+.container {
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+/* ── Breadcrumbs ─────────────────────────────────────────────── */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.breadLink {
+  color: #64748b;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: color 0.15s ease;
+}
+
+.breadLink:hover {
+  color: #d99b26;
+}
+
+.breadSep {
+  color: #cbd5e1;
+}
+
+.breadActive {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* ── User Header Card ────────────────────────────────────────── */
+.userHeaderCard {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.5rem 0;
+}
+
+.avatarCircle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  color: #1e293b;
+  font-size: 1.6rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.userName {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 0.2rem 0;
+  letter-spacing: -0.02em;
+}
+
+.userEmail {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ── Card Container ──────────────────────────────────────────── */
+.cardContainer {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  padding: 2rem 2.25rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.cardHeaderIcon {
+  font-size: 1.15rem;
+  color: #d99b26;
+}
+
+.cardHeaderTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* ── Form Styling ────────────────────────────────────────────── */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.fieldBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 1rem;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  padding: 0.8rem 1rem 0.8rem 2.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  color: #1e293b;
+  outline: none;
+  background-color: #ffffff;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  border-color: #d99b26;
+  box-shadow: 0 0 0 3px rgba(217, 155, 38, 0.15);
+}
+
+.inputDisabled {
+  background-color: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+  border-color: #f1f5f9;
+}
+
+.helpText {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.eyeBtn:hover {
+  color: #334155;
+}
+
+.twoColGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* ── Primary Gold Button ──────────────────────────────────────── */
+.primaryBtn {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+  padding: 0.8rem 1.75rem;
+  background: linear-gradient(135deg, #d99b26 0%, #b8832a 100%);
+  color: #ffffff !important;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(217, 155, 38, 0.3);
+}
+
+.primaryBtn:hover {
+  background: linear-gradient(135deg, #c2881e 0%, #a2721f 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(217, 155, 38, 0.4);
+}
+
+.primaryBtn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  transform: none;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .cardContainer {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .twoColGrid {
+    grid-template-columns: 1fr;
+  }
+}

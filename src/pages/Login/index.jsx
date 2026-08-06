@@ -13,8 +13,7 @@ import {
   FiKey, 
   FiX
 } from 'react-icons/fi';
-import { FcGoogle } from 'react-icons/fc';
-import { FaMeta } from 'react-icons/fa6';
+
 import useAuth from '@hooks/useAuth';
 import authService from '@services/authService';
 import { ROUTES } from '@constants/routes';
@@ -147,7 +146,7 @@ const Login = () => {
     try {
       await authService.verifyEmail({ email: form.email, otp: form.otp });
       setOtpVerified(true);
-      toast.success('✓ OTP code verified successfully!');
+      toast.success('OTP code verified successfully!');
     } catch (err) {
       toast.error(err.message || 'Invalid OTP code. Please check your email and try again.');
     } finally {
@@ -254,7 +253,7 @@ const Login = () => {
           window.dispatchEvent(new Event('registered_users_updated'));
         } catch (e) {}
 
-        toast.success('🎉 Account created and verified successfully!');
+        toast.success('Account created and verified successfully!');
         const loggedUser = res?.user || res?.data?.user;
         const role = loggedUser?.role;
         if (role === 'SUPER_ADMIN' || role === 'ADMIN') {
@@ -272,13 +271,6 @@ const Login = () => {
     }
   };
 
-  const handleSocialAuth = (provider) => {
-    toast.info(`Connecting to ${provider}...`);
-    setTimeout(() => {
-      toast.success(`Successfully authenticated with ${provider}`);
-      navigate(ROUTES.HOME);
-    }, 1200);
-  };
 
   const handleForgotSubmit = async (e) => {
     e.preventDefault();
@@ -616,28 +608,6 @@ const Login = () => {
           </button>
         </form>
 
-        {/* Social Authentication Divider (Register only) */}
-        {activeTab === 'register' && (
-          <>
-            <div className={styles.socialDivider}>
-              <span className={styles.socialDividerLine} />
-              <span className={styles.socialDividerText}>Or continue with</span>
-              <span className={styles.socialDividerLine} />
-            </div>
-
-            {/* Social Buttons */}
-            <div className={styles.socialGrid}>
-              <button
-                type="button"
-                className={styles.socialBtn}
-                onClick={() => handleSocialAuth('Google')}
-              >
-                <FcGoogle className={styles.socialIcon} />
-                <span>Continue with Google</span>
-              </button>
-            </div>
-          </>
-        )}
       </div>
 
       {/* ── FORGOT PASSWORD MODAL ────────────────────────────────────── */}

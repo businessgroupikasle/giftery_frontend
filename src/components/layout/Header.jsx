@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { ROUTES } from '@constants/routes';
 import { useCartContext } from '@context/CartContext';
 import { logout } from '@store/slices/authSlice';
+import useAuth from '@hooks/useAuth';
 import styles from './Header.module.css';
 
 const GiftLogo = () => (
@@ -45,6 +46,7 @@ const GiftLogo = () => (
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { logout: handleLogoutClick } = useAuth();
   const { isAuthenticated, user } = useSelector((s) => s.auth);
   const cartCount = useSelector((s) => s.cart.items.length);
   const wishlistCount = useSelector((s) => s.wishlist.items.length);
@@ -247,7 +249,7 @@ const Header = () => {
                     <span>{user?.role === 'SUPER_ADMIN' ? 'Super Admin Panel' : 'Admin Dashboard'}</span>
                   </Link>
                 )}
-                <button onClick={() => dispatch(logout())} className={styles.dropdownOption}>
+                <button onClick={handleLogoutClick} className={styles.dropdownOption}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                     <polyline points="16 17 21 12 16 7"></polyline>

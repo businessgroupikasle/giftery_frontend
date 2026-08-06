@@ -5,7 +5,7 @@ import Layout from '@components/layout/Layout';
 import StarRating from '@components/product/StarRating';
 import Spinner from '@components/ui/Spinner';
 import { addToCart } from '@store/slices/cartSlice';
-import { addToWishlist } from '@store/slices/wishlistSlice';
+import useWishlist from '@hooks/useWishlist';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { ROUTES } from '@constants/routes';
@@ -117,6 +117,7 @@ const Product = () => {
   const { slug } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { addToWishlist } = useWishlist();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -398,11 +399,11 @@ const Product = () => {
       logo: uploadedLogo,
       maxStock,
     }));
-    toast.success(`Added ${quantity} × ${name} to Cart!`);
+    toast.success(`Added ${quantity} x ${name} to Cart!`);
   };
 
   const handleWishlistToggle = () => {
-    dispatch(addToWishlist({ id: id || slug, name, price, slug }));
+    addToWishlist({ id: id || slug, name, price, slug, image: selectedImage || galleryImages[0], comparePrice });
     toast.success('Added to Wishlist!');
   };
 

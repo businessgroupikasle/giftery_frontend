@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useAuth from '@hooks/useAuth';
+import useWishlist from '@hooks/useWishlist';
 import ProtectedRoute from '@routes/ProtectedRoute';
 import { ROUTES } from '@constants/routes';
 import Maintenance from '@pages/Maintenance';
@@ -37,6 +38,7 @@ const PageLoader = () => (
 
 const App = () => {
   const { user } = useAuth();
+  const { hydrateWishlist } = useWishlist();
   const location = useLocation();
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(() => {
     try {
@@ -49,6 +51,12 @@ const App = () => {
   });
 
   useEffect(() => {
+    if (user) {
+      hydrateWishlist();
+    }
+  }, [user, hydrateWishlist]);
+
+  useEffect(() => {
     const handleSettingsUpdate = () => {
       try {
         const stored = localStorage.getItem('store_basic_settings');
@@ -57,7 +65,7 @@ const App = () => {
         }
       } catch(e) {}
     };
-    
+
     window.addEventListener('store_settings_updated', handleSettingsUpdate);
     return () => window.removeEventListener('store_settings_updated', handleSettingsUpdate);
   }, []);

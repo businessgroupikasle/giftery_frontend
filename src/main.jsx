@@ -31,6 +31,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                 draggable
                 pauseOnHover
                 theme="light"
+                icon={false}
               />
             </CartProvider>
           </AuthProvider>

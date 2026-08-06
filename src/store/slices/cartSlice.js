@@ -1,4 +1,6 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { cartService } from '@services/cartService';
+import { getToken } from '@utils/storage';
 
 const STORAGE_KEY = 'giftery_cart_state';
 
@@ -48,6 +50,114 @@ const recalculateCart = (state) => {
   saveCartToStorage(state);
 };
 
+const normalizeCartItem = (item) => {
+  const p = item.product || {};
+  const targetId = String(p.id || item.productId || item.id || `item-${Date.now()}`);
+  const unitPrice = Number(p.price || item.price || item.salePrice || 0);
+  const qty = Number(item.quantity) || 1;
+  const img = Array.isArray(p.images)
+    ? p.images[0]
+    : (p.image || item.image || '/images/products/placeholder.png');
+
+  return {
+    id: targetId,
+    dbItemId: item.id, // Database CartItem ID if available
+    productId: targetId,
+    name: p.name || item.name || 'Gift Item',
+    variant: item.variant || 'Standard Edition',
+    price: unitPrice,
+    salePrice: unitPrice,
+    image: img,
+    slug: p.slug || item.slug || '',
+    quantity: qty,
+    maxStock: p.stock !== undefined ? Number(p.stock) : (item.maxStock || 9999),
+  };
+};
+
+// ── Async Thunks for Database Profile Sync ─────────────────────────────────
+
+export const fetchCartAsync = createAsyncThunk('cart/fetchCartAsync', async (_, { rejectWithValue }) => {
+  try {
+    if (!getToken()) return null;
+    const cartData = await cartService.getCart();
+    return cartData;
+  } catch (err) {
+    return rejectWithValue(err.message || 'Failed to fetch cart');
+  }
+});
+
+export const addToCartAsync = createAsyncThunk('cart/addToCartAsync', async (payload, { dispatch, rejectWithValue }) => {
+  // Always update local state first for immediate snappy UI feedback
+  dispatch(cartSlice.actions.addItem(payload));
+
+  if (getToken()) {
+    try {
+      const targetId = payload.id || payload.productId || payload.product?.id;
+      const qty = Number(payload.quantity) || 1;
+      if (targetId) {
+        await cartService.addItem({ productId: targetId, quantity: qty });
+      }
+    } catch (err) {
+      console.warn('Backend cart sync error on add:', err.message);
+    }
+  }
+});
+
+export const updateQuantityAsync = createAsyncThunk('cart/updateQuantityAsync', async (payload, { dispatch, getState, rejectWithValue }) => {
+  dispatch(cartSlice.actions.updateQuantity(payload));
+
+  if (getToken()) {
+    try {
+      const state = getState();
+      const targetId = String(payload.id || payload.productId || '');
+      const item = state.cart.items.find((i) => String(i.id || i.productId) === targetId);
+
+      if (item && item.dbItemId) {
+        if (payload.quantity <= 0) {
+          await cartService.removeItem(item.dbItemId);
+        } else {
+          await cartService.updateItem(item.dbItemId, payload.quantity);
+        }
+      } else if (targetId) {
+        // Fallback to fetch fresh cart from DB if dbItemId not linked
+        await cartService.addItem({ productId: targetId, quantity: payload.quantity });
+      }
+    } catch (err) {
+      console.warn('Backend cart sync error on update:', err.message);
+    }
+  }
+});
+
+export const removeFromCartAsync = createAsyncThunk('cart/removeFromCartAsync', async (idPayload, { dispatch, getState, rejectWithValue }) => {
+  const targetId = String(idPayload);
+  const state = getState();
+  const item = state.cart.items.find((i) => String(i.id || i.productId) === targetId);
+
+  dispatch(cartSlice.actions.removeItem(idPayload));
+
+  if (getToken()) {
+    try {
+      if (item && item.dbItemId) {
+        await cartService.removeItem(item.dbItemId);
+      }
+    } catch (err) {
+      console.warn('Backend cart sync error on remove:', err.message);
+    }
+  }
+});
+
+export const clearCartAsync = createAsyncThunk('cart/clearCartAsync', async (_, { dispatch, rejectWithValue }) => {
+  dispatch(cartSlice.actions.clearCart());
+
+  if (getToken()) {
+    try {
+      await cartService.clearCart();
+    } catch (err) {
+      console.warn('Backend cart sync error on clear:', err.message);
+    }
+  }
+});
+
 const initialCartData = loadCartFromStorage();
 
 const cartSlice = createSlice({
@@ -62,22 +172,7 @@ const cartSlice = createSlice({
   reducers: {
     setCart: (state, action) => {
       const items = Array.isArray(action.payload) ? action.payload : [];
-      state.items = items.map((item) => {
-        const itemId = String(item.id || item.productId || item.product?.id || `item-${Date.now()}`);
-        const qty = Number(item.quantity) || 1;
-        const unitPrice = Number(item.price || item.salePrice || item.product?.salePrice || item.product?.price || 0);
-        return {
-          ...item,
-          id: itemId,
-          productId: itemId,
-          name: item.name || item.product?.name || 'Gift Item',
-          price: unitPrice,
-          salePrice: unitPrice,
-          image: item.image || item.product?.images?.[0] || item.product?.image || '/images/products/placeholder.png',
-          slug: item.slug || item.product?.slug || '',
-          quantity: qty,
-        };
-      });
+      state.items = items.map(normalizeCartItem);
       recalculateCart(state);
     },
     addItem: (state, action) => {
@@ -86,7 +181,6 @@ const cartSlice = createSlice({
       const qty = Number(payload.quantity) || 1;
       const unitPrice = Number(payload.price || payload.salePrice || payload.product?.salePrice || payload.product?.price || 0);
 
-      // Find existing item by id, productId or product.id
       const existingIndex = state.items.findIndex((i) => {
         const itemId = String(i.id || i.productId || i.product?.id || '');
         return itemId === targetId;
@@ -112,12 +206,6 @@ const cartSlice = createSlice({
           slug: payload.slug || payload.product?.slug || '',
           quantity: Math.min(qty, maxStock),
           maxStock,
-          product: payload.product || {
-            id: targetId,
-            name: payload.name || 'Gift Item',
-            price: unitPrice,
-            image: payload.image || '',
-          },
         };
         state.items.push(newItem);
       }
@@ -136,7 +224,9 @@ const cartSlice = createSlice({
       state.items = [];
       state.totalQuantity = 0;
       state.totalPrice = 0;
-      saveCartToStorage(state);
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (e) {}
     },
     updateQuantity: (state, action) => {
       const { id, productId, quantity } = action.payload || {};
@@ -165,14 +255,22 @@ const cartSlice = createSlice({
       state.error = action.payload;
     },
   },
+  extraReducers: (builder) => {
+    builder.addCase(fetchCartAsync.fulfilled, (state, action) => {
+      if (action.payload && Array.isArray(action.payload.items)) {
+        state.items = action.payload.items.map(normalizeCartItem);
+        recalculateCart(state);
+      }
+    });
+  },
 });
 
 export const { setCart, addItem, removeItem, clearCart, updateQuantity, setCartLoading, setCartError } =
   cartSlice.actions;
 
-// Convenient aliases used by components
-export const addToCart = addItem;
-export const removeFromCart = removeItem;
+// Aliases
+export const addToCart = addToCartAsync;
+export const removeFromCart = removeFromCartAsync;
 
 // Selectors
 export const selectCartItems = (state) => state.cart.items;

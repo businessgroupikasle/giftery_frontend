@@ -84,8 +84,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e5c158 0%, #d49e29 100%);
-  color: #0b0c0e;
+  background: linear-gradient(135deg, #d99b26 0%, #b8832a 100%);
+  color: #ffffff !important;
   font-size: 0.92rem;
   font-weight: 800;
   letter-spacing: 1.2px;
@@ -93,14 +93,15 @@
   border-radius: 12px;
   text-decoration: none;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(229, 193, 88, 0.4);
+  box-shadow: 0 4px 20px rgba(217, 155, 38, 0.4);
   white-space: nowrap;
 }
 
 .contactBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(229, 193, 88, 0.6);
-  background: linear-gradient(135deg, #f3d470 0%, #e0aa33 100%);
+  box-shadow: 0 8px 28px rgba(217, 155, 38, 0.6);
+  background: linear-gradient(135deg, #c2881e 0%, #a2721f 100%);
+  color: #ffffff !important;
 }
 
 .benefitsGroup {

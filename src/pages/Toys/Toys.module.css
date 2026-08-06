@@ -898,7 +898,7 @@
 .cardCartBtn {
   flex: 1;
   padding: 0.6rem 0.35rem;
-  background: #dfa843;
+  background: var(--color-primary, #dfa843);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -911,14 +911,14 @@
 }
 
 .cardCartBtn:hover {
-  background: #b8832a;
+  background: var(--color-primary-dark, #b8832a);
   transform: translateY(-1px);
 }
 
 .buyNowBtn {
   flex: 1;
   padding: 0.6rem 0.35rem;
-  background: #059669;
+  background: var(--color-success, #059669);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -932,7 +932,7 @@
 }
 
 .buyNowBtn:hover {
-  background: #047857;
+  background: var(--color-success-dark, #047857);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
 }

@@ -19,7 +19,6 @@ export const ENDPOINTS = {
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
     ME: '/auth/me',
-    GOOGLE: '/auth/google',
   },
 
   // ── Users ─────────────────────────────────────────────────
@@ -58,19 +57,18 @@ export const ENDPOINTS = {
   // ── Cart ──────────────────────────────────────────────────
   CART: {
     GET: '/cart',
-    ADD: '/cart/add',
-    UPDATE: (itemId) => `/cart/items/${itemId}`,
-    REMOVE: (itemId) => `/cart/items/${itemId}`,
-    CLEAR: '/cart/clear',
-    MERGE: '/cart/merge',
+    ADD: '/cart',
+    UPDATE: (itemId) => `/cart/${itemId}`,
+    REMOVE: (itemId) => `/cart/${itemId}`,
+    CLEAR: '/cart',
   },
 
   // ── Wishlist ──────────────────────────────────────────────
   WISHLIST: {
     GET: '/wishlist',
-    ADD: '/wishlist/add',
+    ADD: '/wishlist',
     REMOVE: (productId) => `/wishlist/${productId}`,
-    CLEAR: '/wishlist/clear',
+    CLEAR: '/wishlist',
   },
 
   // ── Orders ────────────────────────────────────────────────

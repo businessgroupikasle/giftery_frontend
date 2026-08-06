@@ -11,6 +11,7 @@ import {
   FiXCircle, 
   FiUserPlus
 } from 'react-icons/fi';
+import { formatOrderId } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
 
 const DEFAULT_RECENT_ORDERS = [
@@ -276,21 +277,6 @@ const DashboardOverview = ({
             <span className={styles.kpiSubtext}>vs previous period</span>
           </div>
         </div>
-
-        {/* Card 6: New Quotes */}
-        <div className={styles.kpiCard} onClick={() => handleTabChange('corporate-quotes')} style={{ cursor: 'pointer' }} title="View Corporate Quotes">
-          <div className={styles.kpiHeader}>
-            <div className={`${styles.kpiIconCircle} ${styles.bgPink}`}>
-              <FiFileText />
-            </div>
-            <span className={styles.kpiTitle}>New Quotes</span>
-          </div>
-          <h2 className={styles.kpiValue}>{metrics.newQuotes.toLocaleString('en-IN')}</h2>
-          <div className={styles.kpiFooter}>
-            <span className={styles.trendGreen}><FiTrendingUp /> 20.0%</span>
-            <span className={styles.kpiSubtext}>vs previous period</span>
-          </div>
-        </div>
       </div>
 
       {/* ── ROW 2: CHARTS GRID (3 COLUMNS) ── */}
@@ -505,26 +491,38 @@ const DashboardOverview = ({
                 <th>Order ID</th>
                 <th>Customer</th>
                 <th>Date</th>
+                <th>Product Details</th>
                 <th>Amount</th>
                 <th>Status</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {activeOrders.slice(0, 5).map((o, idx) => (
-                <tr key={o.id || idx}>
-                  <td className={styles.orderIdText}>#{o.id}</td>
-                  <td>{o.customer}</td>
-                  <td>{o.date}</td>
-                  <td>{o.amount}</td>
-                  <td>
-                    <span className={`${styles.pillStatus} ${o.status === 'Delivered' ? styles.pillDelivered : o.status === 'Processing' ? styles.pillProcessing : o.status === 'Cancelled' ? styles.pillCancelled : styles.pillPending}`}>
-                      {o.status}
-                    </span>
-                  </td>
-                  <td><button type="button" className={styles.dotsBtn}><FiMoreVertical /></button></td>
-                </tr>
-              ))}
+              {activeOrders.slice(0, 5).map((o, idx) => {
+                const displayId = formatOrderId(o.id || o.orderId, idx);
+                const customerName = o.customer || o.customerName || o.user?.name || o.shippingAddress?.fullName || 'Customer';
+                const itemCount = o.itemsCount || (Array.isArray(o.items) ? o.items.length : 1);
+                const productSummary = o.itemsDetails || (Array.isArray(o.items) ? o.items.map(i => `${i.name || i.product?.name || 'Item'} ×${i.quantity || 1}`).join(', ') : `${itemCount} Items`);
+                const amountDisplay = o.amount || `₹${(Number(o.rawAmount || o.totalAmount || 0)).toLocaleString('en-IN')}`;
+
+                return (
+                  <tr key={o.id || idx}>
+                    <td className={styles.orderIdText}>{displayId}</td>
+                    <td><strong>{customerName}</strong></td>
+                    <td>{o.date || 'Recent'}</td>
+                    <td style={{ fontSize: '0.82rem', color: '#475569', maxWidth: '180px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={productSummary}>
+                      {productSummary}
+                    </td>
+                    <td><strong style={{ color: '#d99b26' }}>{amountDisplay}</strong></td>
+                    <td>
+                      <span className={`${styles.pillStatus} ${o.status === 'Delivered' ? styles.pillDelivered : o.status === 'Processing' ? styles.pillProcessing : o.status === 'Cancelled' ? styles.pillCancelled : styles.pillPending}`}>
+                        {o.status || 'Pending'}
+                      </span>
+                    </td>
+                    <td><button type="button" className={styles.dotsBtn} onClick={() => handleTabChange('orders')} title="Manage Orders"><FiMoreVertical /></button></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
@@ -574,22 +572,6 @@ const DashboardOverview = ({
               <div>
                 <div className={styles.miniLabel}>New Customers</div>
                 <div className={styles.miniVal}>{alerts.newCustomersCount}</div>
-                <div className={styles.miniSub}>This Week</div>
-              </div>
-            </div>
-
-            <div 
-              className={`${styles.miniAlertCard} ${styles.miniCardGreen}`}
-              onClick={() => handleTabChange('corporate-quotes')}
-              style={{ cursor: 'pointer' }}
-              title="View Bulk Corporate Quotes"
-            >
-              <div className={styles.miniIconBox} style={{ color: '#16a34a' }}>
-                <FiFileText />
-              </div>
-              <div>
-                <div className={styles.miniLabel}>Bulk Quotes</div>
-                <div className={styles.miniVal}>{alerts.bulkQuotesCount}</div>
                 <div className={styles.miniSub}>This Week</div>
               </div>
             </div>

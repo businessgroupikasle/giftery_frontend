@@ -212,7 +212,7 @@
 
 .nextStepGoldBtn,
 .payNowGoldBtn {
-  background: #dfa843;
+  background: var(--color-primary, #dfa843);
   color: #ffffff;
   border: none;
   border-radius: 10px;
@@ -227,7 +227,7 @@
 
 .nextStepGoldBtn:hover,
 .payNowGoldBtn:hover {
-  background: #c8922f;
+  background: var(--color-primary-dark, #b8832a);
 }
 
 .backOutlineBtn {

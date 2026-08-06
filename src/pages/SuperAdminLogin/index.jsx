@@ -50,7 +50,7 @@ const SuperAdminLogin = () => {
 
     try {
       const res = await login({ email: form.email, password: form.password });
-      toast.success('👑 Welcome, Super Administrator');
+      toast.success('Welcome, Super Administrator');
       navigate(ROUTES.DASHBOARD);
     } catch (err) {
       const errMsg = err.message || 'Invalid Super Admin credentials. Please check your username & password.';

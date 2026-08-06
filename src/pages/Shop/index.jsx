@@ -71,14 +71,14 @@ const Shop = () => {
           </select>
           <div className={styles.priceRange}>
             <input
-              type="number" placeholder="Min $" min={0}
+              type="number" placeholder="Min ₹" min={0}
               value={minPrice}
               onChange={(e) => setParam('minPrice', e.target.value)}
               className={styles.priceInput}
             />
             <span>–</span>
             <input
-              type="number" placeholder="Max $" min={0}
+              type="number" placeholder="Max ₹" min={0}
               value={maxPrice}
               onChange={(e) => setParam('maxPrice', e.target.value)}
               className={styles.priceInput}

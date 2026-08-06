@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout, loadUserFromStorage } from '@store/slices/authSlice';
-import authService from '@services/authService';
+import { fetchCartAsync } from '@store/slices/cartSlice';
+import { fetchWishlistAsync } from '@store/slices/wishlistSlice';
 
 const AuthContext = createContext(null);
 
@@ -16,6 +17,14 @@ export const AuthProvider = ({ children }) => {
       dispatch(loadUserFromStorage());
     }
   }, [dispatch]);
+
+  // Sync user profile database cart & wishlist whenever user authenticates
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      dispatch(fetchCartAsync());
+      dispatch(fetchWishlistAsync());
+    }
+  }, [dispatch, isAuthenticated, token]);
 
   const handleLogout = () => {
     dispatch(logout());

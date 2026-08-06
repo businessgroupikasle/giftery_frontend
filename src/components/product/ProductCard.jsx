@@ -2,7 +2,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FiHeart } from 'react-icons/fi';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '@store/slices/cartSlice';
-import { addToWishlist, removeFromWishlist, selectIsWishlisted } from '@store/slices/wishlistSlice';
+import { selectIsWishlisted } from '@store/slices/wishlistSlice';
+import useWishlist from '@hooks/useWishlist';
 import StarRating from './StarRating';
 import { formatCurrency } from '@utils/formatters';
 import { ROUTES } from '@constants/routes';
@@ -14,6 +15,7 @@ import ThreeDotMenu from './ThreeDotMenu';
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { addToWishlist, removeFromWishlist } = useWishlist();
 
   const {
     id, name, slug, price, comparePrice, images, rating = 4.8, _count,
@@ -53,10 +55,10 @@ const ProductCard = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
     if (isWishlisted) {
-      dispatch(removeFromWishlist(id));
+      removeFromWishlist(id);
       toast.info(`Removed ${name} from wishlist`);
     } else {
-      dispatch(addToWishlist({ id, name, price, comparePrice, image, slug }));
+      addToWishlist({ id, name, price, comparePrice, image, slug });
       toast.success(`Added ${name} to wishlist`);
     }
   };

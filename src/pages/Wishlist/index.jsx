@@ -4,23 +4,25 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Layout from '@components/layout/Layout';
 import useFetch from '@hooks/useFetch';
+import useWishlist from '@hooks/useWishlist';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { ROUTES } from '@constants/routes';
 import { addToCart } from '@store/slices/cartSlice';
-import { addToWishlist, removeFromWishlist, clearWishlist } from '@store/slices/wishlistSlice';
+import { removeFromWishlist, clearWishlist } from '@store/slices/wishlistSlice';
 import { formatCurrency } from '@utils/formatters';
 import styles from './Wishlist.module.css';
 
 const Wishlist = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { addToWishlist } = useWishlist();
 
   // Get items from Redux store
   const reduxWishlist = useSelector((state) => state.wishlist.items) || [];
 
   // Fetch backend API wishlist items if user logged in
-  const { data } = useFetch(ENDPOINTS.WISHLIST.GET);
+  const { data, fetch: refetchWishlist } = useFetch(ENDPOINTS.WISHLIST.GET);
   const apiWishlist = data?.wishlist?.items
     ? data.wishlist.items.map((i) => i.product || i)
     : [];
@@ -96,19 +98,43 @@ const Wishlist = () => {
     return () => window.removeEventListener('products_updated', fetchLiveProducts);
   }, [wishlistItems.length]);
 
-  const handleAddToCart = (item) => {
+  const handleAddToCart = async (item) => {
     dispatch(addToCart({ id: item.id, name: item.name, price: item.price, image: item.image, slug: item.slug }));
-    toast.success(`Added "${item.name}" to cart 🛒`);
+    dispatch(removeFromWishlist(item.id));
+
+    try {
+      await axiosInstance.delete(ENDPOINTS.WISHLIST.REMOVE(item.id));
+      refetchWishlist();
+    } catch (e) {
+      refetchWishlist();
+    }
+
+    toast.success(`Moved "${item.name}" to cart`);
   };
 
-  const handleBuyNow = (item) => {
+  const handleBuyNow = async (item) => {
     dispatch(addToCart({ id: item.id, name: item.name, price: item.price, image: item.image, slug: item.slug }));
-    toast.success(`Proceeding to checkout for "${item.name}" ⚡`);
+    dispatch(removeFromWishlist(item.id));
+
+    try {
+      await axiosInstance.delete(ENDPOINTS.WISHLIST.REMOVE(item.id));
+      refetchWishlist();
+    } catch (e) {
+      refetchWishlist();
+    }
+
+    toast.success(`Proceeding to cart with "${item.name}"`);
     navigate(ROUTES.CART);
   };
 
-  const handleRemoveFromWishlist = (id, name) => {
+  const handleRemoveFromWishlist = async (id, name) => {
     dispatch(removeFromWishlist(id));
+    try {
+      await axiosInstance.delete(ENDPOINTS.WISHLIST.REMOVE(id));
+      refetchWishlist();
+    } catch (e) {
+      refetchWishlist();
+    }
     toast.info(`Removed "${name}" from wishlist`);
   };
 
@@ -118,8 +144,8 @@ const Wishlist = () => {
   };
 
   const handleAddRecommendedToWishlist = (item) => {
-    dispatch(addToWishlist(item));
-    toast.success(`Added "${item.name}" to Wishlist ❤️`);
+    addToWishlist(item);
+    toast.success(`Added "${item.name}" to Wishlist`);
   };
 
   return (

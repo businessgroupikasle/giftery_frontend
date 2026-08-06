@@ -34,7 +34,7 @@ const INITIAL_ENQUIRIES = [
 
 const INITIAL_COUPONS = [
   { id: 'c-1', code: 'LUXURY20', discount: '20% OFF', category: 'Corporate Gifts', status: 'Active' },
-  { id: 'c-2', code: 'WELCOME10', discount: '$10 OFF', category: 'First Purchase', status: 'Active' },
+  { id: 'c-2', code: 'WELCOME10', discount: '₹100 OFF', category: 'First Purchase', status: 'Active' },
 ];
 
 const INITIAL_CORPORATE_QUOTES = [
@@ -143,7 +143,7 @@ const Dashboard = () => {
     const updated = [newAdmin, ...adminUsers];
     setAdminUsers(updated);
     localStorage.setItem('admin_users_roles', JSON.stringify(updated));
-    toast.success(`🎉 ${roleForm.name} assigned ${roleForm.role} role & permissions!`);
+    toast.success(`${roleForm.name} assigned ${roleForm.role} role & permissions!`);
     setShowAddRoleModal(false);
     setRoleForm({ name: '', email: '', phone: '', role: 'STORE_ADMIN', permissions: ['Products', 'Orders', 'Quotes'] });
   };
@@ -195,8 +195,8 @@ const Dashboard = () => {
           role: 'CUSTOMER',
           ordersCount: u.ordersCount || 0,
           totalSpent: u.totalSpent || 0,
-          joinedDate: u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent',
-          status: u.isActive ? 'Active' : 'Inactive',
+          joinedDate: u.joinedDate || (u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent'),
+          status: u.status || (u.isActive !== undefined ? (u.isActive ? 'Active' : 'Inactive') : 'Active'),
         }));
     } catch (err) {
       console.warn('Users API fetch warning:', err.message);
@@ -287,11 +287,11 @@ const Dashboard = () => {
       localStorage.setItem('store_basic_settings', JSON.stringify(settingsForm));
       window.dispatchEvent(new Event('store_settings_updated'));
       await axiosInstance.put(ENDPOINTS.SETTINGS.UPDATE || '/settings', settingsForm);
-      toast.success('⚙️ Store Basic Settings saved successfully!');
+      toast.success('Store Basic Settings saved successfully!');
     } catch {
       localStorage.setItem('store_basic_settings', JSON.stringify(settingsForm));
       window.dispatchEvent(new Event('store_settings_updated'));
-      toast.success('⚙️ Store Basic Settings saved successfully!');
+      toast.success('Store Basic Settings saved successfully!');
     } finally {
       setSavingSettings(false);
     }
@@ -354,8 +354,12 @@ const Dashboard = () => {
     let apiOrders = [];
     try {
       const res = await axiosInstance.get(ENDPOINTS.ORDERS.LIST);
-      const data = res.data?.data || res.data || res;
-      if (Array.isArray(data)) apiOrders = data;
+      const responseData = res.data?.data || res.data || res;
+      apiOrders = Array.isArray(responseData?.data)
+        ? responseData.data
+        : (Array.isArray(responseData)
+          ? responseData
+          : (Array.isArray(responseData?.orders) ? responseData.orders : []));
     } catch (err) {
       console.warn('Orders fetch warning:', err.message);
     }
@@ -363,21 +367,56 @@ const Dashboard = () => {
     const localOrders = JSON.parse(localStorage.getItem('giftery_orders') || '[]');
     const combined = [...localOrders];
     apiOrders.forEach(ao => {
-      if (!combined.find(c => c.id === ao.id || c.orderId === ao.id)) {
+      if (!combined.find(c => String(c.id || c.orderId) === String(ao.id || ao.orderId))) {
         combined.push(ao);
       }
     });
 
     if (combined.length > 0) {
-      const formatted = combined.map(o => ({
-        id: o.id?.toString().startsWith('ORD-') ? o.id : `ORD-${o.id}`,
-        customer: o.customerName || o.user?.name || o.shippingAddress?.fullName || 'Customer',
-        date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Recent',
-        itemsCount: o.items?.length || 1,
-        amount: `₹${(o.totalAmount || 0).toLocaleString('en-IN')}`,
-        rawAmount: o.totalAmount || 0,
-        status: o.status ? (o.status === 'DELIVERED' ? 'Delivered' : o.status === 'PROCESSING' ? 'Processing' : o.status === 'CANCELLED' ? 'Cancelled' : 'Pending') : 'Pending',
-      }));
+      const formatted = combined.map(o => {
+        const customerName = o.customerName || o.customer || o.user?.name || o.shippingAddress?.fullName || o.shippingAddress?.name || o.customerEmail || o.user?.email || 'Customer';
+        const dateStr = o.createdAt || o.date;
+        let formattedDate = 'Recent';
+        if (dateStr) {
+          try {
+            formattedDate = new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+          } catch (e) {}
+        }
+
+        const itemsArr = Array.isArray(o.items) ? o.items : [];
+        const itemsCount = o.itemsCount || (itemsArr.length > 0 ? itemsArr.length : 1);
+        const itemsDetails = itemsArr.length > 0
+          ? itemsArr.map(i => `${i.name || i.product?.name || 'Gift Item'} ×${i.quantity || 1}`).join(', ')
+          : '1 Item';
+
+        const totalNum = Number(o.totalAmount || o.rawAmount || o.total || 0);
+
+        let statusStr = 'Pending';
+        if (o.status) {
+          const s = String(o.status).toUpperCase();
+          if (s === 'DELIVERED') statusStr = 'Delivered';
+          else if (s === 'PROCESSING') statusStr = 'Processing';
+          else if (s === 'CANCELLED') statusStr = 'Cancelled';
+          else if (s === 'SHIPPED') statusStr = 'Shipped';
+          else statusStr = 'Pending';
+        }
+
+        return {
+          id: o.id || o.orderId || `ORD-${Date.now()}`,
+          orderId: o.orderId || o.id,
+          customer: customerName,
+          customerEmail: o.customerEmail || o.user?.email || '',
+          date: formattedDate,
+          createdAt: dateStr || new Date().toISOString(),
+          itemsCount,
+          itemsDetails,
+          items: itemsArr,
+          amount: `₹${totalNum.toLocaleString('en-IN')}`,
+          rawAmount: totalNum,
+          status: statusStr,
+          shippingAddress: o.shippingAddress || null,
+        };
+      });
       setOrdersList(formatted);
     }
   };
@@ -479,7 +518,6 @@ const Dashboard = () => {
 
   const fetchAllDashboardData = async () => {
     setIsRefreshing(true);
-    toast.info('Refreshing store data...', { autoClose: 1200 });
     try {
       await Promise.allSettled([
         fetchDashboardStats(),
@@ -490,7 +528,7 @@ const Dashboard = () => {
         fetchCategories(),
         loadCustomers(),
       ]);
-      toast.success('🔄 Dashboard data refreshed successfully!');
+      toast.success('Dashboard data refreshed successfully!');
     } catch (err) {
       toast.error('Failed to refresh store data');
     } finally {
@@ -908,7 +946,7 @@ const Dashboard = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success(`📥 ${filename} CSV downloaded successfully!`);
+    toast.success(`${filename} CSV downloaded successfully!`);
   };
 
   const handleExportOrdersCSV = () => {
@@ -1134,15 +1172,6 @@ const Dashboard = () => {
             <OrdersSection
               ordersList={ordersList}
               handleExportOrdersCSV={handleExportOrdersCSV}
-            />
-          )}
-
-          {activeTab === 'corporate-quotes' && (
-            <CorporateQuotesSection
-              corporateQuotes={corporateQuotes}
-              handleUpdateQuoteStatus={handleUpdateQuoteStatus}
-              handleDeleteQuote={handleDeleteQuote}
-              handleExportQuotesCSV={handleExportQuotesCSV}
             />
           )}
 

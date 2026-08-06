@@ -44,7 +44,7 @@ const AdminLogin = () => {
 
     try {
       await login({ email: form.email, password: form.password });
-      toast.success('💼 Welcome back, Store Administrator');
+      toast.success('Welcome back, Store Administrator');
       navigate(ROUTES.DASHBOARD);
     } catch (err) {
       toast.error(err.message || 'Invalid Store Admin credentials');

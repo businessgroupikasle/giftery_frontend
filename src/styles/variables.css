@@ -4,12 +4,13 @@
 
 :root {
   /* ── Colors ──────────────────────────────────────────── */
-  --color-primary:       hsl(38, 80%, 52%);
-  --color-primary-dark:  hsl(38, 80%, 40%);
-  --color-primary-light: hsl(38, 80%, 68%);
+  --color-primary:       #dfa843;
+  --color-primary-dark:  #b8832a;
+  --color-primary-light: #f5d886;
   --color-secondary:     hsl(280, 75%, 60%);
   --color-accent:        hsl(340, 90%, 55%);
-  --color-success:       hsl(145, 65%, 42%);
+  --color-success:       #059669;
+  --color-success-dark:  #047857;
   --color-warning:       hsl(38, 95%, 50%);
   --color-error:         hsl(0, 80%, 55%);
 

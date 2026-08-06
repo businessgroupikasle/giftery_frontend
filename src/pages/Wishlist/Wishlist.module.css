@@ -169,24 +169,24 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: #1b4d2e;
-  color: #ffffff;
+  background: linear-gradient(135deg, #d99b26 0%, #b8832a 100%);
+  color: #ffffff !important;
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 800;
   padding: 0.85rem 2.4rem;
   border-radius: 12px;
   text-decoration: none;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 16px rgba(27, 77, 46, 0.28);
+  box-shadow: 0 4px 16px rgba(217, 155, 38, 0.3);
 }
 
 .exploreBtn:hover {
-  background-color: #133a22;
-  color: #ffffff;
+  background: linear-gradient(135deg, #c2881e 0%, #a2721f 100%);
+  color: #ffffff !important;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(27, 77, 46, 0.38);
+  box-shadow: 0 6px 20px rgba(217, 155, 38, 0.4);
 }
 
 /* ── Populated Wishlist State ────────────────────────────── */
@@ -380,8 +380,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #1b4d2e 0%, #133a22 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, #111827 0%, #1e293b 100%);
+  color: #ffffff !important;
   border: none;
   padding: 0.75rem 1rem;
   border-radius: 10px;
@@ -389,15 +389,16 @@
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(27, 77, 46, 0.25);
+  box-shadow: 0 4px 14px rgba(17, 24, 39, 0.25);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .buyNowBtn:hover {
-  background: linear-gradient(135deg, #133a22 0%, #0b2214 100%);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(27, 77, 46, 0.35);
+  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.35);
+  color: #ffffff !important;
 }
 
 .addToCartOutlineBtn {
@@ -405,21 +406,23 @@
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  background-color: #f9fafb;
-  color: #1b4d2e;
-  border: 1px solid #1b4d2e;
+  background: var(--color-primary, #dfa843);
+  color: #ffffff !important;
+  border: none;
   padding: 0.65rem 1rem;
   border-radius: 10px;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(217, 155, 38, 0.25);
 }
 
 .addToCartOutlineBtn:hover {
-  background-color: #eaf4ed;
-  border-color: #133a22;
-  color: #133a22;
+  background: var(--color-primary-dark, #b8832a);
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(217, 155, 38, 0.35);
 }
 
 /* ── Recommended Section Below ───────────────────────────── */

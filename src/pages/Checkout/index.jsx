@@ -61,10 +61,27 @@ const Checkout = () => {
     return { freeShippingThreshold: 5000, standardShippingFee: 99 };
   });
 
+  const [appliedCoupon] = useState(() => {
+    try {
+      const stored = localStorage.getItem('giftery_applied_coupon');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return null;
+  });
+
   // Totals
   const itemCount = cartItems.length;
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0);
-  const discountAmount = 0; // No default discount
+
+  let discountAmount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.type === 'percent') {
+      discountAmount = (subtotal * appliedCoupon.value) / 100;
+    } else if (appliedCoupon.type === 'fixed') {
+      discountAmount = Math.min(subtotal, appliedCoupon.value);
+    }
+  }
+
   const isFreeShipping = subtotal >= storeSettings.freeShippingThreshold;
   const shippingFee = (isFreeShipping || subtotal === 0) ? 0 : storeSettings.standardShippingFee;
   const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
@@ -165,10 +182,10 @@ const Checkout = () => {
                 razorpay_signature: response.razorpay_signature || '',
               });
 
-              toast.success(`🎉 Payment Successful! Razorpay ID: ${response.razorpay_payment_id || 'pay_verified'}`);
+              toast.success(`Payment Successful! Razorpay ID: ${response.razorpay_payment_id || 'pay_verified'}`);
               finishOrderSuccess({ ...orderData, paymentId: response.razorpay_payment_id });
             } catch (verErr) {
-              toast.success(`🎉 Payment Completed! Razorpay ID: ${response.razorpay_payment_id || 'pay_success'}`);
+              toast.success(`Payment Completed! Razorpay ID: ${response.razorpay_payment_id || 'pay_success'}`);
               finishOrderSuccess({ ...orderData, paymentId: response.razorpay_payment_id });
             }
           },
@@ -208,7 +225,7 @@ const Checkout = () => {
 
   const simulatePaymentSuccess = (orderData) => {
     setTimeout(() => {
-      toast.success('🎉 Order placed successfully!');
+      toast.success('Order placed successfully!');
       finishOrderSuccess(orderData);
     }, 1000);
   };
@@ -216,14 +233,15 @@ const Checkout = () => {
   const finishOrderSuccess = (orderData) => {
     const storedUser = JSON.parse(localStorage.getItem('giftery_user') || '{}');
     const userEmail = addressForm.email || storedUser.email || '';
+    const uniqueId = orderData.orderId || `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const newPlacedOrder = {
-      id: orderData.orderId || `ORD-${Date.now().toString().slice(-6)}`,
-      orderId: orderData.orderId || `ORD-${Date.now().toString().slice(-6)}`,
+      id: uniqueId,
+      orderId: uniqueId,
       createdAt: new Date().toISOString(),
       status: 'PENDING',
       items: orderData.items || cartItems.map(i => ({
-        id: i.id || `item-${Date.now()}`,
+        id: i.id || `item-${Date.now()}-${Math.random()}`,
         name: i.name,
         price: i.price,
         quantity: i.quantity,

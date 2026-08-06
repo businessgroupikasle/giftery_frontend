@@ -837,8 +837,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #e5c158 0%, #c58b29 100%);
-  color: #0b0c0e;
+  background: linear-gradient(135deg, #d99b26 0%, #b8832a 100%);
+  color: #ffffff !important;
   font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: 1.5px;
@@ -846,13 +846,14 @@
   border-radius: 10px;
   text-decoration: none;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(229, 193, 88, 0.35);
+  box-shadow: 0 4px 20px rgba(217, 155, 38, 0.35);
 }
 
 .ctaBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(229, 193, 88, 0.5);
-  background: linear-gradient(135deg, #f0cf6d 0%, #d8962a 100%);
+  box-shadow: 0 8px 30px rgba(217, 155, 38, 0.5);
+  background: linear-gradient(135deg, #c2881e 0%, #a2721f 100%);
+  color: #ffffff !important;
 }
 
 /* Responsive */

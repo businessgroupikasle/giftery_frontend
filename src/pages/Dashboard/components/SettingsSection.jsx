@@ -249,7 +249,7 @@ const SettingsSection = ({
           </div>
           <button
             type="button"
-            onClick={() => toast.info('⚡ Product catalog cache re-indexed successfully!')}
+            onClick={() => toast.info('Product catalog cache re-indexed successfully!')}
             className={styles.viewAllBtn}
             style={{ background: '#ffffff', borderColor: '#bbf7d0', color: '#166534' }}
           >

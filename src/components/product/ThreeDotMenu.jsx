@@ -38,7 +38,7 @@ const ThreeDotMenu = ({ productUrl, productName, productImage }) => {
   const handleInstagramShare = (e) => {
     e.stopPropagation();
     navigator.clipboard.writeText(fullUrl);
-    toast.success('✓ Product link copied! Redirecting to Instagram...');
+    toast.success('Product link copied! Redirecting to Instagram...');
     window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
   };
 

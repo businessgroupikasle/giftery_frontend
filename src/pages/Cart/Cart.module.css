@@ -134,7 +134,7 @@
 
 .exploreBtn {
   display: inline-block;
-  background: #dfa843;
+  background: var(--color-primary, #dfa843);
   color: #ffffff;
   padding: 0.8rem 1.75rem;
   border-radius: 8px;
@@ -144,7 +144,7 @@
 }
 
 .exploreBtn:hover {
-  background: #c8922f;
+  background: var(--color-primary-dark, #b8832a);
 }
 
 /* ── 2. MAIN CART GRID ───────────────────────────────── */
@@ -250,18 +250,6 @@
   margin: 0;
 }
 
-.customizedBadge {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #dfa843;
-  margin: 0;
-}
-
-.logoTag {
-  font-size: 0.72rem;
-  color: #94a3b8;
-  margin: 0;
-}
 
 .priceText,
 .totalText {
@@ -483,7 +471,7 @@
 }
 
 .proceedCheckoutBtn {
-  background: #dfa843;
+  background: var(--color-primary, #dfa843);
   color: #ffffff;
   border: none;
   border-radius: 10px;
@@ -501,7 +489,7 @@
 }
 
 .proceedCheckoutBtn:hover {
-  background: #c8922f;
+  background: var(--color-primary-dark, #b8832a);
 }
 
 .lockIcon {
