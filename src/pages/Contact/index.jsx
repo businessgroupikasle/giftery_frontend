@@ -100,6 +100,73 @@ const Contact = () => {
   const [submitted, setSubmitted] = useState(false);
   const [charCount, setCharCount] = useState(0);
 
+  // Book an Appointment Modal State
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+  const [appointmentSubmitted, setAppointmentSubmitted] = useState(false);
+  const [appointmentData, setAppointmentData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    date: new Date().toISOString().split('T')[0],
+    timeSlot: '11:00 AM',
+    location: 'Giftery Corporate Gift Store (R.S. Puram, Coimbatore)',
+    notes: '',
+  });
+
+  const handleAppointmentChange = (e) => {
+    const { name, value } = e.target;
+    setAppointmentData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAppointmentSubmit = (e) => {
+    e.preventDefault();
+    if (!appointmentData.name || !appointmentData.email || !appointmentData.phone) {
+      toast.error('Please fill in your name, email and phone number');
+      return;
+    }
+    if (!isValidEmail(appointmentData.email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    if (!isValidMobile(appointmentData.phone)) {
+      toast.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
+
+    const newBooking = {
+      id: `apt-${Date.now()}`,
+      name: appointmentData.name,
+      email: appointmentData.email,
+      phone: appointmentData.phone,
+      subject: `Studio Appointment: ${appointmentData.location}`,
+      message: `Appointment requested for ${appointmentData.date} at ${appointmentData.timeSlot}. Store: ${appointmentData.location}. Notes: ${appointmentData.notes || 'None'}`,
+      status: 'New',
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const stored = JSON.parse(localStorage.getItem('customer_enquiries') || '[]');
+      localStorage.setItem('customer_enquiries', JSON.stringify([newBooking, ...stored]));
+      window.dispatchEvent(new Event('enquiries_updated'));
+    } catch (e) {}
+
+    setAppointmentSubmitted(true);
+    toast.success('Appointment booked successfully! Our team will confirm your visit.');
+    setTimeout(() => {
+      setShowAppointmentModal(false);
+      setAppointmentSubmitted(false);
+      setAppointmentData({
+        name: '',
+        email: '',
+        phone: '',
+        date: new Date().toISOString().split('T')[0],
+        timeSlot: '11:00 AM',
+        location: 'Giftery Corporate Gift Store (R.S. Puram, Coimbatore)',
+        notes: '',
+      });
+    }, 2000);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'message') setCharCount(value.length);
@@ -332,21 +399,21 @@ const Contact = () => {
             <div className={styles.mapCard}>
               <div className={styles.mapCardHeader}>
                 <div className={styles.mapCardTitleGroup}>
-                  <span className={styles.mapBadgeHeadquarters}>CORPORATE HEADQUARTERS</span>
-                  <h3 className={styles.mapTitleText}>Noida Corporate Office</h3>
-                  <p className={styles.mapAddressSubtext}>123, Business Park, Sector 62, Noida, Uttar Pradesh 201309</p>
+                  <span className={styles.mapBadgeHeadquarters}>Corporate Gift Store</span>
+                  <h3 className={styles.mapTitleText}>Corporate Office</h3>
+                  <p className={styles.mapAddressSubtext}>39, Ramachandra Rd, R.S. Puram, Coimbatore, Tamil Nadu 641002,</p>
                 </div>
               </div>
               <div className={styles.mapWrapper}>
                 <iframe
                   className={styles.mapFrame}
-                  title="Noida Corporate HQ Map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3502.3449649929967!2d77.36487251508247!3d28.62705798241736!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce5a2ed95d8a1%3A0x2c2d41c31abe9c7e!2sSector%2062%2C%20Noida%2C%20Uttar%20Pradesh!5e0!3m2!1sen!2sin!4v1691400000000!5m2!1sen!2sin"
+                  title="Giftery Corporate Gift Store Map"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3916.4277011676213!2d76.9546855!3d11.006502099999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba8593823cf77fd%3A0x81050ca268e468c3!2sGiftery!5e0!3m2!1sen!2sin!4v1786008766904!5m2!1sen!2sin"
                   allowFullScreen=""
                   loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
+                  referrerPolicy="strict-origin-when-cross-origin"
                 />
-                <div className={styles.mapOfficeCard}>
+                {/* <div className={styles.mapOfficeCard}>
                   <div className={styles.mapOfficePinIcon}>
                     <MapPinIcon />
                   </div>
@@ -356,39 +423,28 @@ const Contact = () => {
                       123, Business Park, Sector 62,<br />Noida, Uttar Pradesh 201309
                     </p>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
 
-            {/* Map 2: Experience Studio (Bengaluru, MG Road) */}
+            {/* Map 2: Toys & Games Store */}
             <div className={styles.mapCard}>
               <div className={styles.mapCardHeader}>
                 <div className={styles.mapCardTitleGroup}>
-                  <span className={styles.mapBadgeStudio}>EXPERIENCE STUDIO & HUB</span>
-                  <h3 className={styles.mapTitleText}>Bengaluru Experience Studio</h3>
-                  <p className={styles.mapAddressSubtext}>104, Luxury Tower, MG Road, Bengaluru, Karnataka 560001</p>
+                  <span className={styles.mapBadgeStudio}>TOYS & GAMES STORE</span>
+                  <h3 className={styles.mapTitleText}>Giftery Toys & Custom Gifts Store</h3>
+                  <p className={styles.mapAddressSubtext}>Ramanathapuram, Coimbatore, Tamil Nadu 641045</p>
                 </div>
               </div>
               <div className={styles.mapWrapper}>
                 <iframe
                   className={styles.mapFrame}
-                  title="Bengaluru Studio Map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3887.97341852033!2d77.60742187512165!3d12.97344968734204!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba3592eb49e29a3%3A0x8e8d8935c12f20f6!2sM.G.%20Road%2C%20Bengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1691400000000!5m2!1sen!2sin"
+                  title="Giftery Toys Store Map"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3916.5386567988758!2d76.98877639999999!3d10.998153199999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba85948b846a5fb%3A0xf7aa26b76aa39cb7!2sGiftery%20-%20Fancy%20Gifts%20Items%20%7C%20Stationary%20%7C%20Engraving%20and%20Customized%20Gifts%20%7C%20Personalized%20Gifts%20%7C%20Toys!5e0!3m2!1sen!2sin!4v1786008856269!5m2!1sen!2sin"
                   allowFullScreen=""
                   loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
+                  referrerPolicy="strict-origin-when-cross-origin"
                 />
-                <div className={styles.mapOfficeCard}>
-                  <div className={styles.mapOfficePinIcon}>
-                    <MapPinIcon />
-                  </div>
-                  <div>
-                    <p className={styles.mapOfficeTitle}>Experience Studio</p>
-                    <p className={styles.mapOfficeAddress}>
-                      104, Luxury Tower, MG Road,<br />Bengaluru, Karnataka 560001
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -407,7 +463,9 @@ const Contact = () => {
               </div>
               <div>
                 <p className={styles.contactInfoLabel}>Phone</p>
-                <p className={styles.contactInfoValue}>+91 98765 43210</p>
+                <p className={styles.contactInfoValue}>
+                  <a href="tel:+917010121945" style={{ color: 'inherit', textDecoration: 'none' }}>+91 70101 21945</a>
+                </p>
               </div>
             </div>
 
@@ -417,7 +475,9 @@ const Contact = () => {
               </div>
               <div>
                 <p className={styles.contactInfoLabel}>Email</p>
-                <p className={styles.contactInfoValue}>hello@gifterys.com</p>
+                <p className={styles.contactInfoValue}>
+                  <a href="mailto:giftery2023@gmail.com" style={{ color: 'inherit', textDecoration: 'none' }}>giftery2023@gmail.com</a>
+                </p>
               </div>
             </div>
 
@@ -426,9 +486,9 @@ const Contact = () => {
                 <MapPinIcon />
               </div>
               <div>
-                <p className={styles.contactInfoLabel}>Corporate HQ</p>
+                <p className={styles.contactInfoLabel}>Corporate HQ & Store</p>
                 <p className={styles.contactInfoValue}>
-                  123, Business Park, Sector 62,<br />Noida, Uttar Pradesh 201309
+                  39, Ramachandra Rd, R.S. Puram,<br />Coimbatore, Tamil Nadu 641002
                 </p>
               </div>
             </div>
@@ -453,11 +513,16 @@ const Contact = () => {
               <h4 className={styles.studioCardTitle}>Visit Our Experience Studio</h4>
             </div>
             <p className={styles.studioCardDesc}>
-              See, feel and experience our premium corporate gifts in person at our Bengaluru Experience Hub.
+              See, feel and experience our premium corporate gifts in person at our Experience Hubs.
             </p>
-            <Link to={ROUTES.CONTACT} className={styles.studioLink}>
+            <button
+              type="button"
+              onClick={() => setShowAppointmentModal(true)}
+              className={styles.studioLink}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', textAlign: 'left', padding: 0 }}
+            >
               BOOK AN APPOINTMENT <ArrowRight />
-            </Link>
+            </button>
           </div>
 
           {/* 3. Bulk Orders Card */}
@@ -478,6 +543,134 @@ const Contact = () => {
         </div>
 
       </div>
+
+      {/* ── BOOK AN APPOINTMENT MODAL ── */}
+      {showAppointmentModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }} onClick={() => setShowAppointmentModal(false)}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '520px', width: '100%', padding: '2rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+            <button type="button" style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 'bold' }} onClick={() => setShowAppointmentModal(false)}>
+              ✕
+            </button>
+            <h3 style={{ margin: '0 0 0.4rem 0', color: '#0f172a', fontSize: '1.35rem', fontWeight: '800' }}>
+              Book Studio Appointment
+            </h3>
+            <p style={{ margin: '0 0 1.25rem 0', color: '#64748b', fontSize: '0.88rem' }}>
+              Schedule a personalized consultation & tour at our experience store.
+            </p>
+
+            {appointmentSubmitted ? (
+              <div style={{ padding: '2rem 1rem', textAlign: 'center', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
+                <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '0.5rem' }}>🎉</span>
+                <h4 style={{ margin: 0, color: '#166534', fontSize: '1.1rem', fontWeight: '800' }}>Appointment Confirmed!</h4>
+                <p style={{ margin: '0.5rem 0 0 0', color: '#15803d', fontSize: '0.85rem' }}>We look forward to seeing you. Check your email for details.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleAppointmentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>Full Name *</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={appointmentData.name}
+                    onChange={handleAppointmentChange}
+                    placeholder="Enter your full name"
+                    required
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>Email Address *</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={appointmentData.email}
+                      onChange={handleAppointmentChange}
+                      placeholder="name@company.com"
+                      required
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>Phone Number *</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={appointmentData.phone}
+                      onChange={handleAppointmentChange}
+                      placeholder="10-digit mobile number"
+                      required
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>Store Location *</label>
+                  <select
+                    name="location"
+                    value={appointmentData.location}
+                    onChange={handleAppointmentChange}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem', background: '#ffffff' }}
+                  >
+                    <option value="Giftery Corporate Gift Store (R.S. Puram, Coimbatore)">Corporate Gift Store (R.S. Puram, Coimbatore)</option>
+                    <option value="Giftery Toys & Custom Gifts Store (Ramanathapuram, Coimbatore)">Toys & Custom Gifts Store (Ramanathapuram, Coimbatore)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>Preferred Date *</label>
+                    <input
+                      type="date"
+                      name="date"
+                      value={appointmentData.date}
+                      onChange={handleAppointmentChange}
+                      required
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>Time Slot *</label>
+                    <select
+                      name="timeSlot"
+                      value={appointmentData.timeSlot}
+                      onChange={handleAppointmentChange}
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem', background: '#ffffff' }}
+                    >
+                      <option value="10:00 AM">10:00 AM - 11:30 AM</option>
+                      <option value="11:30 AM">11:30 AM - 01:00 PM</option>
+                      <option value="02:00 PM">02:00 PM - 03:30 PM</option>
+                      <option value="03:30 PM">03:30 PM - 05:00 PM</option>
+                      <option value="05:00 PM">05:00 PM - 06:30 PM</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>Specific Requirements / Notes (Optional)</label>
+                  <textarea
+                    name="notes"
+                    value={appointmentData.notes}
+                    onChange={handleAppointmentChange}
+                    placeholder="E.g. Looking for 100+ executive gift hampers..."
+                    rows="2"
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.85rem', resize: 'vertical' }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  style={{ marginTop: '0.5rem', background: '#dfa843', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '0.85rem', fontWeight: '800', fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(223, 168, 67, 0.35)' }}
+                >
+                  CONFIRM APPOINTMENT
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

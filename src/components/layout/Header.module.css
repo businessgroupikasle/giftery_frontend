@@ -369,15 +369,15 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 200px;
+  width: 230px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 14px 35px -6px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 14px 35px -6px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.08);
   padding: 0.75rem 0.5rem;
   display: none;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   z-index: 1100;
   animation: dropdownFadeIn 0.18s ease-out;
 }
@@ -398,23 +398,43 @@
 }
 
 .accountHeader {
-  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.35rem 0.65rem 0.45rem;
+}
+
+.signedInLabel {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.userEmailText {
+  font-size: 0.92rem;
   font-weight: 800;
-  color: #1e293b;
-  padding: 0.4rem 0.65rem 0.6rem;
-  border-bottom: 1px solid #f1f5f9;
-  margin-bottom: 4px;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 4px 0;
 }
 
 .dropdownOption {
   display: flex !important;
   align-items: center !important;
-  gap: 0.65rem !important;
-  font-size: 0.88rem !important;
+  gap: 0.7rem !important;
+  font-size: 0.9rem !important;
   font-weight: 600 !important;
   color: #334155 !important;
   text-decoration: none !important;
-  padding: 0.55rem 0.7rem !important;
+  padding: 0.6rem 0.75rem !important;
   border-radius: 8px !important;
   background: transparent !important;
   border: none !important;
@@ -427,6 +447,15 @@
 .dropdownOption:hover {
   background: #f8fafc !important;
   color: #0f172a !important;
+}
+
+.signOutOption {
+  color: #dc2626 !important;
+}
+
+.signOutOption:hover {
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
 }
 
 /* Responsive adjustments */

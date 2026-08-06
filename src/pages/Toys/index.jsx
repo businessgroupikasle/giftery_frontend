@@ -409,7 +409,7 @@ const Toys = () => {
           <div className={styles.heroInner}>
             <div className={styles.breadcrumb}>
               <Link to={ROUTES.HOME}>Home</Link>
-              <span>›</span>
+              <span>/</span>
               <span className={styles.breadcrumbActive}>Toys & Games</span>
             </div>
 

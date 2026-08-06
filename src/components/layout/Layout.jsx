@@ -1,5 +1,6 @@
 import Header from './Header';
 import Footer from './Footer';
+import FloatingWidgets from './FloatingWidgets';
 import styles from './Layout.module.css';
 
 const Layout = ({ children }) => (
@@ -9,6 +10,7 @@ const Layout = ({ children }) => (
       {children}
     </main>
     <Footer />
+    <FloatingWidgets />
   </div>
 );
 

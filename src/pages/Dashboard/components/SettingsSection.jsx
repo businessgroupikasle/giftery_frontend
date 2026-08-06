@@ -1,4 +1,4 @@
-import { FiGlobe, FiLock, FiDatabase, FiServer, FiSave, FiTruck } from 'react-icons/fi';
+import { FiGlobe, FiLock, FiDatabase, FiServer, FiSave, FiTruck, FiUpload } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import styles from '../Dashboard.module.css';
 
@@ -8,6 +8,31 @@ const SettingsSection = ({
   handleSaveSettings,
   savingSettings,
 }) => {
+  const handleLogoFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleSettingsChange({
+          target: { name: 'storeLogo', value: reader.result, type: 'text' },
+        });
+        toast.info('Logo image selected! Click "Save Store Basic Settings" to apply across Header & Footer.');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    handleSettingsChange({
+      target: { name: 'storeLogo', value: '', type: 'text' },
+    });
+    toast.info('Custom logo cleared. Save settings to revert to default logo.');
+  };
+
   return (
     <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Card 1: General Store Profile */}
@@ -93,6 +118,63 @@ const SettingsSection = ({
               className={styles.searchInput}
               style={{ paddingLeft: '0.85rem' }}
             />
+          </div>
+        </div>
+
+        {/* Store Logo Upload Section */}
+        <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px dashed #e2e8f0' }}>
+          <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
+            <FiUpload style={{ color: '#d99b26' }} />
+            <span>Header & Footer Store Logo Image</span>
+          </label>
+          <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.78rem', color: '#64748b' }}>
+            Upload your official store logo PNG/JPEG image. It will immediately reflect across the site header, mobile navigation, and footer pages.
+          </p>
+
+          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* Current Logo Preview Box */}
+            <div style={{ width: '160px', height: '80px', borderRadius: '10px', border: '2px dashed #cbd5e1', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem', overflow: 'hidden' }}>
+              {settingsForm.storeLogo ? (
+                <img src={settingsForm.storeLogo} alt="Store Logo Preview" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+              ) : (
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center', fontWeight: '600' }}>No Custom Logo (Using Default)</span>
+              )}
+            </div>
+
+            {/* File Upload Button & URL Controls */}
+            <div style={{ flex: 1, minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <label style={{ background: '#d99b26', color: '#ffffff', padding: '0.55rem 1.1rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', boxShadow: '0 2px 8px rgba(217,155,38,0.25)' }}>
+                  <FiUpload /> Upload Logo Image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoFileUpload}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+
+                {settingsForm.storeLogo && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveLogo}
+                    style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', padding: '0.55rem 0.9rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', cursor: 'pointer' }}
+                  >
+                    Reset to Default
+                  </button>
+                )}
+              </div>
+
+              <input
+                type="text"
+                name="storeLogo"
+                placeholder="Or paste Logo Image URL (e.g. https://domain.com/logo.png)"
+                value={settingsForm.storeLogo || ''}
+                onChange={handleSettingsChange}
+                className={styles.searchInput}
+                style={{ paddingLeft: '0.85rem', fontSize: '0.8rem' }}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -230,81 +312,6 @@ const SettingsSection = ({
         </div>
       </div>
 
-      {/* Card 4: Database & Infrastructure Connection */}
-      <div className={styles.cardContainer}>
-        <div className={styles.cardHeaderRow}>
-          <h3 className={styles.cardTitle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FiDatabase style={{ color: '#16a34a' }} />
-            <span>Database & Infrastructure Connection</span>
-          </h3>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#f0fdf4', border: '1px solid #dcfce7', borderRadius: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#16a34a' }} />
-            <div>
-              <strong style={{ fontSize: '0.9rem', color: '#14532d' }}>PostgreSQL Database Status: Connected & Healthy</strong>
-              <div style={{ fontSize: '0.75rem', color: '#166534' }}>Connected to localhost:5432/giftery-db via Prisma ORM.</div>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => toast.info('Product catalog cache re-indexed successfully!')}
-            className={styles.viewAllBtn}
-            style={{ background: '#ffffff', borderColor: '#bbf7d0', color: '#166534' }}
-          >
-            Re-index Catalog & Cache
-          </button>
-        </div>
-      </div>
-
-      {/* Card 5: Email SMTP Server Settings */}
-      <div className={styles.cardContainer}>
-        <div className={styles.cardHeaderRow}>
-          <h3 className={styles.cardTitle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FiServer style={{ color: '#0284c7' }} />
-            <span>Email & SMTP Server Configuration</span>
-          </h3>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem', marginTop: '0.5rem' }}>
-          <div>
-            <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>SMTP Host</label>
-            <input
-              type="text"
-              name="smtpHost"
-              value={settingsForm.smtpHost || 'smtp.giftery.com'}
-              onChange={handleSettingsChange}
-              className={styles.searchInput}
-              style={{ paddingLeft: '0.85rem' }}
-            />
-          </div>
-
-          <div>
-            <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>SMTP Port</label>
-            <input
-              type="text"
-              name="smtpPort"
-              value={settingsForm.smtpPort || '587'}
-              onChange={handleSettingsChange}
-              className={styles.searchInput}
-              style={{ paddingLeft: '0.85rem' }}
-            />
-          </div>
-
-          <div>
-            <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Notification Sender Name</label>
-            <input
-              type="text"
-              name="senderName"
-              value={settingsForm.senderName || 'GIFTERYS Order Notifications'}
-              onChange={handleSettingsChange}
-              className={styles.searchInput}
-              style={{ paddingLeft: '0.85rem' }}
-            />
-          </div>
-        </div>
-      </div>
 
       {/* Save Settings Button */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>

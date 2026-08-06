@@ -142,7 +142,7 @@
   flex: 1;
   padding: 0.6rem 0.35rem;
   background: var(--color-primary, #dfa843);
-  color: #ffffff;
+  color: #ffffff !important;
   border: none;
   border-radius: 8px;
   font-size: 0.8rem;
@@ -155,13 +155,14 @@
 
 .addToCartBtn:hover {
   background: var(--color-primary-dark, #b8832a);
+  color: #ffffff !important;
   transform: translateY(-1px);
 }
 
 .buyNowBtn {
   flex: 1;
   padding: 0.6rem 0.35rem;
-  background: var(--color-success, #059669);
+  background: #1e293b;
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -171,11 +172,11 @@
   transition: all 0.2s ease;
   text-align: center;
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2);
+  box-shadow: 0 2px 6px rgba(30, 41, 59, 0.25);
 }
 
 .buyNowBtn:hover {
-  background: var(--color-success-dark, #047857);
+  background: #0f172a;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.35);
 }

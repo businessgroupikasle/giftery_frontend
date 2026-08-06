@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { FiSearch, FiBell, FiLogOut, FiCheckCircle, FiTrash2, FiX } from 'react-icons/fi';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { FiSearch, FiBell, FiX } from 'react-icons/fi';
 import styles from '../Dashboard.module.css';
 
 const INITIAL_NOTIFICATIONS = [
@@ -36,90 +36,97 @@ const INITIAL_NOTIFICATIONS = [
     read: false,
     targetTab: 'enquiries',
   },
-  {
-    id: 'notif-4',
-    type: 'user',
-    icon: '👤',
-    bg: '#f0fdf4',
-    title: 'New Account Registered',
-    message: 'Ananya Sharma registered a new customer account',
-    time: '2 hours ago',
-    read: false,
-    targetTab: 'customers',
-  },
-  {
-    id: 'notif-5',
-    type: 'alert',
-    icon: '⚠️',
-    bg: '#fef2f2',
-    title: 'Low Inventory Alert',
-    message: 'Product "Premium Wireless Charger" is below safety threshold (3 left)',
-    time: '4 hours ago',
-    read: false,
-    targetTab: 'products',
-  },
 ];
 
-const INITIAL_MESSAGES = [
-  {
-    id: 'msg-1',
-    sender: 'Tech Solutions Pvt. Ltd.',
-    snippet: 'Looking for 200 executive leather gift hampers with custom logo engraving.',
-    time: '10 mins ago',
-    read: false,
-  },
-  {
-    id: 'msg-2',
-    sender: 'Apex Global Mobility',
-    snippet: 'Need 300 onboarding backpacks and metallic drinkware sets for new joiners.',
-    time: '1 hour ago',
-    read: false,
-  },
-  {
-    id: 'msg-3',
-    sender: 'Rahul Verma',
-    snippet: 'Need gold foil embossing for individual employee names on executive notebooks.',
-    time: '3 hours ago',
-    read: false,
-  },
-];
+const DashboardNavbar = ({
+  searchQuery,
+  setSearchQuery,
+  user,
+  handleLogout,
+  setActiveTab,
+  ordersList = [],
+  enquiriesList = [],
+  corporateQuotes = [],
+  customersList = [],
+  productsList = [],
+}) => {
+  // Dynamically generate live store notifications
+  const liveNotifications = useMemo(() => {
+    const list = [];
 
-const DashboardNavbar = ({ searchQuery, setSearchQuery, user, handleLogout, setActiveTab }) => {
-  const [notifications, setNotifications] = useState(() => {
-    try {
-      const stored = localStorage.getItem('admin_notifications');
-      if (stored) return JSON.parse(stored);
-    } catch (e) {}
-    return INITIAL_NOTIFICATIONS;
-  });
+    // 1. Live Enquiries
+    (enquiriesList || []).forEach((e, idx) => {
+      list.push({
+        id: `live-enq-${e.id || idx}`,
+        type: 'enquiry',
+        icon: '💬',
+        bg: '#f5f3ff',
+        title: 'Customer Enquiry Received',
+        message: `${e.name || 'Customer'} sent enquiry: "${e.subject || e.category || e.message?.slice(0, 40) || 'General Inquiry'}"`,
+        time: e.createdAt || e.date || 'Recent',
+        read: e.status === 'Resolved',
+        targetTab: 'enquiries',
+      });
+    });
 
-  const [messages, setMessages] = useState(() => {
-    try {
-      const stored = localStorage.getItem('admin_messages');
-      if (stored) return JSON.parse(stored);
-    } catch (e) {}
-    return INITIAL_MESSAGES;
-  });
+    // 2. Live Quotes
+    (corporateQuotes || []).forEach((q, idx) => {
+      list.push({
+        id: `live-quote-${q.id || idx}`,
+        type: 'quote',
+        icon: '🎁',
+        bg: '#fffbeb',
+        title: 'New Bulk Quote Request',
+        message: `${q.name || q.company || 'Client'} requested quote for ${q.quantity || 100} units (${q.company || 'Corporate'})`,
+        time: q.date || 'Recent',
+        read: q.status === 'Resolved',
+        targetTab: 'corporate-quotes',
+      });
+    });
+
+    // 3. Live Orders
+    (ordersList || []).forEach((o, idx) => {
+      list.push({
+        id: `live-ord-${o.id || idx}`,
+        type: 'order',
+        icon: '📦',
+        bg: '#eff6ff',
+        title: 'New Order Received',
+        message: `Order #${o.id} placed by ${o.customer || 'Customer'} (${o.amount || '₹0'})`,
+        time: o.date || 'Recent',
+        read: o.status === 'Delivered',
+        targetTab: 'orders',
+      });
+    });
+
+    // 4. Low Inventory Alerts
+    (productsList || []).filter((p) => p.stock < 5).forEach((p, idx) => {
+      list.push({
+        id: `live-prod-${p.id || idx}`,
+        type: 'alert',
+        icon: '⚠️',
+        bg: '#fef2f2',
+        title: 'Low Inventory Alert',
+        message: `Product "${p.name}" is low on stock (${p.stock || 0} left)`,
+        time: 'Action Required',
+        read: false,
+        targetTab: 'products',
+      });
+    });
+
+    return list.length > 0 ? list : INITIAL_NOTIFICATIONS;
+  }, [enquiriesList, corporateQuotes, ordersList, productsList]);
+
+  const [notifications, setNotifications] = useState(liveNotifications);
+
+  useEffect(() => {
+    setNotifications(liveNotifications);
+  }, [liveNotifications]);
 
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
-  const [showMsgDropdown, setShowMsgDropdown] = useState(false);
   const [notifFilter, setNotifFilter] = useState('all');
 
   const notifRef = useRef(null);
-  const msgRef = useRef(null);
-
-  // Sync to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('admin_notifications', JSON.stringify(notifications));
-    } catch (e) {}
-  }, [notifications]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('admin_messages', JSON.stringify(messages));
-    } catch (e) {}
-  }, [messages]);
 
   // Click outside to close dropdowns
   useEffect(() => {
@@ -127,16 +134,12 @@ const DashboardNavbar = ({ searchQuery, setSearchQuery, user, handleLogout, setA
       if (notifRef.current && !notifRef.current.contains(e.target)) {
         setShowNotifDropdown(false);
       }
-      if (msgRef.current && !msgRef.current.contains(e.target)) {
-        setShowMsgDropdown(false);
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
-  const unreadMsgCount = messages.filter((m) => !m.read).length;
 
   const displayNotifications =
     notifFilter === 'unread' ? notifications.filter((n) => !n.read) : notifications;
@@ -150,7 +153,6 @@ const DashboardNavbar = ({ searchQuery, setSearchQuery, user, handleLogout, setA
   };
 
   const handleNotificationClick = (notif) => {
-    // Mark item as read
     setNotifications((prev) =>
       prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
     );
@@ -184,16 +186,13 @@ const DashboardNavbar = ({ searchQuery, setSearchQuery, user, handleLogout, setA
         <span className={styles.searchShortcut}>Ctrl + /</span>
       </div>
 
-      {/* Right Action Badges & Logout Button */}
+      {/* Right Action Badges */}
       <div className={styles.topActions}>
         {/* ── NOTIFICATIONS BELL BUTTON & DROPDOWN ── */}
         <div className={styles.notifDropdownWrapper} ref={notifRef}>
           <div
             className={styles.iconBtnWithBadge}
-            onClick={() => {
-              setShowNotifDropdown(!showNotifDropdown);
-              setShowMsgDropdown(false);
-            }}
+            onClick={() => setShowNotifDropdown(!showNotifDropdown)}
             title="Notifications"
             role="button"
             tabIndex={0}
@@ -310,33 +309,9 @@ const DashboardNavbar = ({ searchQuery, setSearchQuery, user, handleLogout, setA
             </div>
           )}
         </div>
-
-
-
-        {/* Logout Button */}
-        <button
-          type="button"
-          onClick={handleLogout}
-          className={styles.logoutTopBtn}
-          title="Logout"
-        >
-          <FiLogOut />
-          <span>Logout</span>
-        </button>
-
-        {/* User Profile Avatar */}
-        <img
-          src={
-            user?.avatar ||
-            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
-          }
-          alt="Profile"
-          className={styles.topUserAvatar}
-        />
       </div>
     </header>
   );
 };
 
 export default DashboardNavbar;
-

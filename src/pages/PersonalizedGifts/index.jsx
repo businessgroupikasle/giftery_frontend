@@ -406,7 +406,7 @@ const PersonalizedGifts = () => {
             <div className={styles.bannerMain}>
               <div className={styles.breadcrumb}>
                 <Link to={ROUTES.HOME}>Home</Link>
-                <span>›</span>
+                <span>/</span>
                 <span style={{ color: '#d4a85a', fontWeight: 600 }}>Personalized Gifts</span>
               </div>
               <h1 className={styles.bannerTitle}>Personalized Gifts</h1>

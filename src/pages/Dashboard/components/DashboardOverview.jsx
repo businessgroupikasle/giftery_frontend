@@ -652,15 +652,34 @@ const DashboardOverview = ({
           {/* Bottom Live Customer Enquiries Card */}
           <div className={styles.cardContainer}>
             <div className={styles.cardHeaderRow}>
-              <h3 className={styles.cardTitle}>Live Enquiries</h3>
-              <button type="button" className={styles.viewAllBtn} onClick={() => handleTabChange('enquiries')}>View All</button>
+              <h3 className={styles.cardTitle}>Live Customer Enquiries</h3>
+              <button type="button" className={styles.viewAllBtn} onClick={() => handleTabChange('enquiries')}>View All ({enquiriesList.length})</button>
             </div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-              <div style={{ fontWeight: 600, color: '#1e293b' }}>{latestEnquiry.subject || latestEnquiry.category || 'Bulk Executive Hampers Inquiry'}</div>
-              <div style={{ marginTop: '2px' }}>{latestEnquiry.name || 'Tech Solutions Pvt. Ltd.'}</div>
-              <span className={`${styles.pillStatus} ${styles.pillPending}`} style={{ marginTop: '6px', display: 'inline-block' }}>
-                {latestEnquiry.status || 'New'}
-              </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginTop: '0.75rem' }}>
+              {enquiriesList.slice(0, 3).map((enq) => (
+                <div
+                  key={enq.id}
+                  onClick={() => handleTabChange('enquiries')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.6rem 0.85rem',
+                    background: '#f8fafc',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div>
+                    <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block' }}>{enq.name}</strong>
+                    <span style={{ fontSize: '0.78rem', color: '#64748b' }}>{enq.subject || enq.category || 'General Inquiry'}</span>
+                  </div>
+                  <span className={`${styles.pillStatus} ${enq.status === 'Resolved' ? styles.pillDelivered : enq.status === 'In Progress' ? styles.pillProcessing : styles.pillPending}`}>
+                    {enq.status || 'New'}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

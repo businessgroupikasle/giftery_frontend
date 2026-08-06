@@ -228,14 +228,46 @@ const ProductsSection = ({
                 {/* 2. Specifications */}
                 <div>
                   <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
-                    Specifications <span style={{ fontWeight: 400, color: '#94a3b8' }}>(Material, Dimensions, Color, Branding)</span>
+                    Specifications <span style={{ fontWeight: 400, color: '#94a3b8' }}>(Key: Value pairs formatted into a clean table on product page)</span>
                   </label>
                   <textarea
                     name="specifications"
-                    rows={3}
+                    rows={4}
                     value={productForm.specifications || ''}
                     onChange={handleProductFormChange}
-                    placeholder="Material: Premium Leather & Steel&#10;Dimensions: 15cm x 10cm x 5cm&#10;Branding: Laser Engraving"
+                    placeholder="Material: Genuine Italian Leather & Stainless Steel&#10;Dimensions: 15cm x 10cm x 5cm&#10;Weight: 350 grams&#10;Branding: High Precision Laser Engraving&#10;Color Options: Matte Black & Gold Accent"
+                    className={styles.searchInput}
+                    style={{ padding: '0.65rem 0.85rem', width: '100%', resize: 'vertical', fontFamily: 'inherit', borderRadius: '8px' }}
+                  />
+                </div>
+
+                {/* 2b. Customization Options */}
+                <div>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                    Customization Details <span style={{ fontWeight: 400, color: '#94a3b8' }}>(Logo uploading guidelines, engraving limits & packaging options)</span>
+                  </label>
+                  <textarea
+                    name="customization"
+                    rows={3}
+                    value={productForm.customization || ''}
+                    onChange={handleProductFormChange}
+                    placeholder="Custom logo laser engraving available. Max 25 characters name engraving. Comes with premium black velvet gift box."
+                    className={styles.searchInput}
+                    style={{ padding: '0.65rem 0.85rem', width: '100%', resize: 'vertical', fontFamily: 'inherit', borderRadius: '8px' }}
+                  />
+                </div>
+
+                {/* 2c. Shipping & Returns */}
+                <div>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                    Shipping & Returns Info <span style={{ fontWeight: 400, color: '#94a3b8' }}>(Delivery timeline & return policies)</span>
+                  </label>
+                  <textarea
+                    name="shippingReturns"
+                    rows={2}
+                    value={productForm.shippingReturns || ''}
+                    onChange={handleProductFormChange}
+                    placeholder="Dispatches in 2-3 business days. Free standard shipping on orders above ₹999. 7 days return & replacement policy."
                     className={styles.searchInput}
                     style={{ padding: '0.65rem 0.85rem', width: '100%', resize: 'vertical', fontFamily: 'inherit', borderRadius: '8px' }}
                   />

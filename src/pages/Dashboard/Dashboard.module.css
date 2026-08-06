@@ -223,7 +223,7 @@
   justify-content: space-between;
   position: sticky;
   top: 0;
-  z-index: 90;
+  z-index: 1000;
 }
 
 .navToggleBtn {
@@ -390,6 +390,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
+  z-index: 10;
 }
 
 .pageHeaderTitle {
@@ -1117,14 +1119,14 @@
 .notificationDropdown {
   position: absolute;
   top: calc(100% + 10px);
-  right: -80px;
+  right: 0;
   width: 380px;
   max-width: 90vw;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.06);
-  z-index: 999;
+  z-index: 9999;
   display: flex;
   flex-direction: column;
   overflow: hidden;

@@ -1,0 +1,116 @@
+.floatingContainer {
+  position: fixed;
+  bottom: 28px;
+  right: 24px;
+  z-index: 9990;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+
+.catalogBtn {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #144025;
+  color: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(15, 56, 31, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.catalogBtn:hover {
+  background: #0f301b;
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 8px 24px rgba(15, 56, 31, 0.45);
+}
+
+.whatsappBtn {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.whatsappBtn:hover {
+  background: #1fb958;
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45);
+}
+
+.icon {
+  font-size: 1.55rem;
+}
+
+/* Tooltip popup to the left on hover */
+.tooltip {
+  position: absolute;
+  right: 64px;
+  top: 50%;
+  transform: translateY(-50%) scale(0.9);
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent transparent #0f172a;
+}
+
+.catalogBtn:hover .tooltip,
+.whatsappBtn:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) scale(1);
+}
+
+@media (max-width: 640px) {
+  .floatingContainer {
+    bottom: 20px;
+    right: 16px;
+    gap: 10px;
+  }
+  .catalogBtn,
+  .whatsappBtn {
+    width: 46px;
+    height: 46px;
+  }
+  .icon {
+    font-size: 1.35rem;
+  }
+  .tooltip {
+    display: none;
+  }
+}

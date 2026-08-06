@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   FaFacebookF, 
@@ -14,14 +15,12 @@ import styles from './Footer.module.css';
 
 const GiftLogoSvg = () => (
   <svg className={styles.brandLogoSvg} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M20 12V36" stroke="url(#goldGradFooter)" strokeWidth="2.5" strokeLinecap="round" />
-    <rect x="6" y="17" width="28" height="19" rx="2" stroke="url(#goldGradFooter)" strokeWidth="2.2" fill="url(#goldGradFooter)" fillOpacity="0.15" />
-    <rect x="4" y="12" width="32" height="5" rx="1.5" fill="url(#goldGradFooter)" stroke="url(#goldGradFooter)" strokeWidth="1.5" />
-    <path d="M20 12C20 12 16 4 11 4C7.5 4 6 6.5 7 9.5C8 12 20 12 20 12Z" stroke="url(#goldGradFooter)" strokeWidth="2" strokeLinejoin="round" fill="url(#goldGradFooter)" fillOpacity="0.25" />
-    <path d="M20 12C20 12 24 4 29 4C32.5 4 34 6.5 33 9.5C32 12 20 12 20 12Z" stroke="url(#goldGradFooter)" strokeWidth="2" strokeLinejoin="round" fill="url(#goldGradFooter)" fillOpacity="0.25" />
+    <rect width="40" height="40" rx="8" fill="url(#giftGrad)" />
+    <path d="M20 10V30M10 20H30" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M20 10C17 7 12 7 12 10C12 13 20 20 20 20C20 20 28 13 28 10C28 7 23 7 20 10Z" stroke="#FFFFFF" strokeWidth="2" strokeLinejoin="round" />
     <defs>
-      <linearGradient id="goldGradFooter" x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#F7D58B" />
+      <linearGradient id="giftGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#F5D77F" />
         <stop offset="0.5" stopColor="#DFA843" />
         <stop offset="1" stopColor="#B8832A" />
       </linearGradient>
@@ -30,6 +29,36 @@ const GiftLogoSvg = () => (
 );
 
 const Footer = () => {
+  const [customLogo, setCustomLogo] = useState(() => {
+    try {
+      return localStorage.getItem('giftery_store_logo') || null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const handleLogoUpdate = () => {
+      try {
+        const logo = localStorage.getItem('giftery_store_logo');
+        setCustomLogo(logo || null);
+        console.log('✓ Logo updated in Footer:', logo ? 'Logo set' : 'Logo cleared');
+      } catch (e) {
+        console.error('Error updating logo:', e);
+      }
+    };
+
+    window.addEventListener('store_logo_updated', handleLogoUpdate);
+    window.addEventListener('store_settings_updated', handleLogoUpdate);
+    window.addEventListener('storage', handleLogoUpdate);
+
+    return () => {
+      window.removeEventListener('store_logo_updated', handleLogoUpdate);
+      window.removeEventListener('store_settings_updated', handleLogoUpdate);
+      window.removeEventListener('storage', handleLogoUpdate);
+    };
+  }, []);
+
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
@@ -37,7 +66,15 @@ const Footer = () => {
           {/* Column 1: Brand Header & Social */}
           <div className={styles.brandCol}>
             <Link to={ROUTES.HOME} className={styles.brandLink}>
-              <GiftLogoSvg />
+              {customLogo ? (
+                <img
+                  src={customLogo}
+                  alt="GIFTERY Logo"
+                  style={{ maxHeight: '46px', maxWidth: '140px', objectFit: 'contain' }}
+                />
+              ) : (
+                <GiftLogoSvg />
+              )}
               <div className={styles.brandTextGroup}>
                 <h2 className={styles.brandTitle}>GIFTERYS</h2>
                 <span className={styles.brandSubtitle}>CREATING MEMORIES FOR BRAND</span>

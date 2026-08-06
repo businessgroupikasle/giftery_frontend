@@ -123,8 +123,8 @@ const Product = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState('');
-  const [quantity, setQuantity] = useState(50);
-  const [quantityInput, setQuantityInput] = useState('50');
+  const [quantity, setQuantity] = useState(1);
+  const [quantityInput, setQuantityInput] = useState('1');
   const [uploadedLogo, setUploadedLogo] = useState(null);
   const [activeTab, setActiveTab] = useState('description');
   const [relatedProducts, setRelatedProducts] = useState([]);
@@ -153,7 +153,7 @@ const Product = () => {
         setProduct(localFound);
         const imgs = parseImagesArray(localFound.images || localFound.image, 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80');
         setSelectedImage(imgs[0]);
-        setQuantity(localFound.minOrder || 10);
+        setQuantity(localFound.minOrder || 1);
         setLoading(false);
         return;
       }
@@ -166,7 +166,7 @@ const Product = () => {
           setProduct(data);
           const imgs = parseImagesArray(data.images || data.image, 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80');
           setSelectedImage(imgs[0]);
-          setQuantity(data.minOrder || 10);
+          setQuantity(data.minOrder || 1);
         }
       } catch (err) {
         console.warn(`Product API fetch for slug "${slug}" fallback to dataset:`, err.message);
@@ -176,7 +176,7 @@ const Product = () => {
           setProduct({ ...found, name: found.slug === slug ? found.name : slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) });
           const imgs = parseImagesArray(found.images || found.image);
           setSelectedImage(imgs[0]);
-          setQuantity(found.minOrder || 10);
+          setQuantity(found.minOrder || 1);
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -280,35 +280,94 @@ const Product = () => {
 
   const maxStock = product.stock !== undefined && product.stock !== null ? Number(product.stock) : 9999;
 
-  const renderFormattedText = (content) => {
-    if (!content) {
-      return <p style={{ color: '#94a3b8', fontStyle: 'italic', margin: 0 }}>No details provided.</p>;
+  const getCategoryLink = (catName) => {
+    if (!catName) return ROUTES.CORPORATE_GIFTS;
+    const lower = String(catName).toLowerCase();
+    if (lower.includes('toy')) return ROUTES.TOYS;
+    if (lower.includes('personal') || lower.includes('frame') || lower.includes('photo') || lower.includes('acrylic') || lower.includes('caricature')) return ROUTES.PERSONALIZED_GIFTS;
+    return ROUTES.CORPORATE_GIFTS;
+  };
+
+  const renderSpecificationsTable = (specContent) => {
+    if (!specContent) {
+      return (
+        <div style={{ padding: '1.5rem', textAlign: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: '10px', fontStyle: 'italic' }}>
+          No technical specifications provided for this product yet.
+        </div>
+      );
     }
 
-    if (typeof content === 'object' && !Array.isArray(content)) {
-      return (
-        <table className={styles.specsTable}>
+    let rows = [];
+
+    if (typeof specContent === 'object' && !Array.isArray(specContent)) {
+      rows = Object.entries(specContent).map(([k, v]) => ({ key: k, value: String(v) }));
+    } else if (typeof specContent === 'string') {
+      const trimmed = specContent.trim();
+      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+            rows = Object.entries(parsed).map(([k, v]) => ({ key: k, value: String(v) }));
+          }
+        } catch (e) {}
+      }
+
+      if (rows.length === 0) {
+        const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
+        lines.forEach((line) => {
+          if (line.includes(':')) {
+            const parts = line.split(':');
+            const key = parts[0].trim();
+            const val = parts.slice(1).join(':').trim();
+            rows.push({ key, value: val });
+          } else if (line.includes('-') && !line.startsWith('-')) {
+            const parts = line.split('-');
+            const key = parts[0].trim();
+            const val = parts.slice(1).join('-').trim();
+            rows.push({ key, value: val });
+          } else {
+            rows.push({ key: 'Feature / Spec', value: line.replace(/^[•\-\*]\s*/, '') });
+          }
+        });
+      }
+    }
+
+    if (rows.length === 0) {
+      return <p style={{ color: '#475569', lineHeight: '1.7' }}>{String(specContent)}</p>;
+    }
+
+    return (
+      <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '12px', background: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead>
+            <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+              <th style={{ padding: '0.9rem 1.25rem', fontSize: '0.82rem', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.5px', width: '35%' }}>
+                Specification Feature
+              </th>
+              <th style={{ padding: '0.9rem 1.25rem', fontSize: '0.82rem', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Details & Material Info
+              </th>
+            </tr>
+          </thead>
           <tbody>
-            {Object.entries(content).map(([key, val]) => (
-              <tr key={key}>
-                <td className={styles.specKeyName}>{key.toUpperCase()}</td>
-                <td className={styles.specValText}>{String(val)}</td>
+            {rows.map((row, idx) => (
+              <tr
+                key={idx}
+                style={{
+                  background: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
+                  borderBottom: idx === rows.length - 1 ? 'none' : '1px solid #f1f5f9',
+                }}
+              >
+                <td style={{ padding: '0.85rem 1.25rem', fontSize: '0.88rem', fontWeight: '700', color: '#0f172a', borderRight: '1px solid #f1f5f9', textTransform: 'capitalize' }}>
+                  {row.key}
+                </td>
+                <td style={{ padding: '0.85rem 1.25rem', fontSize: '0.88rem', fontWeight: '500', color: '#475569', lineHeight: '1.5' }}>
+                  {row.value}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
-      );
-    }
-
-    const lines = String(content).split('\n').map(l => l.trim()).filter(Boolean);
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-        {lines.map((line, idx) => (
-          <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', fontSize: '0.92rem', color: '#334155', lineHeight: '1.6' }}>
-            <span style={{ color: '#d99b26', fontWeight: 'bold' }}>•</span>
-            <span>{line}</span>
-          </div>
-        ))}
       </div>
     );
   };
@@ -419,11 +478,9 @@ const Product = () => {
           {/* ── 1. BREADCRUMBS ── */}
           <nav className={styles.breadcrumb}>
             <Link to={ROUTES.HOME}>Home</Link>
-            <span className={styles.sep}>›</span>
-            <Link to={ROUTES.CORPORATE_GIFTS}>{categoryName}</Link>
-            <span className={styles.sep}>›</span>
-            <Link to={ROUTES.CORPORATE_GIFTS}>{subcategory}</Link>
-            <span className={styles.sep}>›</span>
+            <span className={styles.sep}>/</span>
+            <Link to={getCategoryLink(categoryName)}>{categoryName || 'Corporate Gifts'}</Link>
+            <span className={styles.sep}>/</span>
             <span className={styles.activeBreadcrumb}>{name}</span>
           </nav>
 
@@ -590,14 +647,14 @@ const Product = () => {
             <div className={styles.tabContentCard}>
               {/* Tab Headers */}
               <div className={styles.tabsHeaderNav}>
-                {['description', 'specifications', 'reviews'].map(tab => (
+                {['description', 'specifications'].map(tab => (
                   <button
                     key={tab}
                     type="button"
                     className={`${styles.tabNavBtn} ${activeTab === tab ? styles.tabNavActive : ''}`}
                     onClick={() => setActiveTab(tab)}
                   >
-                    {tab.toUpperCase()} {tab === 'reviews' ? `(${reviewsCount})` : ''}
+                    {tab.toUpperCase()}
                   </button>
                 ))}
               </div>
@@ -618,18 +675,10 @@ const Product = () => {
 
                 {activeTab === 'specifications' && (
                   <div className={styles.tabSectionBox}>
-                    <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>Detailed Product Specifications</h4>
-                    {renderFormattedText(specifications)}
-                  </div>
-                )}
-
-                {activeTab === 'reviews' && (
-                  <div className={styles.tabSectionBox}>
-                    <h4>Verified Customer Reviews ({reviewsCount})</h4>
-                    <div className={styles.reviewsSummaryRow}>
-                      <StarRating rating={rating} size="md" showValue />
-                      <p>98% of corporate clients recommend this product set.</p>
-                    </div>
+                    <h4 style={{ marginBottom: '1rem', color: '#1e293b', fontSize: '1.1rem', fontWeight: '800' }}>
+                      Product Specifications & Technical Details
+                    </h4>
+                    {renderSpecificationsTable(specifications)}
                   </div>
                 )}
               </div>

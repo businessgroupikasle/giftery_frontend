@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FiCalendar, FiRefreshCw, FiDownload, FiFilter, FiChevronDown } from 'react-icons/fi';
@@ -96,11 +96,22 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomerModal, setSelectedCustomerModal] = useState(null);
 
-  // Header Action Controls State
+  // Header Action Controls State & Click Outside Handler
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('Last 30 Days');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const filterWrapperRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterWrapperRef.current && !filterWrapperRef.current.contains(event.target)) {
+        setShowFilterMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Admin Roles & Users State
   const [adminUsers, setAdminUsers] = useState(() => {
@@ -285,13 +296,31 @@ const Dashboard = () => {
     setSavingSettings(true);
     try {
       localStorage.setItem('store_basic_settings', JSON.stringify(settingsForm));
-      window.dispatchEvent(new Event('store_settings_updated'));
+      if (settingsForm.storeLogo) {
+        localStorage.setItem('giftery_store_logo', settingsForm.storeLogo);
+      } else {
+        localStorage.removeItem('giftery_store_logo');
+      }
+      // Dispatch events with slight delay to ensure DOM is updated
+      setTimeout(() => {
+        window.dispatchEvent(new Event('store_settings_updated'));
+        window.dispatchEvent(new Event('store_logo_updated'));
+      }, 50);
+
       await axiosInstance.put(ENDPOINTS.SETTINGS.UPDATE || '/settings', settingsForm);
-      toast.success('Store Basic Settings saved successfully!');
+      toast.success('Store Settings & Logo saved successfully!');
     } catch {
       localStorage.setItem('store_basic_settings', JSON.stringify(settingsForm));
-      window.dispatchEvent(new Event('store_settings_updated'));
-      toast.success('Store Basic Settings saved successfully!');
+      if (settingsForm.storeLogo) {
+        localStorage.setItem('giftery_store_logo', settingsForm.storeLogo);
+      } else {
+        localStorage.removeItem('giftery_store_logo');
+      }
+      setTimeout(() => {
+        window.dispatchEvent(new Event('store_settings_updated'));
+        window.dispatchEvent(new Event('store_logo_updated'));
+      }, 50);
+      toast.success('Store Settings & Logo saved successfully!');
     } finally {
       setSavingSettings(false);
     }
@@ -461,7 +490,14 @@ const Dashboard = () => {
     try {
       const res = await axiosInstance.get(ENDPOINTS.SETTINGS.GET);
       const data = res.data || res;
-      if (data && typeof data === 'object') setSettingsForm(prev => ({ ...prev, ...data }));
+      if (data && typeof data === 'object') {
+        setSettingsForm(prev => ({ ...prev, ...data }));
+        // Sync logo to localStorage for Header & Footer
+        if (data.storeLogo) {
+          localStorage.setItem('giftery_store_logo', data.storeLogo);
+          window.dispatchEvent(new Event('store_logo_updated'));
+        }
+      }
     } catch (err) {
       console.warn('Settings API fetch warning:', err.message);
     }
@@ -986,6 +1022,14 @@ const Dashboard = () => {
     downloadCSV('Customer_Database_Report', headers, rows);
   };
 
+  const handleExportEnquiriesCSV = () => {
+    const headers = ['Enquiry ID', 'Customer Name', 'Email Address', 'Phone Number', 'Category / Subject', 'Enquiry Message', 'Submitted Date', 'Status'];
+    const rows = (enquiriesList || []).map(e => [
+      e.id, e.name, e.email, e.phone || 'N/A', e.subject || e.category || 'General Inquiry', e.message || '', e.createdAt || e.date || 'Recent', e.status || 'New',
+    ]);
+    downloadCSV('Customer_Enquiries_Report', headers, rows);
+  };
+
   const handleHeaderExport = () => {
     if (activeTab === 'products') {
       handleExportProductsCSV();
@@ -994,11 +1038,7 @@ const Dashboard = () => {
     } else if (activeTab === 'corporate-quotes') {
       handleExportQuotesCSV();
     } else if (activeTab === 'enquiries') {
-      const headers = ['Enquiry ID', 'Name', 'Email', 'Phone', 'Category', 'Subject', 'Status', 'Date'];
-      const rows = (enquiriesList || []).map(e => [
-        e.id, e.name, e.email, e.phone || '', e.category || '', e.subject || '', e.status || 'New', e.createdAt || ''
-      ]);
-      downloadCSV('Enquiries_Report', headers, rows);
+      handleExportEnquiriesCSV();
     } else {
       handleExportOrdersCSV();
     }
@@ -1023,6 +1063,11 @@ const Dashboard = () => {
           user={user}
           handleLogout={handleLogout}
           setActiveTab={handleTabChange}
+          ordersList={ordersList}
+          enquiriesList={enquiriesList}
+          corporateQuotes={corporateQuotes}
+          customersList={customersList}
+          productsList={productsList}
         />
 
         {/* Inner Content Workspace */}
@@ -1051,7 +1096,7 @@ const Dashboard = () => {
             {/* Header Action Controls */}
             <div className={styles.headerActions}>
               {/* Filter Dropdown */}
-              <div className={styles.filterWrapper}>
+              <div className={styles.filterWrapper} ref={filterWrapperRef}>
                 <button
                   className={`${styles.headerActionBtn} ${styles.filterBtn}`}
                   onClick={() => setShowFilterMenu(!showFilterMenu)}
@@ -1202,10 +1247,12 @@ const Dashboard = () => {
               productsList={productsList}
               corporateQuotes={corporateQuotes}
               customersList={customersList}
+              enquiriesList={enquiriesList}
               handleExportOrdersCSV={handleExportOrdersCSV}
               handleExportProductsCSV={handleExportProductsCSV}
               handleExportQuotesCSV={handleExportQuotesCSV}
               handleExportCustomersCSV={handleExportCustomersCSV}
+              handleExportEnquiriesCSV={handleExportEnquiriesCSV}
             />
           )}
 

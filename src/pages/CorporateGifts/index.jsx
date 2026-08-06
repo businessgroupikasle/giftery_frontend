@@ -512,7 +512,7 @@ const CorporateGifts = () => {
             <div className={styles.bannerMain}>
               <div className={styles.breadcrumb}>
                 <Link to={ROUTES.HOME}>Home</Link>
-                <span>›</span>
+                <span>/</span>
                 <span style={{ color: '#ffffff', fontWeight: 600 }}>Corporate Gifts</span>
               </div>
               <h1 className={styles.bannerTitle}>Corporate Gifts Collection</h1>
