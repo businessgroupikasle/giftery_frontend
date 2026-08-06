@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { FiBox, FiSave, FiUpload, FiPlus, FiImage } from 'react-icons/fi';
+import axiosInstance from '@api/axiosInstance';
+import { toast } from 'react-toastify';
 import styles from '../Dashboard.module.css';
 
 const parseImages = (imgs) => {
@@ -23,6 +25,34 @@ const parseImages = (imgs) => {
     return trimmed.split(',').map((s) => s.trim()).filter(Boolean);
   }
   return [];
+};
+
+const handleImageFileUpload = (file, idx, imageList, handleProductFormChange) => {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    const dataUrl = evt.target?.result;
+    if (!dataUrl) return;
+
+    try {
+      const res = await axiosInstance.post('/upload', { image: dataUrl });
+      const uploadedUrl = res.data?.data?.url || res.data?.url;
+      if (uploadedUrl) {
+        const updated = [...imageList];
+        updated[idx] = uploadedUrl;
+        handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
+        toast.success('Image saved directly to backend Uploads directory!');
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend upload endpoint fallback:', err.message);
+    }
+
+    const updated = [...imageList];
+    updated[idx] = dataUrl;
+    handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
+  };
+  reader.readAsDataURL(file);
 };
 
 const ProductsSection = ({
@@ -321,6 +351,84 @@ const ProductsSection = ({
                     style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }}
                   />
                 </div>
+
+                {/* Homepage Collection Badges & Tabs Checkboxes */}
+                <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '0.5rem' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                    Homepage Collections &amp; Filter Tabs
+                  </label>
+                  <p style={{ fontSize: '0.76rem', color: '#64748b', margin: '0 0 0.85rem 0' }}>
+                    Select which collection tabs on the homepage (&quot;Explore Our Collections&quot;) this product should appear in when ticked:
+                  </p>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ffffff', padding: '0.55rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                      <input
+                        type="checkbox"
+                        name="isFeatured"
+                        checked={!!productForm.isFeatured || !!productForm.featured}
+                        onChange={handleProductFormChange}
+                        style={{ width: '16px', height: '16px', accentColor: '#1b4332', cursor: 'pointer' }}
+                      />
+                      <span>Featured Products</span>
+                    </label>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ffffff', padding: '0.55rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                      <input
+                        type="checkbox"
+                        name="isBestseller"
+                        checked={!!productForm.isBestseller}
+                        onChange={handleProductFormChange}
+                        style={{ width: '16px', height: '16px', accentColor: '#1b4332', cursor: 'pointer' }}
+                      />
+                      <span>Best Sellers</span>
+                    </label>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ffffff', padding: '0.55rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                      <input
+                        type="checkbox"
+                        name="isPopular"
+                        checked={!!productForm.isPopular}
+                        onChange={handleProductFormChange}
+                        style={{ width: '16px', height: '16px', accentColor: '#1b4332', cursor: 'pointer' }}
+                      />
+                      <span>Popular Products</span>
+                    </label>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ffffff', padding: '0.55rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                      <input
+                        type="checkbox"
+                        name="isNewArrival"
+                        checked={!!productForm.isNewArrival}
+                        onChange={handleProductFormChange}
+                        style={{ width: '16px', height: '16px', accentColor: '#1b4332', cursor: 'pointer' }}
+                      />
+                      <span>New Arrivals</span>
+                    </label>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ffffff', padding: '0.55rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                      <input
+                        type="checkbox"
+                        name="isMostLoved"
+                        checked={!!productForm.isMostLoved}
+                        onChange={handleProductFormChange}
+                        style={{ width: '16px', height: '16px', accentColor: '#1b4332', cursor: 'pointer' }}
+                      />
+                      <span>Most Loved</span>
+                    </label>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ffffff', padding: '0.55rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                      <input
+                        type="checkbox"
+                        name="isGiftSet"
+                        checked={!!productForm.isGiftSet}
+                        onChange={handleProductFormChange}
+                        style={{ width: '16px', height: '16px', accentColor: '#1b4332', cursor: 'pointer' }}
+                      />
+                      <span>Gift Sets</span>
+                    </label>
+                  </div>
+                </div>
               </div>
 
               {/* Row 5: Product Images Upload Slots (Matching User's Screenshot Design) */}
@@ -449,20 +557,7 @@ const ProductsSection = ({
                                         type="file"
                                         accept="image/*"
                                         style={{ display: 'none' }}
-                                        onChange={(e) => {
-                                          const file = e.target.files?.[0];
-                                          if (!file) return;
-                                          const reader = new FileReader();
-                                          reader.onload = (evt) => {
-                                            const dataUrl = evt.target?.result;
-                                            if (dataUrl) {
-                                              const updated = [...imageList];
-                                              updated[idx] = dataUrl;
-                                              handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
-                                            }
-                                          };
-                                          reader.readAsDataURL(file);
-                                        }}
+                                        onChange={(e) => handleImageFileUpload(e.target.files?.[0], idx, imageList, handleProductFormChange)}
                                       />
                                     </label>
 
@@ -511,20 +606,7 @@ const ProductsSection = ({
                                     type="file"
                                     accept="image/*"
                                     style={{ display: 'none' }}
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0];
-                                      if (!file) return;
-                                      const reader = new FileReader();
-                                      reader.onload = (evt) => {
-                                        const dataUrl = evt.target?.result;
-                                        if (dataUrl) {
-                                          const updated = [...imageList];
-                                          updated[idx] = dataUrl;
-                                          handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
-                                        }
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }}
+                                    onChange={(e) => handleImageFileUpload(e.target.files?.[0], idx, imageList, handleProductFormChange)}
                                   />
                                 </label>
                               )}

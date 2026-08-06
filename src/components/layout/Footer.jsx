@@ -14,19 +14,32 @@ import { ROUTES } from '@constants/routes';
 import styles from './Footer.module.css';
 
 const GiftLogoSvg = () => (
-  <svg className={styles.brandLogoSvg} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="40" height="40" rx="8" fill="url(#giftGrad)" />
-    <path d="M20 10V30M10 20H30" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
-    <path d="M20 10C17 7 12 7 12 10C12 13 20 20 20 20C20 20 28 13 28 10C28 7 23 7 20 10Z" stroke="#FFFFFF" strokeWidth="2" strokeLinejoin="round" />
-    <defs>
-      <linearGradient id="giftGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#F5D77F" />
-        <stop offset="0.5" stopColor="#DFA843" />
-        <stop offset="1" stopColor="#B8832A" />
-      </linearGradient>
-    </defs>
-  </svg>
+  <div style={{ display: 'inline-flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.15' }}>
+    <span style={{
+      fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif",
+      fontSize: '1.85rem',
+      fontWeight: '800',
+      color: '#ffffff',
+      letterSpacing: '0.06em',
+      lineHeight: '1',
+    }}>
+      GIFTERYS
+    </span>
+    <span style={{
+      fontFamily: "'Inter', sans-serif",
+      fontSize: '0.62rem',
+      fontWeight: '800',
+      color: '#ea580c',
+      letterSpacing: '0.12em',
+      marginTop: '5px',
+      textTransform: 'uppercase',
+    }}>
+      CREATING MEMORIES FOR BRAND
+    </span>
+  </div>
 );
+
+const DEFAULT_LOGO_URL = '/images/store-logo.png';
 
 const Footer = () => {
   const [customLogo, setCustomLogo] = useState(() => {
@@ -42,10 +55,7 @@ const Footer = () => {
       try {
         const logo = localStorage.getItem('giftery_store_logo');
         setCustomLogo(logo || null);
-        console.log('✓ Logo updated in Footer:', logo ? 'Logo set' : 'Logo cleared');
-      } catch (e) {
-        console.error('Error updating logo:', e);
-      }
+      } catch (e) {}
     };
 
     window.addEventListener('store_logo_updated', handleLogoUpdate);
@@ -66,19 +76,15 @@ const Footer = () => {
           {/* Column 1: Brand Header & Social */}
           <div className={styles.brandCol}>
             <Link to={ROUTES.HOME} className={styles.brandLink}>
-              {customLogo ? (
-                <img
-                  src={customLogo}
-                  alt="GIFTERY Logo"
-                  style={{ maxHeight: '46px', maxWidth: '140px', objectFit: 'contain' }}
-                />
-              ) : (
-                <GiftLogoSvg />
-              )}
-              <div className={styles.brandTextGroup}>
-                <h2 className={styles.brandTitle}>GIFTERYS</h2>
-                <span className={styles.brandSubtitle}>CREATING MEMORIES FOR BRAND</span>
-              </div>
+              <img
+                src={customLogo || DEFAULT_LOGO_URL}
+                alt="GIFTERY Logo"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = DEFAULT_LOGO_URL;
+                }}
+                style={{ height: '80px', maxWidth: '340px', objectFit: 'contain' }}
+              />
             </Link>
 
             <p className={styles.brandDescription}>

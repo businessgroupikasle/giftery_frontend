@@ -518,13 +518,98 @@ const Dashboard = () => {
     } catch (err) {
       console.warn('Products fetch error:', err.message);
     } finally {
+const DEFAULT_STORE_PRODUCTS = [
+  {
+    id: 'prod-corp-1',
+    name: 'Luxury Executive Onboarding Gift Set',
+    categoryName: 'Corporate Gifts',
+    price: 1249,
+    stock: 50,
+    images: ['/images/prod_gift_set.png'],
+    description: 'Premium corporate welcome box featuring thermal bottle, leather diary, and gold pen.',
+    isFeatured: true,
+    isGiftSet: true,
+    tags: ['Corporate Gifts', 'featured', 'giftsets'],
+    isActive: true,
+  },
+  {
+    id: 'prod-corp-2',
+    name: 'Executive Laptop Backpack',
+    categoryName: 'Corporate Gifts',
+    price: 1999,
+    stock: 35,
+    images: ['/images/prod_laptop_bag.png'],
+    description: 'Ergonomic water-resistant laptop bag for modern professionals.',
+    isBestseller: true,
+    isPopular: true,
+    tags: ['Corporate Gifts', 'bestsellers', 'popular'],
+    isActive: true,
+  },
+  {
+    id: 'prod-pers-1',
+    name: 'Custom Engraved Wooden Photo Frame',
+    categoryName: 'Personalized Gifts',
+    price: 699,
+    stock: 40,
+    images: ['/images/prod_notebook_pen.png'],
+    description: 'High precision laser engraved solid beechwood photo frame.',
+    isPopular: true,
+    isMostLoved: true,
+    tags: ['Personalized Gifts', 'popular', 'loved'],
+    isActive: true,
+  },
+  {
+    id: 'prod-pers-2',
+    name: 'Customized Acrylic Table Stand & Desk Clock',
+    categoryName: 'Personalized Gifts',
+    price: 899,
+    stock: 25,
+    images: ['/images/cat_welcome.png'],
+    description: 'Crystal clear acrylic desk accent customized with name and logo.',
+    isNewArrival: true,
+    isMostLoved: true,
+    tags: ['Personalized Gifts', 'new', 'loved'],
+    isActive: true,
+  },
+  {
+    id: 'prod-toy-1',
+    name: 'Educational STEM Building Blocks Set',
+    categoryName: 'Toys',
+    price: 799,
+    stock: 60,
+    images: ['/images/cat_tech.png'],
+    description: 'Interactive building block set encouraging creative thinking for kids.',
+    isNewArrival: true,
+    isGiftSet: true,
+    tags: ['Toys', 'new', 'giftsets'],
+    isActive: true,
+  },
+  {
+    id: 'prod-toy-2',
+    name: 'Remote Control High Speed Stunt Car',
+    categoryName: 'Toys',
+    price: 1499,
+    stock: 30,
+    images: ['/images/prod_power_bank.png'],
+    description: '360 degree rotating rechargeable remote control car with LED lights.',
+    isBestseller: true,
+    isFeatured: true,
+    tags: ['Toys', 'bestsellers', 'featured'],
+    isActive: true,
+  },
+];
+
       const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-      const merged = [...localProducts];
+      let merged = [...localProducts];
       apiProducts.forEach(ap => {
         if (!merged.find(m => m.id === ap.id || m.slug === ap.slug)) {
           merged.push(ap);
         }
       });
+      if (merged.length === 0) {
+        merged = DEFAULT_STORE_PRODUCTS;
+        localStorage.setItem('giftery_products', JSON.stringify(DEFAULT_STORE_PRODUCTS));
+      }
       setProductsList(merged);
       setLoadingProducts(false);
     }
@@ -683,6 +768,12 @@ const Dashboard = () => {
       sku: product.sku || '',
       weight: product.weight?.toString() || '',
       featured: product.featured || false,
+      isFeatured: product.isFeatured || product.featured || (Array.isArray(product.tags) && product.tags.includes('featured')),
+      isBestseller: product.isBestseller || (Array.isArray(product.tags) && product.tags.includes('bestsellers')),
+      isPopular: product.isPopular || (Array.isArray(product.tags) && product.tags.includes('popular')),
+      isNewArrival: product.isNewArrival || (Array.isArray(product.tags) && product.tags.includes('new')),
+      isMostLoved: product.isMostLoved || (Array.isArray(product.tags) && product.tags.includes('loved')),
+      isGiftSet: product.isGiftSet || (Array.isArray(product.tags) && product.tags.includes('giftsets')),
       categoryId: product.categoryId || '',
       subCategoryId: product.subCategoryId || '',
       isActive: product.isActive !== false,
@@ -739,13 +830,31 @@ const Dashboard = () => {
     const tagsArr = productForm.tags
       ? productForm.tags.split(',').map(s => s.trim()).filter(Boolean)
       : [];
+
+    const isFeaturedVal = !!productForm.isFeatured || !!productForm.featured;
+    const isBestsellerVal = !!productForm.isBestseller;
+    const isPopularVal = !!productForm.isPopular;
+    const isNewArrivalVal = !!productForm.isNewArrival;
+    const isMostLovedVal = !!productForm.isMostLoved;
+    const isGiftSetVal = !!productForm.isGiftSet;
+
+    const collectionTagNames = [];
+    if (isFeaturedVal) collectionTagNames.push('featured');
+    if (isBestsellerVal) collectionTagNames.push('bestsellers');
+    if (isPopularVal) collectionTagNames.push('popular');
+    if (isNewArrivalVal) collectionTagNames.push('new');
+    if (isMostLovedVal) collectionTagNames.push('loved');
+    if (isGiftSetVal) collectionTagNames.push('giftsets');
+
+    const finalTags = Array.from(new Set([...tagsArr, ...collectionTagNames]));
+
     const payload = {
       name: productForm.name,
       description: productForm.description,
       specifications: productForm.specifications,
       customization: productForm.customization,
       shippingReturns: productForm.shippingReturns,
-      tags: tagsArr,
+      tags: finalTags,
       rating: parseFloat(productForm.rating) || 4.8,
       reviewsCount: parseInt(productForm.reviewsCount) || 128,
       price: parseFloat(productForm.price),
@@ -754,7 +863,13 @@ const Dashboard = () => {
       images: imagesArr,
       sku: productForm.sku || undefined,
       weight: productForm.weight ? parseFloat(productForm.weight) : undefined,
-      featured: productForm.featured,
+      featured: isFeaturedVal,
+      isFeatured: isFeaturedVal,
+      isBestseller: isBestsellerVal,
+      isPopular: isPopularVal,
+      isNewArrival: isNewArrivalVal,
+      isMostLoved: isMostLovedVal,
+      isGiftSet: isGiftSetVal,
       categoryId: productForm.categoryId,
       subCategoryId: productForm.subCategoryId || undefined,
       isActive: productForm.isActive,
@@ -779,6 +894,12 @@ const Dashboard = () => {
       reviewsCount: payload.reviewsCount,
       tags: payload.tags,
       featured: payload.featured,
+      isFeatured: isFeaturedVal,
+      isBestseller: isBestsellerVal,
+      isPopular: isPopularVal,
+      isNewArrival: isNewArrivalVal,
+      isMostLoved: isMostLovedVal,
+      isGiftSet: isGiftSetVal,
       categoryId: payload.categoryId,
       subCategoryId: payload.subCategoryId,
       categoryName: selectedCatObj ? selectedCatObj.name : (editingProduct ? editingProduct.categoryName : ''),

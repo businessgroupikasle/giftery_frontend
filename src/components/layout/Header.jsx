@@ -8,40 +8,33 @@ import useAuth from '@hooks/useAuth';
 import styles from './Header.module.css';
 
 const GiftLogo = () => (
-  <svg width="42" height="46" viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.logoSvg}>
-    {/* Ribbon Top Loops */}
-    <path d="M13 10C13 10 9 3 4.5 5.5C1 7.5 2 12 8.5 12H13" stroke="#e5c158" strokeWidth="2.2" strokeLinecap="round"/>
-    <path d="M23 10C23 10 27 3 31.5 5.5C35 7.5 34 12 27.5 12H23" stroke="#e5c158" strokeWidth="2.2" strokeLinecap="round"/>
-    
-    {/* Gift Box Cover / Lid */}
-    <rect x="2" y="12" width="32" height="7" rx="1.5" fill="url(#lidGrad)" stroke="#d4af37" strokeWidth="0.8"/>
-    
-    {/* Gift Box Base */}
-    <rect x="4" y="19" width="28" height="18" rx="1.5" fill="url(#boxGrad)" stroke="#a0a0a0" strokeWidth="0.8"/>
-    
-    {/* Vertical Gold Ribbon */}
-    <rect x="15.5" y="12" width="5" height="25" fill="url(#goldGrad)"/>
-    
-    {/* Horizontal Gold Ribbon */}
-    <rect x="2" y="14.5" width="32" height="2.5" fill="url(#goldGrad)"/>
-
-    <defs>
-      <linearGradient id="lidGrad" x1="2" y1="12" x2="34" y2="19" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#f5f5f5"/>
-        <stop offset="1" stopColor="#b8b8b8"/>
-      </linearGradient>
-      <linearGradient id="boxGrad" x1="4" y1="19" x2="32" y2="37" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#e0e0e0"/>
-        <stop offset="1" stopColor="#8a8a8a"/>
-      </linearGradient>
-      <linearGradient id="goldGrad" x1="15.5" y1="12" x2="20.5" y2="37" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#f7dc6f"/>
-        <stop offset="0.5" stopColor="#d4af37"/>
-        <stop offset="1" stopColor="#aa7c11"/>
-      </linearGradient>
-    </defs>
-  </svg>
+  <div style={{ display: 'inline-flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.15' }}>
+    <span style={{
+      fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif",
+      fontSize: '1.85rem',
+      fontWeight: '800',
+      color: '#ffffff',
+      letterSpacing: '0.06em',
+      textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+      lineHeight: '1',
+    }}>
+      GIFTERY
+    </span>
+    <span style={{
+      fontFamily: "'Inter', sans-serif",
+      fontSize: '0.62rem',
+      fontWeight: '800',
+      color: '#d99b26',
+      letterSpacing: '0.12em',
+      marginTop: '5px',
+      textTransform: 'uppercase',
+    }}>
+      PREMIUM GIFTS, LASTING IMPRESSIONS
+    </span>
+  </div>
 );
+
+const DEFAULT_LOGO_URL = '/images/store-logo.png';
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -67,10 +60,7 @@ const Header = () => {
       try {
         const logo = localStorage.getItem('giftery_store_logo');
         setCustomLogo(logo || null);
-        console.log('✓ Logo updated in Header:', logo ? 'Logo set' : 'Logo cleared');
-      } catch (e) {
-        console.error('Error updating logo:', e);
-      }
+      } catch (e) {}
     };
 
     window.addEventListener('store_logo_updated', handleLogoUpdate);
@@ -89,19 +79,15 @@ const Header = () => {
       <div className={styles.inner}>
         {/* Brand / Logo */}
         <Link to={ROUTES.HOME} className={styles.brand}>
-          {customLogo ? (
-            <img
-              src={customLogo}
-              alt="GIFTERY Logo"
-              style={{ maxHeight: '42px', maxWidth: '120px', objectFit: 'contain' }}
-            />
-          ) : (
-            <GiftLogo />
-          )}
-          <div className={styles.brandText}>
-            <span className={styles.brandTitle}>GIFTERY</span>
-            <span className={styles.brandTagline}>PREMIUM GIFTS, LASTING IMPRESSIONS</span>
-          </div>
+          <img
+            src={customLogo || DEFAULT_LOGO_URL}
+            alt="GIFTERY Logo"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = DEFAULT_LOGO_URL;
+            }}
+            style={{ height: '70px', maxWidth: '320px', objectFit: 'contain' }}
+          />
         </Link>
 
         {/* Navigation */}

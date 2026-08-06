@@ -4,6 +4,8 @@ import useAuth from '@hooks/useAuth';
 import useWishlist from '@hooks/useWishlist';
 import ProtectedRoute from '@routes/ProtectedRoute';
 import { ROUTES } from '@constants/routes';
+import { ENDPOINTS } from '@api/endpoints';
+import axiosInstance from '@api/axiosInstance';
 import Maintenance from '@pages/Maintenance';
 
 // ── Lazy-loaded Pages ─────────────────────────────────────────
@@ -49,6 +51,27 @@ const App = () => {
     } catch(e) {}
     return false;
   });
+
+  useEffect(() => {
+    const fetchAndSyncSettings = async () => {
+      try {
+        const response = await axiosInstance.get(ENDPOINTS.SETTINGS.GET);
+        if (response?.data) {
+          localStorage.setItem('store_basic_settings', JSON.stringify(response.data));
+          if (response.data.storeLogo) {
+            localStorage.setItem('giftery_store_logo', response.data.storeLogo);
+          }
+          setIsMaintenanceMode(response.data.maintenanceMode === true);
+          window.dispatchEvent(new Event('store_settings_updated'));
+          window.dispatchEvent(new Event('store_logo_updated'));
+        }
+      } catch(e) {
+        console.error('Failed to sync settings from backend:', e);
+      }
+    };
+
+    fetchAndSyncSettings();
+  }, []);
 
   useEffect(() => {
     if (user) {

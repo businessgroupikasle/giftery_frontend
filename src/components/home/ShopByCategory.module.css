@@ -1,247 +1,314 @@
-/* ── Explore Our Gift Collections / Shop By Category ── */
+/* ── Explore Our Collections / Products Section Redesign (Enlarged Edition) ── */
 .collectionsSection {
   background-color: #ffffff;
-  padding: 5.5rem 0;
+  padding: 6rem 0 7rem 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 .collectionsContainer {
-  max-width: 1400px;
+  max-width: 1480px;
   margin: 0 auto;
   padding: 0 2rem;
 }
 
-.collectionsHeader {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 3rem;
+/* Header Text */
+.headerWrapper {
+  text-align: center;
+  max-width: 850px;
+  margin: 0 auto 3rem auto;
 }
 
-.collectionsSubheading {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #c58b29;
-  letter-spacing: 2.2px;
-  text-transform: uppercase;
-  display: block;
-  margin-bottom: 0.4rem;
-}
-
-.collectionsTitle {
-  font-size: clamp(1.8rem, 3.2vw, 2.5rem);
-  font-weight: 800;
-  color: #111827;
-  line-height: 1.2;
-}
-
-.collectionsTitleGold {
-  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
-  color: #c58b29;
-}
-
-.viewAllBtn {
+.subheadingWrapper {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.subheadingDash {
+  color: #d99b26;
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: -1px;
+}
+
+.subheadingText {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #d99b26;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+
+.mainHeading {
+  font-size: clamp(2.3rem, 3.8vw, 3.3rem);
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.18;
+  margin-bottom: 0.75rem;
+}
+
+.headingHighlight {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  color: #d99b26;
+  font-weight: 700;
+}
+
+.descriptionText {
+  font-size: 1.1rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Filter Pills Navigation */
+.filterPillsRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 3.25rem;
+}
+
+.filterPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
   background: #ffffff;
-  color: #374151;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 0.65rem 1.3rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+  color: #334155;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 50px;
+  padding: 0.8rem 1.6rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
-.viewAllBtn:hover {
-  background: #111827;
-  color: #ffffff;
-  border-color: #111827;
+.filterPill:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
-/* Collections Grid & Cards */
-.collectionsGrid {
+.filterPillActive {
+  background: #dfa843 !important;
+  color: #ffffff !important;
+  border-color: #dfa843 !important;
+  box-shadow: 0 6px 18px rgba(223, 168, 67, 0.35) !important;
+}
+
+.pillIcon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.1rem;
+}
+
+/* Products Grid (4 Columns - 4+4 Layout for 8 Products) */
+.productsGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  max-width: 1100px;
-  margin: 0 auto;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.35rem;
+  margin-bottom: 4rem;
 }
 
-.collectionCard {
-  border-radius: 16px;
-  overflow: hidden;
+.productCard {
+  background: #ffffff;
+  border: 1.5px solid #f1f5f9;
+  border-radius: 20px;
+  padding: 0.95rem;
   display: flex;
   flex-direction: column;
-  position: relative;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
 }
 
-.collectionCard:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+.productCard:hover {
+  transform: translateY(-7px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e1;
 }
 
-.cardImageWrapper {
+.productImgWrapper {
   width: 100%;
-  height: 220px;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
   overflow: hidden;
-  position: relative;
-  background: #eaedf2;
+  background: #fbf7f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
 }
 
-.cardImg {
+.productImg {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.4s ease;
 }
 
-.collectionCard:hover .cardImg {
-  transform: scale(1.05);
+.productCard:hover .productImg {
+  transform: scale(1.08);
 }
 
-.cardBadge {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  margin: -26px auto 0.75rem auto;
-  position: relative;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.cardContent {
-  padding: 0 1.25rem 1.75rem 1.25rem;
-  text-align: center;
+.productCardBody {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   flex-grow: 1;
+  padding: 0 0.35rem 0.35rem 0.35rem;
 }
 
-.cardTitle {
+.productName {
   font-size: 1.05rem;
   font-weight: 800;
+  color: #0f172a;
   margin-bottom: 0.4rem;
   line-height: 1.3;
 }
 
-.cardSubtitle {
-  font-size: 0.8rem;
+.productDesc {
+  font-size: 0.82rem;
+  color: #64748b;
   line-height: 1.45;
-  margin-bottom: 1.25rem;
-  min-height: 2.5rem;
+  margin-bottom: 0.9rem;
+  min-height: 2.4rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.cardCta {
-  margin-top: auto;
-  font-size: 0.78rem;
+.productPrice {
+  font-size: 1.15rem;
   font-weight: 800;
-  letter-spacing: 1.2px;
-  text-decoration: none;
-  transition: opacity 0.2s ease;
+  color: #0f172a;
+  margin-bottom: 1rem;
+  margin-top: auto;
 }
 
-.cardCta:hover {
-  opacity: 0.8;
-}
-
-/* Theme 1: Dark Card (Corporate Gifts) */
-.cardTheme_dark {
-  background: #111217;
-  color: #ffffff;
-}
-
-.cardTheme_dark .cardBadge {
-  background: #111217;
-  border: 2px solid #e5c158;
-}
-
-.cardTheme_dark .cardTitle {
-  color: #ffffff;
-}
-
-.cardTheme_dark .cardSubtitle {
-  color: #9ca3af;
-}
-
-.cardTheme_dark .cardCta {
-  color: #e5c158;
-}
-
-/* Theme 2: Light Cards (Welcome Kits, Tech, Eco) */
-.cardTheme_light {
-  background: #edf0f5;
-  color: #111827;
-}
-
-.cardTheme_light .cardBadge {
+.addToCartBtn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: #ffffff;
-  border: 1px solid #d1d5db;
+  color: #d99b26;
+  border: 2px solid #f1d59b;
+  border-radius: 50px;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.25s ease;
 }
 
-.cardTheme_light .cardTitle {
-  color: #111827;
+.addToCartBtn:hover {
+  background: #d99b26;
+  color: #ffffff;
+  border-color: #d99b26;
+  box-shadow: 0 4px 14px rgba(217, 155, 38, 0.3);
+  transform: translateY(-1px);
 }
 
-.cardTheme_light .cardSubtitle {
-  color: #6b7280;
+/* Value Proposition Banner (5 Pillars Bar - Larger Sizing) */
+.valuePropsBanner {
+  background: #fffcf8;
+  border: 1.5px solid #f3ebe0;
+  border-radius: 20px;
+  padding: 1.75rem 2rem;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.5rem;
+  box-shadow: 0 6px 20px rgba(217, 155, 38, 0.05);
 }
 
-.cardTheme_light .cardCta {
-  color: #111827;
+.propItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-/* Theme 3: Gold Camel Card (Custom Merchandise) */
-.cardTheme_gold {
-  background: #d8962a;
-  color: #111217;
+.propIconCircle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #fef7ec;
+  border: 1.5px solid #fdecd3;
+  color: #d99b26;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(217, 155, 38, 0.1);
 }
 
-.cardTheme_gold .cardBadge {
-  background: #111217;
-  border: none;
+.propTitle {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 0.2rem;
 }
 
-.cardTheme_gold .cardTitle {
-  color: #111217;
+.propDesc {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.4;
+  margin: 0;
 }
 
-.cardTheme_gold .cardSubtitle {
-  color: rgba(17, 18, 23, 0.85);
+/* View All Products CTA Button */
+.viewAllProductsBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #dfa843;
+  color: #ffffff;
+  border-radius: 50px;
+  padding: 0.9rem 2.5rem;
+  font-size: 0.98rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 18px rgba(223, 168, 67, 0.35);
 }
 
-.cardTheme_gold .cardCta {
-  color: #111217;
+.viewAllProductsBtn:hover {
+  background: #b8832a;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(223, 168, 67, 0.45);
+  color: #ffffff;
 }
 
-/* Responsive */
+/* Responsive Breakdown */
 @media (max-width: 1280px) {
-  .collectionsGrid {
-    grid-template-columns: repeat(3, 1fr);
+  .productsGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.35rem;
   }
 }
 
-@media (max-width: 900px) {
-  .collectionsGrid {
+@media (max-width: 850px) {
+  .productsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
+  .filterPillsRow {
+    gap: 0.65rem;
+  }
+  .filterPill {
+    padding: 0.65rem 1.2rem;
+    font-size: 0.85rem;
+  }
 }
 
-@media (max-width: 600px) {
-  .collectionsGrid {
+@media (max-width: 520px) {
+  .productsGrid {
     grid-template-columns: 1fr;
-  }
-  .collectionsHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
   }
 }
