@@ -46,6 +46,7 @@ const Header = () => {
   const { toggleCart } = useCartContext();
 
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [customLogo, setCustomLogo] = useState(() => {
     try {
@@ -208,6 +209,16 @@ const Header = () => {
         </nav>
 
 
+        {/* Mobile Menu Toggle Button */}
+        <button
+          className={styles.mobileMenuToggleBtn}
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle mobile menu"
+          aria-expanded={mobileMenuOpen}
+        >
+          ☰
+        </button>
+
         {/* Action Icons: Wishlist, Cart, Profile */}
         <div className={styles.actions}>
           {/* 1. Wishlist */}
@@ -305,6 +316,107 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation Drawer */}
+      {mobileMenuOpen && (
+        <nav className={styles.mobileNavDrawer}>
+          <NavLink
+            to={ROUTES.HOME}
+            className={({ isActive }) => `${styles.mobileNavLink} ${isActive ? styles.active : ''}`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Home
+          </NavLink>
+
+          <NavLink
+            to={ROUTES.ABOUT}
+            className={({ isActive }) => `${styles.mobileNavLink} ${isActive ? styles.active : ''}`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            About Us
+          </NavLink>
+
+          <NavLink
+            to={ROUTES.CORPORATE_GIFTS}
+            className={({ isActive }) => `${styles.mobileNavLink} ${isActive ? styles.active : ''}`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Corporate Gifts
+          </NavLink>
+
+          <NavLink
+            to={ROUTES.PERSONALIZED_GIFTS}
+            className={({ isActive }) => `${styles.mobileNavLink} ${isActive ? styles.active : ''}`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Personalized Gifts
+          </NavLink>
+
+          <NavLink
+            to={ROUTES.TOYS}
+            className={({ isActive }) => `${styles.mobileNavLink} ${isActive ? styles.active : ''}`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Toys
+          </NavLink>
+
+          <NavLink
+            to={ROUTES.CONTACT}
+            className={({ isActive }) => `${styles.mobileNavLink} ${isActive ? styles.active : ''}`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Contact
+          </NavLink>
+
+          <div className={styles.mobileNavDivider} />
+
+          {isAuthenticated ? (
+            <>
+              <Link
+                to={ROUTES.PROFILE}
+                className={styles.mobileNavLink}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                My Profile
+              </Link>
+              <Link
+                to={ROUTES.ORDERS}
+                className={styles.mobileNavLink}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                My Orders
+              </Link>
+              {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
+                <Link
+                  to={ROUTES.DASHBOARD}
+                  className={styles.mobileNavLink}
+                  style={{ color: '#dfa843', fontWeight: 'bold' }}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              )}
+              <button
+                onClick={() => {
+                  handleLogoutClick();
+                  setMobileMenuOpen(false);
+                }}
+                className={`${styles.mobileNavLink} ${styles.logoutBtn}`}
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <Link
+              to={ROUTES.LOGIN}
+              className={styles.mobileNavLink}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Sign In
+            </Link>
+          )}
+        </nav>
+      )}
     </header>
   );
 };

@@ -303,7 +303,7 @@ const Login = () => {
           <Link to={ROUTES.HOME} className={styles.headerLogoLink}>
             <GiftLogoSvg />
             <div className={styles.headerBrandGroup}>
-              <h1 className={styles.headerBrandTitle}>GIFTERYS</h1>
+              <h1 className={styles.headerBrandTitle}>GIFTERY</h1>
               <span className={styles.headerBrandTagline}>PREMIUM GIFTS, LASTING IMPRESSIONS</span>
             </div>
           </Link>

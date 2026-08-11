@@ -791,36 +791,229 @@
   margin: 0;
 }
 
-/* Responsive */
+/* Responsive Design */
+
+/* Tablet View (1024px) */
 @media (max-width: 1024px) {
+  .pageWrapper {
+    padding: 1.25rem 0 3.5rem;
+  }
+  .container {
+    padding: 0 1.25rem;
+  }
   .productTopGrid {
     grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 1.75rem;
+  }
+  .galleryColumn {
+    gap: 0.9rem;
+  }
+  .mainImageBox {
+    aspect-ratio: 1/1;
+  }
+  .thumbBtn {
+    width: 60px;
+    height: 60px;
+  }
+  .infoColumn {
+    gap: 0.75rem;
+  }
+  .productTitle {
+    font-size: 1.65rem;
   }
   .detailsSplitGrid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
   .trustBadgesGrid,
   .bottomHighlightsBanner {
     grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  .breadcrumb {
+    margin-bottom: 1.25rem;
   }
 }
 
-@media (max-width: 640px) {
+/* Tablet to Mobile Transition (768px) */
+@media (max-width: 768px) {
+  .pageWrapper {
+    padding: 1rem 0 3rem;
+  }
+  .container {
+    padding: 0 1rem;
+  }
+  .breadcrumb {
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  .productTopGrid {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+    padding: 1.5rem;
+    border-radius: 14px;
+  }
   .galleryColumn {
-    flex-direction: column-reverse;
+    gap: 0.85rem;
   }
   .thumbnailsList {
-    flex-direction: row;
+    gap: 0.55rem;
+  }
+  .thumbBtn {
+    width: 55px;
+    height: 55px;
+  }
+  .mainImageBox {
+    border-radius: 12px;
+    aspect-ratio: 1/1;
+  }
+  .badgePill {
+    font-size: 0.65rem;
+    padding: 0.22rem 0.6rem;
+  }
+  .productTitle {
+    font-size: 1.5rem;
+    margin: 0 0 0.4rem 0;
+  }
+  .ratingSoldRow {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+  }
+  .currentPrice {
+    font-size: 1.6rem;
+  }
+  .comparePrice {
+    font-size: 0.9rem;
+  }
+  .shortSummary {
+    font-size: 0.85rem;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.85rem;
+  }
+  .customizationSection {
+    margin-bottom: 1rem;
+  }
+  .quantitySection {
+    margin-bottom: 1.25rem;
   }
   .ctaButtonGroup {
     flex-direction: column;
+    gap: 0.75rem;
   }
-  .trustBadgesGrid,
-  .bottomHighlightsBanner {
+  .addToCartGoldBtn,
+  .requestQuoteOutlineBtn {
+    padding: 0.8rem 1.25rem;
+    font-size: 0.85rem;
+  }
+  .detailsSplitGrid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .tabBodyContainer {
+    padding: 1.5rem;
+  }
+  .bulletsAndSpecsGrid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .trustBadgesGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.9rem;
+    padding: 1rem 1.25rem;
+  }
+  .trustItem {
+    gap: 0.6rem;
+  }
+  .trustTitle {
+    font-size: 0.78rem;
+  }
+  .trustDesc {
+    font-size: 0.68rem;
+  }
+  .bottomHighlightsBanner {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+  }
+  .relatedGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  .relCard {
+    border-radius: 9px;
   }
 }
 
+/* Mobile View (640px) */
+@media (max-width: 640px) {
+  .pageWrapper {
+    padding: 0.85rem 0 2.75rem;
+  }
+  .container {
+    padding: 0 0.9rem;
+  }
+  .breadcrumb {
+    font-size: 0.75rem;
+    margin-bottom: 0.9rem;
+  }
+  .productTopGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1.25rem;
+  }
+  .galleryColumn {
+    gap: 0.75rem;
+  }
+  .thumbnailsList {
+    gap: 0.5rem;
+  }
+  .thumbBtn {
+    width: 50px;
+    height: 50px;
+  }
+  .productTitle {
+    font-size: 1.35rem;
+  }
+  .currentPrice {
+    font-size: 1.45rem;
+  }
+  .ctaButtonGroup {
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+  .addToCartGoldBtn,
+  .requestQuoteOutlineBtn {
+    padding: 0.75rem 1rem;
+    font-size: 0.82rem;
+  }
+  .detailsSplitGrid {
+    gap: 1.25rem;
+  }
+  .tabNavBtn {
+    padding: 0.85rem 1rem;
+    font-size: 0.75rem;
+  }
+  .tabBodyContainer {
+    padding: 1.25rem;
+  }
+  .trustBadgesGrid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    padding: 1rem;
+  }
+  .bottomHighlightsBanner {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    padding: 1rem 1.25rem;
+  }
+  .relatedGrid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+}
+
+/* Small Mobile (480px) */
 @media (max-width: 480px) {
   .productPageWrapper {
     padding: 1rem 0 3rem;
@@ -837,7 +1030,7 @@
   .thumbnailsList {
     gap: 0.4rem;
   }
-  .thumbImg {
+  .thumbBtn {
     width: 52px;
     height: 52px;
   }
@@ -845,10 +1038,10 @@
     flex-direction: column;
     gap: 0.65rem;
   }
-  .addToCartBtn,
-  .buyNowBtn {
+  .addToCartGoldBtn,
+  .requestQuoteOutlineBtn {
     width: 100%;
-    padding: 0.9rem 1rem;
+    padding: 0.85rem 1rem;
     justify-content: center;
   }
   .tabsNav {
@@ -865,5 +1058,83 @@
   }
   .relatedGrid {
     grid-template-columns: 1fr;
+  }
+  .trustBadgesGrid {
+    grid-template-columns: 1fr;
+    padding: 0.9rem 1.1rem;
+  }
+}
+
+/* Extra Small Mobile (360px) */
+@media (max-width: 360px) {
+  .pageWrapper {
+    padding: 0.75rem 0 2.5rem;
+  }
+  .container {
+    padding: 0 0.75rem;
+  }
+  .breadcrumb {
+    font-size: 0.7rem;
+    gap: 0.3rem;
+  }
+  .productTopGrid {
+    gap: 1.25rem;
+    padding: 1rem;
+  }
+  .galleryColumn {
+    gap: 0.65rem;
+  }
+  .thumbnailsList {
+    gap: 0.35rem;
+  }
+  .thumbBtn {
+    width: 45px;
+    height: 45px;
+  }
+  .productTitle {
+    font-size: 1.2rem;
+    margin: 0 0 0.3rem 0;
+  }
+  .currentPrice {
+    font-size: 1.3rem;
+  }
+  .comparePrice {
+    font-size: 0.8rem;
+  }
+  .ctaButtonGroup {
+    gap: 0.5rem;
+  }
+  .addToCartGoldBtn,
+  .requestQuoteOutlineBtn {
+    padding: 0.7rem 0.85rem;
+    font-size: 0.75rem;
+  }
+  .tabNavBtn {
+    padding: 0.75rem 0.85rem;
+    font-size: 0.7rem;
+  }
+  .tabBodyContainer {
+    padding: 1rem;
+  }
+  .bulletsAndSpecsGrid {
+    gap: 1rem;
+  }
+  .trustBadgesGrid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+    padding: 0.85rem 1rem;
+  }
+  .trustIconCircle {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+  .bottomHighlightsBanner {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+    padding: 0.9rem 1rem;
+  }
+  .relatedGrid {
+    gap: 0.5rem;
   }
 }

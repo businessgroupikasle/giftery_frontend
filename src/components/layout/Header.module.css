@@ -17,6 +17,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 /* Brand & Logo */
@@ -239,6 +240,28 @@
   color: #e5c158;
 }
 
+/* Mobile Menu Toggle Button */
+.mobileMenuToggleBtn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  color: #e5e7eb;
+  font-size: 1.8rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: color 0.2s ease, transform 0.15s ease;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mobileMenuToggleBtn:hover {
+  color: #e5c158;
+  transform: scale(1.1);
+}
+
 /* Right Control Icons */
 .actions {
   display: flex;
@@ -459,20 +482,341 @@
 }
 
 /* Responsive adjustments */
+
+/* Desktop to Tablet (1024px) */
 @media (max-width: 1024px) {
+  .inner {
+    padding: 0 1.5rem;
+    gap: 1rem;
+  }
   .nav {
     gap: 1rem;
+  }
+  .navLink {
+    font-size: 0.9rem;
   }
   .searchForm {
     width: 180px;
   }
+  .actions {
+    gap: 1.25rem;
+  }
 }
 
+/* Tablet View (768px - 1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .inner {
+    height: 80px;
+    padding: 0 1.25rem;
+    flex-wrap: nowrap;
+  }
+  .brand {
+    flex: 1;
+  }
+  .brandTitle {
+    font-size: 1.45rem;
+  }
+  .brandTagline {
+    font-size: 0.5rem;
+  }
+  .nav {
+    display: flex;
+    gap: 1.2rem;
+  }
+  .navLink {
+    font-size: 0.88rem;
+    gap: 0.25rem;
+  }
+  .searchForm {
+    width: 160px;
+  }
+  .searchInput {
+    font-size: 0.88rem;
+  }
+  .actions {
+    gap: 1.25rem;
+    order: auto;
+  }
+  .mobileMenuToggleBtn {
+    display: none;
+    order: auto;
+  }
+  .mobileNavDrawer {
+    display: none;
+  }
+  .iconBtn {
+    padding: 0.25rem;
+  }
+}
+
+/* Tablet to Mobile Transition (768px) */
 @media (max-width: 768px) {
+  .inner {
+    padding: 0 1rem;
+    height: 76px;
+    gap: 0.75rem;
+    flex-wrap: nowrap;
+  }
+  .brand {
+    gap: 0.7rem;
+    flex: 1;
+    order: 0;
+  }
+  .brandTitle {
+    font-size: 1.35rem;
+    letter-spacing: 2.2px;
+  }
+  .brandTagline {
+    font-size: 0.5rem;
+  }
   .nav {
     display: none;
   }
   .searchForm {
-    width: 150px;
+    display: none;
+  }
+  .actions {
+    gap: 0.85rem;
+    order: 1;
+  }
+  .mobileMenuToggleBtn {
+    display: flex;
+    order: 2;
+  }
+  .iconBtn {
+    padding: 0.25rem;
+    font-size: 1.3rem;
+  }
+  .cartBtn {
+    font-size: 1.35rem;
+  }
+
+  /* Mobile Navigation Drawer */
+  .mobileNavDrawer {
+    position: fixed;
+    top: 76px;
+    left: 0;
+    right: 0;
+    background: #0b0c10;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    z-index: 999;
+    max-height: calc(100vh - 76px);
+    overflow-y: auto;
+    animation: slideDown 0.3s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .mobileNavLink {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: #d1d5db;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    background: transparent;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .mobileNavLink:hover {
+    background: rgba(229, 193, 88, 0.12);
+    color: #e5c158;
+    padding-left: 1.25rem;
+  }
+
+  .mobileNavLink.active {
+    color: #e5c158;
+    background: rgba(229, 193, 88, 0.12);
+    font-weight: 600;
+    border-left: 3px solid #e5c158;
+    padding-left: 0.9rem;
+  }
+
+  .mobileNavDivider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 0.5rem 0;
+  }
+
+  .logoutBtn {
+    color: #dc2626;
+    margin-top: 0.5rem;
+  }
+
+  .logoutBtn:hover {
+    background: rgba(220, 38, 38, 0.15);
+    color: #ef4444;
+  }
+}
+
+/* Mobile View (480px - 768px) */
+@media (max-width: 640px) {
+  .inner {
+    padding: 0 0.9rem;
+    height: 70px;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+  }
+  .brand {
+    gap: 0.6rem;
+    flex: 1;
+    order: 0;
+  }
+  .brandTitle {
+    font-size: 1.25rem;
+    letter-spacing: 2px;
+  }
+  .brandTagline {
+    font-size: 0.48rem;
+  }
+  .logoSvg {
+    width: 32px;
+    height: 32px;
+  }
+  .searchForm {
+    display: none;
+  }
+  .actions {
+    gap: 0.7rem;
+  }
+  .mobileMenuToggleBtn {
+    width: 36px;
+    height: 36px;
+    font-size: 1.6rem;
+  }
+  .iconBtn {
+    font-size: 1.2rem;
+    padding: 0.2rem;
+  }
+  .cartBtn {
+    font-size: 1.25rem;
+  }
+  .profileTriggerBtn {
+    display: none;
+  }
+  .mobileNavDrawer {
+    top: 70px;
+    padding: 0.85rem;
+  }
+  .mobileNavLink {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Small Mobile (480px) */
+@media (max-width: 480px) {
+  .inner {
+    padding: 0 0.85rem;
+    height: 72px;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+  }
+  .brand {
+    flex: 1;
+    order: 0;
+  }
+  .brand img {
+    height: 48px !important;
+    max-width: 140px !important;
+  }
+  .actions {
+    order: 1;
+  }
+  .mobileMenuToggleBtn {
+    order: 2;
+  }
+  .brandTitle {
+    font-size: 1.2rem;
+  }
+  .searchForm {
+    display: none;
+  }
+  .actions {
+    gap: 0.65rem;
+  }
+  .mobileNavDrawer {
+    top: 72px;
+    padding: 1rem;
+  }
+  .dropdownMenu {
+    min-width: 180px;
+  }
+}
+
+/* Extra Small Mobile (360px) */
+@media (max-width: 360px) {
+  .inner {
+    padding: 0 0.45rem;
+    height: 64px;
+    gap: 0.3rem;
+    flex-wrap: nowrap;
+  }
+  .brand {
+    gap: 0.5rem;
+    flex: 1;
+    order: 0;
+  }
+  .actions {
+    order: 1;
+  }
+  .mobileMenuToggleBtn {
+    order: 2;
+  }
+  .brand img {
+    height: 38px !important;
+    max-width: 110px !important;
+  }
+  .brandTitle {
+    font-size: 1.05rem;
+    letter-spacing: 1.4px;
+  }
+  .brandTagline {
+    font-size: 0.42rem;
+    margin-top: 2px;
+  }
+  .actions {
+    gap: 0.5rem;
+  }
+  .mobileMenuToggleBtn {
+    width: 32px;
+    height: 32px;
+    font-size: 1.4rem;
+    padding: 0.1rem;
+  }
+  .iconBtn {
+    font-size: 1.1rem;
+  }
+  .cartBtn {
+    font-size: 1.15rem;
+  }
+  .mobileNavDrawer {
+    top: 64px;
+    padding: 0.75rem;
+  }
+  .mobileNavLink {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.85rem;
+  }
+  .dropdownMenu {
+    min-width: 160px;
   }
 }

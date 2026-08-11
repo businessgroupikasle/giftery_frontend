@@ -52,7 +52,7 @@ const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout }) =>
       <div className={styles.brandBox}>
         <GiftLogoSvg />
         <div className={styles.brandTextGroup}>
-          <h1 className={styles.brandTitle}>GIFTERYS</h1>
+          <h1 className={styles.brandTitle}>GIFTERY</h1>
           <span className={styles.brandTagline}>PREMIUM GIFTS, LASTING IMPRESSIONS</span>
         </div>
       </div>

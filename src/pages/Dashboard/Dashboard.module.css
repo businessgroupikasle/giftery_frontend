@@ -212,6 +212,102 @@
   min-width: 0;
 }
 
+/* Responsive Sidebar */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+  }
+  .brandBox {
+    padding: 1.25rem 1rem 1rem 1rem;
+  }
+  .brandTitle {
+    font-size: 1.15rem;
+  }
+  .navMenu {
+    padding: 0.85rem 0.7rem;
+  }
+  .navItem {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+  }
+  .brandBox {
+    padding: 1rem 0.9rem;
+  }
+  .brandTitle {
+    font-size: 1.05rem;
+  }
+  .brandTagline {
+    font-size: 0.52rem;
+  }
+  .navMenu {
+    padding: 0.75rem 0.6rem;
+  }
+  .navItem {
+    padding: 0.55rem 0.65rem;
+    font-size: 0.78rem;
+  }
+  .navIcon {
+    font-size: 1rem;
+  }
+  .sidebarProfile {
+    margin: 0.75rem;
+    padding: 0.7rem 0.75rem;
+  }
+  .profileName {
+    font-size: 0.8rem;
+  }
+  .profileRole {
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboardContainer {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid #1e2229;
+    max-height: 70vh;
+  }
+  .navMenu {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+  }
+  .brandBox {
+    padding: 0.9rem 0.8rem;
+  }
+  .brandTitle {
+    font-size: 0.95rem;
+  }
+  .navItem {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  .sidebarProfile {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
 /* Top Navbar (Light) */
 .topNavbar {
   height: 64px;
@@ -224,6 +320,29 @@
   position: sticky;
   top: 0;
   z-index: 1000;
+}
+
+@media (max-width: 1024px) {
+  .topNavbar {
+    height: 60px;
+    padding: 0 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .topNavbar {
+    height: 56px;
+    padding: 0 1.25rem;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .topNavbar {
+    height: 52px;
+    padding: 0 1rem;
+    gap: 0.5rem;
+  }
 }
 
 .navToggleBtn {
@@ -250,6 +369,24 @@
   display: flex;
   align-items: center;
   width: 340px;
+}
+
+@media (max-width: 1024px) {
+  .searchWrapper {
+    width: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .searchWrapper {
+    width: 220px;
+  }
+}
+
+@media (max-width: 480px) {
+  .searchWrapper {
+    width: 180px;
+  }
 }
 
 .searchIcon {
@@ -383,6 +520,27 @@
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
+}
+
+@media (max-width: 1024px) {
+  .workspaceInner {
+    padding: 1.5rem 1.75rem;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .workspaceInner {
+    padding: 1.25rem 1.5rem;
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .workspaceInner {
+    padding: 1rem 1.25rem;
+    gap: 1rem;
+  }
 }
 
 /* Header Banner Row */
@@ -589,9 +747,49 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.9rem;
+  }
+  .kpiCard {
+    padding: 1rem 0.9rem;
+  }
+}
+
 @media (max-width: 768px) {
   .kpiGrid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+  .kpiCard {
+    padding: 0.9rem 0.8rem;
+  }
+  .kpiValue {
+    font-size: 1.25rem;
+  }
+  .kpiFooter {
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+  .kpiCard {
+    padding: 0.85rem 0.75rem;
+  }
+  .kpiValue {
+    font-size: 1.1rem;
   }
 }
 
@@ -687,9 +885,37 @@
   gap: 1.25rem;
 }
 
+@media (max-width: 1400px) {
+  .chartsGrid {
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 1.15rem;
+  }
+}
+
 @media (max-width: 1200px) {
   .chartsGrid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+  .cardContainer {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chartsGrid {
+    gap: 0.75rem;
+  }
+  .cardContainer {
+    padding: 0.85rem;
+    border-radius: 12px;
   }
 }
 
@@ -873,9 +1099,47 @@
   gap: 1.25rem;
 }
 
+@media (max-width: 1400px) {
+  .bottomGrid {
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 1.15rem;
+  }
+}
+
 @media (max-width: 1200px) {
   .bottomGrid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .bottomGrid {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+  .ordersTable th,
+  .ordersTable td {
+    padding: 0.6rem 0.4rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .bottomGrid {
+    gap: 0.75rem;
+  }
+  .ordersTable {
+    min-width: 100%;
+    font-size: 0.7rem;
+  }
+  .ordersTable th,
+  .ordersTable td {
+    padding: 0.5rem 0.35rem;
+  }
+  .miniAlertsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
   }
 }
 
@@ -1133,6 +1397,31 @@
   animation: notifSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@media (max-width: 768px) {
+  .notificationDropdown {
+    width: 85vw;
+    max-width: 85vw;
+    max-height: 70vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .notificationDropdown {
+    width: 90vw;
+    max-width: 90vw;
+    max-height: 60vh;
+  }
+  .notifHeader {
+    padding: 0.75rem 1rem;
+  }
+  .notifTitle {
+    font-size: 0.85rem;
+  }
+  .notifList {
+    max-height: 250px;
+  }
+}
+
 @keyframes notifSlideDown {
   from {
     opacity: 0;
@@ -1379,5 +1668,40 @@
   .primaryBtn {
     padding: 0.65rem 1rem;
     font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .workspaceInner {
+    padding: 0.5rem;
+  }
+
+  .topNavbar {
+    padding: 0 0.5rem;
+    height: 54px;
+    gap: 0.4rem;
+  }
+
+  .navToggleBtn {
+    padding: 0.25rem;
+    font-size: 1.1rem;
+  }
+
+  .searchInput {
+    font-size: 0.75rem;
+    padding: 0.45rem 1.8rem 0.45rem 1.8rem;
+  }
+
+  .statCard,
+  .metricCard {
+    padding: 0.75rem;
+  }
+
+  .statNumber {
+    font-size: 1.25rem;
+  }
+
+  .headerBannerTitle {
+    font-size: 1.2rem;
   }
 }

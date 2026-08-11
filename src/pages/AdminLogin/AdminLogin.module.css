@@ -272,7 +272,40 @@
   text-decoration: underline;
 }
 
-/* -- Mobile Responsive -- */
+/* Tablet View (1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .adminAuthContainer {
+    padding: 2.5rem 1.5rem;
+  }
+  .adminCard {
+    max-width: 420px;
+    padding: 2.4rem 2.2rem;
+  }
+  .briefcaseBadge {
+    width: 56px;
+    height: 56px;
+    font-size: 1.75rem;
+  }
+  .brandTitle {
+    font-size: 1.35rem;
+  }
+  .mainTitle {
+    font-size: 1.6rem;
+  }
+  .subTitle {
+    font-size: 0.8rem;
+  }
+  .inputField {
+    font-size: 0.85rem;
+    padding: 0.8rem 1rem 0.8rem 2.6rem;
+  }
+  .submitBtn {
+    padding: 0.85rem;
+    font-size: 0.87rem;
+  }
+}
+
+/* Tablet to Mobile Transition (768px) */
 @media (max-width: 768px) {
   .adminAuthContainer {
     padding: 1.5rem 1rem;
@@ -283,9 +316,33 @@
     max-width: 100%;
     width: 100%;
     border-radius: 16px;
+    margin-top: 3rem;
   }
-  .adminTitle {
-    font-size: 1.4rem;
+  .briefcaseBadge {
+    width: 52px;
+    height: 52px;
+    font-size: 1.6rem;
+  }
+  .brandTitle {
+    font-size: 1.25rem;
+  }
+  .mainTitle {
+    font-size: 1.45rem;
+  }
+  .subTitle {
+    font-size: 0.78rem;
+  }
+  .quickFillBar {
+    padding: 0.45rem 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .inputField {
+    font-size: 0.83rem;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+  }
+  .submitBtn {
+    padding: 0.8rem;
+    font-size: 0.85rem;
   }
   .backHomeBtn {
     top: 1rem;
@@ -293,8 +350,57 @@
     font-size: 0.78rem;
     padding: 0.45rem 0.85rem;
   }
+  .otherPortals {
+    font-size: 0.75rem;
+    margin-top: 1.5rem;
+  }
 }
 
+/* Mobile View (480px - 768px) */
+@media (max-width: 640px) {
+  .adminAuthContainer {
+    padding: 1.25rem 1rem;
+  }
+  .adminCard {
+    padding: 1.8rem 1.35rem;
+    margin-top: 2.5rem;
+  }
+  .briefcaseBadge {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+    margin-bottom: 0.8rem;
+  }
+  .brandTitle {
+    font-size: 1.15rem;
+  }
+  .mainTitle {
+    font-size: 1.3rem;
+    margin: 0 0 0.4rem 0;
+  }
+  .subTitle {
+    font-size: 0.75rem;
+  }
+  .titleGroup {
+    margin-bottom: 1.5rem;
+  }
+  .form {
+    gap: 1.1rem;
+  }
+  .inputGroup {
+    gap: 0.3rem;
+  }
+  .inputField {
+    font-size: 0.81rem;
+    padding: 0.7rem 0.95rem 0.7rem 2.4rem;
+  }
+  .submitBtn {
+    padding: 0.75rem;
+    font-size: 0.83rem;
+  }
+}
+
+/* Small Mobile (480px) */
 @media (max-width: 480px) {
   .adminAuthContainer {
     padding: 1rem 0.75rem;
@@ -302,16 +408,99 @@
   .adminCard {
     padding: 1.5rem 1.25rem;
     border-radius: 12px;
+    margin-top: 2rem;
   }
-  .adminTitle {
+  .briefcaseBadge {
+    width: 44px;
+    height: 44px;
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+  }
+  .brandTitle {
+    font-size: 1.1rem;
+  }
+  .mainTitle {
     font-size: 1.2rem;
   }
-  .adminSubtitle {
+  .subTitle {
     font-size: 0.82rem;
   }
-  .loginBtn,
+  .quickFillBar {
+    padding: 0.4rem 0.65rem;
+    margin-bottom: 1rem;
+  }
+  .quickFillText {
+    font-size: 0.68rem;
+  }
+  .inputLabel {
+    font-size: 0.74rem;
+  }
+  .inputField {
+    font-size: 0.8rem;
+    padding: 0.65rem 0.9rem 0.65rem 2.3rem;
+  }
   .submitBtn {
-    padding: 0.9rem 1rem;
-    font-size: 0.88rem;
+    padding: 0.7rem;
+    font-size: 0.81rem;
+  }
+  .backHomeBtn {
+    top: 0.85rem;
+    left: 0.85rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.72rem;
+  }
+  .otherPortals {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    font-size: 0.72rem;
+  }
+}
+
+/* Extra Small Mobile (360px) */
+@media (max-width: 360px) {
+  .adminAuthContainer {
+    padding: 0.75rem 0.5rem;
+  }
+  .adminCard {
+    padding: 1.25rem 1rem;
+    border-radius: 10px;
+    margin-top: 1.75rem;
+  }
+  .briefcaseBadge {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    margin-bottom: 0.65rem;
+  }
+  .brandTitle {
+    font-size: 1rem;
+  }
+  .mainTitle {
+    font-size: 1.1rem;
+  }
+  .subTitle {
+    font-size: 0.72rem;
+  }
+  .quickFillBar {
+    padding: 0.35rem 0.6rem;
+    margin-bottom: 0.9rem;
+  }
+  .inputField {
+    font-size: 0.78rem;
+    padding: 0.6rem 0.85rem 0.6rem 2.2rem;
+  }
+  .submitBtn {
+    padding: 0.65rem;
+    font-size: 0.78rem;
+  }
+  .backHomeBtn {
+    top: 0.7rem;
+    left: 0.7rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.65rem;
+  }
+  .otherPortals {
+    margin-top: 1rem;
+    font-size: 0.65rem;
   }
 }

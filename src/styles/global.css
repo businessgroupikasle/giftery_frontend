@@ -44,3 +44,50 @@ input, textarea, select {
   background: var(--color-primary);
   color: white;
 }
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE DESIGN — Mobile & Tablet Views
+   ═══════════════════════════════════════════════════════ */
+
+/* Tablet View (768px - 1024px) */
+@media (max-width: 1024px) {
+  html { font-size: 15px; }
+  body { font-size: var(--text-base); line-height: 1.5; }
+}
+
+/* Tablet to Mobile Transition (640px - 768px) */
+@media (max-width: 768px) {
+  html { font-size: 14.5px; }
+  body { font-size: 0.95rem; }
+
+  img, video { max-width: 100%; }
+  button { padding: 0.5rem 1rem; font-size: 0.9rem; }
+  input, textarea, select { font-size: 16px; }
+}
+
+/* Mobile View (480px - 640px) */
+@media (max-width: 640px) {
+  html { font-size: 14px; }
+  body { font-size: 0.9rem; line-height: 1.5; }
+
+  button { padding: 0.45rem 0.85rem; font-size: 0.85rem; }
+  input, textarea, select { font-size: 16px; padding: 0.5rem; }
+}
+
+/* Small Mobile (360px - 480px) */
+@media (max-width: 480px) {
+  html { font-size: 13.5px; }
+  body { font-size: 0.85rem; line-height: 1.5; }
+
+  button { padding: 0.4rem 0.7rem; font-size: 0.8rem; }
+  input, textarea, select { font-size: 16px; padding: 0.45rem; }
+}
+
+/* Extra Small Mobile (below 360px) */
+@media (max-width: 360px) {
+  html { font-size: 13px; }
+  body { font-size: 0.8rem; line-height: 1.4; }
+
+  button { padding: 0.35rem 0.6rem; font-size: 0.75rem; }
+  input, textarea, select { font-size: 16px; padding: 0.4rem; }
+}

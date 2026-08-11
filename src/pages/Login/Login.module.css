@@ -459,7 +459,40 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* -- Mobile Responsive -- */
+/* Tablet View (768px - 1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .authPageContainer {
+    padding: 2rem 1.5rem;
+  }
+  .authCard {
+    max-width: 420px;
+    padding: 2.15rem 1.95rem;
+  }
+  .headerBrandTitle {
+    font-size: 1.4rem;
+  }
+  .authHeaderSubtitle {
+    font-size: 0.8rem;
+  }
+  .segmentBtn {
+    font-size: 0.8rem;
+    padding: 0.55rem;
+  }
+  .inputField {
+    font-size: 0.85rem;
+    padding: 0.6rem 2.4rem 0.6rem 2.3rem;
+  }
+  .submitBtn {
+    padding: 0.7rem;
+    font-size: 0.87rem;
+  }
+  .backHomeBtn {
+    top: 1.25rem;
+    left: 1.25rem;
+  }
+}
+
+/* Tablet to Mobile Transition (768px) */
 @media (max-width: 768px) {
   .authPageContainer {
     padding: 1.5rem 1rem;
@@ -470,12 +503,30 @@
     max-width: 100%;
     width: 100%;
     border-radius: 16px;
+    margin-top: 3rem;
   }
   .logoArea {
     margin-bottom: 1.25rem;
   }
-  .authTitle {
-    font-size: 1.4rem;
+  .headerBrandTitle {
+    font-size: 1.3rem;
+  }
+  .headerBrandTagline {
+    font-size: 0.55rem;
+  }
+  .authHeaderSubtitle {
+    font-size: 0.78rem;
+  }
+  .segmentBtn {
+    font-size: 0.78rem;
+  }
+  .inputField {
+    font-size: 0.83rem;
+    padding: 0.6rem 2.3rem 0.6rem 2.3rem;
+  }
+  .submitBtn {
+    padding: 0.72rem;
+    font-size: 0.86rem;
   }
   .backHomeBtn {
     top: 1rem;
@@ -483,8 +534,45 @@
     font-size: 0.78rem;
     padding: 0.45rem 0.85rem;
   }
+  .forgotModal {
+    max-width: 90%;
+  }
 }
 
+/* Mobile View (480px - 768px) */
+@media (max-width: 640px) {
+  .authPageContainer {
+    padding: 1.25rem 1rem;
+  }
+  .authCard {
+    padding: 1.85rem 1.4rem;
+    margin-top: 2.5rem;
+  }
+  .headerLogoSvg {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  .headerBrandTitle {
+    font-size: 1.2rem;
+  }
+  .authHeaderSubtitle {
+    font-size: 0.75rem;
+    margin: 0.5rem 0 0 0;
+  }
+  .authForm {
+    gap: 1rem;
+  }
+  .inputField {
+    font-size: 0.82rem;
+    padding: 0.55rem 2.2rem 0.55rem 2.2rem;
+  }
+  .submitBtn {
+    padding: 0.68rem;
+    font-size: 0.84rem;
+  }
+}
+
+/* Small Mobile (480px) */
 @media (max-width: 480px) {
   .authPageContainer {
     padding: 1rem 0.75rem;
@@ -492,19 +580,77 @@
   .authCard {
     padding: 1.5rem 1.25rem;
     border-radius: 12px;
+    margin-top: 2.25rem;
   }
-  .authTitle {
-    font-size: 1.25rem;
+  .headerLogoSvg {
+    width: 40px !important;
+    height: 40px !important;
   }
-  .authSubtitle {
-    font-size: 0.82rem;
+  .headerBrandTitle {
+    font-size: 1.15rem;
   }
-  .formRow,
-  .inputGroup {
-    gap: 0.75rem;
+  .headerBrandTagline {
+    font-size: 0.5rem;
+  }
+  .authHeaderSubtitle {
+    font-size: 0.73rem;
+  }
+  .authForm {
+    gap: 0.95rem;
+  }
+  .inputLabel {
+    font-size: 0.75rem;
+  }
+  .inputField {
+    font-size: 0.8rem;
+    padding: 0.5rem 2.1rem 0.5rem 2.1rem;
   }
   .submitBtn {
-    padding: 0.9rem 1rem;
-    font-size: 0.88rem;
+    padding: 0.65rem;
+    font-size: 0.82rem;
+  }
+  .backHomeBtn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.72rem;
+  }
+  .forgotModal {
+    max-width: 85%;
+    padding: 1.5rem;
+  }
+}
+
+/* Extra Small Mobile (360px) */
+@media (max-width: 360px) {
+  .authPageContainer {
+    padding: 0.75rem 0.5rem;
+  }
+  .authCard {
+    padding: 1.25rem 1rem;
+    border-radius: 10px;
+    margin-top: 2rem;
+  }
+  .headerLogoSvg {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .headerBrandTitle {
+    font-size: 1.05rem;
+  }
+  .authHeaderSubtitle {
+    font-size: 0.7rem;
+  }
+  .inputField {
+    font-size: 0.78rem;
+    padding: 0.48rem 2rem 0.48rem 2rem;
+  }
+  .submitBtn {
+    padding: 0.6rem;
+    font-size: 0.78rem;
+  }
+  .backHomeBtn {
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.65rem;
   }
 }

@@ -68,7 +68,7 @@ const AdminLogin = () => {
           <div className={styles.briefcaseBadge}>
             <FiBriefcase />
           </div>
-          <h2 className={styles.brandName}>GIFTERYS</h2>
+          <h2 className={styles.brandName}>GIFTERY</h2>
           <span className={styles.brandSub}>STORE ADMIN MANAGEMENT PORTAL</span>
         </div>
 

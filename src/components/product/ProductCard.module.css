@@ -181,7 +181,149 @@
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.35);
 }
 
-/* -- Mobile Responsive -- */
+/* Responsive Design */
+
+/* Tablet View (768px - 1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .card {
+    border-radius: 12px;
+  }
+  .imageWrapper {
+    aspect-ratio: 4/3;
+  }
+  .badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+  }
+  .topRightWishlistBtn {
+    width: 34px;
+    height: 34px;
+    font-size: 1.1rem;
+  }
+  .body {
+    padding: 0.95rem;
+    gap: 0.45rem;
+  }
+  .name {
+    font-size: 0.88rem;
+    min-height: 2.4rem;
+  }
+  .price {
+    font-size: 1.1rem;
+  }
+  .addToCartBtn,
+  .buyNowBtn {
+    padding: 0.58rem 0.3rem;
+    font-size: 0.78rem;
+  }
+}
+
+/* Tablet to Mobile Transition (768px) */
+@media (max-width: 768px) {
+  .card {
+    border-radius: 11px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  }
+  .imageWrapper {
+    aspect-ratio: 3/2;
+  }
+  .badge {
+    font-size: 0.62rem;
+    padding: 0.2rem 0.45rem;
+    top: 0.5rem;
+    left: 0.5rem;
+  }
+  .topRightWishlistBtn {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+    top: 8px;
+    right: 8px;
+  }
+  .body {
+    padding: 0.9rem;
+    gap: 0.4rem;
+  }
+  .name {
+    font-size: 0.86rem;
+    min-height: 2.3rem;
+  }
+  .reviewCount {
+    font-size: 0.75rem;
+  }
+  .price {
+    font-size: 1.05rem;
+  }
+  .comparePrice {
+    font-size: 0.8rem;
+  }
+  .addToCartBtn,
+  .buyNowBtn {
+    padding: 0.56rem 0.28rem;
+    font-size: 0.76rem;
+  }
+  .actionsRow {
+    gap: 0.35rem;
+  }
+}
+
+/* Mobile View (480px - 640px) */
+@media (max-width: 640px) {
+  .card {
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  }
+  .imageWrapper {
+    aspect-ratio: 1/1;
+  }
+  .badge {
+    font-size: 0.6rem;
+    padding: 0.18rem 0.4rem;
+  }
+  .topRightWishlistBtn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.95rem;
+  }
+  .body {
+    padding: 0.8rem;
+    gap: 0.35rem;
+  }
+  .name {
+    font-size: 0.82rem;
+    min-height: 2.1rem;
+  }
+  .rating {
+    gap: 0.3rem;
+  }
+  .reviewCount {
+    font-size: 0.72rem;
+  }
+  .price {
+    font-size: 1rem;
+  }
+  .comparePrice {
+    font-size: 0.75rem;
+  }
+  .addToCartBtn,
+  .buyNowBtn {
+    padding: 0.52rem 0.24rem;
+    font-size: 0.73rem;
+  }
+  .actionsRow {
+    gap: 0.3rem;
+  }
+}
+
+/* Small Mobile (480px) */
 @media (max-width: 480px) {
   .body {
     padding: 0.75rem;
@@ -206,5 +348,47 @@
     width: 30px;
     height: 30px;
     font-size: 1rem;
+  }
+}
+
+/* Extra Small Mobile (360px) */
+@media (max-width: 360px) {
+  .card {
+    border-radius: 8px;
+  }
+  .imageWrapper {
+    aspect-ratio: 1/1.1;
+  }
+  .badge {
+    font-size: 0.55rem;
+    padding: 0.15rem 0.35rem;
+    top: 0.4rem;
+    left: 0.4rem;
+  }
+  .topRightWishlistBtn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+    top: 6px;
+    right: 6px;
+  }
+  .body {
+    padding: 0.65rem;
+    gap: 0.3rem;
+  }
+  .name {
+    font-size: 0.78rem;
+    min-height: 2rem;
+  }
+  .price {
+    font-size: 0.95rem;
+  }
+  .comparePrice {
+    font-size: 0.7rem;
+  }
+  .addToCartBtn,
+  .buyNowBtn {
+    padding: 0.48rem 0.2rem;
+    font-size: 0.68rem;
   }
 }
