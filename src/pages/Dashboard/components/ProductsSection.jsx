@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { FiBox, FiSave, FiUpload, FiPlus, FiImage } from 'react-icons/fi';
+import React, { useState, useMemo } from 'react';
 import axiosInstance from '@api/axiosInstance';
 import { toast } from 'react-toastify';
 import styles from '../Dashboard.module.css';
@@ -55,9 +54,48 @@ const handleImageFileUpload = (file, idx, imageList, handleProductFormChange) =>
   reader.readAsDataURL(file);
 };
 
+// Helper function to resolve product's Main Category ID robustly
+const resolveMainCategoryId = (product, categoriesList) => {
+  const catId = product.categoryId || (typeof product.category === 'object' ? product.category?.id : product.category);
+  const subId = product.subCategoryId || (typeof product.subcategory === 'object' ? product.subcategory?.id : product.subcategory) || (typeof product.subCategory === 'object' ? product.subCategory?.id : product.subCategory);
+
+  // 1. Try finding by catId directly
+  if (catId) {
+    const matchedCat = categoriesList.find(c => c.id === catId || c.slug === catId || String(c.name).toLowerCase() === String(catId).toLowerCase());
+    if (matchedCat) {
+      if (!matchedCat.parentId) return matchedCat.id; // Direct Main Category
+      // If it's a subcategory, return its parent Main Category ID
+      const parentCat = categoriesList.find(c => c.id === matchedCat.parentId);
+      if (parentCat) return parentCat.id;
+    }
+  }
+
+  // 2. Try finding by subId
+  if (subId) {
+    const matchedSub = categoriesList.find(c => c.id === subId || c.slug === subId || String(c.name).toLowerCase() === String(subId).toLowerCase());
+    if (matchedSub && matchedSub.parentId) {
+      const parentCat = categoriesList.find(c => c.id === matchedSub.parentId);
+      if (parentCat) return parentCat.id;
+      return matchedSub.parentId;
+    }
+  }
+
+  // 3. Try matching by category name string
+  if (product.category?.name || (typeof product.category === 'string' && product.category)) {
+    const catName = String(product.category?.name || product.category).toLowerCase().trim();
+    const matchedByName = categoriesList.find(c => !c.parentId && c.name.toLowerCase().trim() === catName);
+    if (matchedByName) return matchedByName.id;
+
+    const matchedSubByName = categoriesList.find(c => c.parentId && c.name.toLowerCase().trim() === catName);
+    if (matchedSubByName && matchedSubByName.parentId) return matchedSubByName.parentId;
+  }
+
+  return 'unassigned';
+};
+
 const ProductsSection = ({
-  productsList,
-  categories,
+  productsList = [],
+  categories = [],
   loadingProducts,
   showProductForm,
   editingProduct,
@@ -71,624 +109,556 @@ const ProductsSection = ({
   handleDeleteProduct,
 }) => {
   const [maxSlots, setMaxSlots] = useState(1);
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState('all'); // 'all' | mainCategoryId | 'unassigned'
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleCloseModal = () => {
     setMaxSlots(1);
     resetProductForm();
   };
 
+  // Map Main Categories & Group Products strictly by Main Category with Counts
+  const { mainCategories, mainCategoryGroups, stats } = useMemo(() => {
+    const mainCats = categories.filter(c => !c.parentId);
+
+    const groupsMap = new Map();
+
+    mainCats.forEach(main => {
+      groupsMap.set(main.id, {
+        mainCategory: main,
+        products: []
+      });
+    });
+
+    const unassignedGroupKey = 'unassigned';
+    groupsMap.set(unassignedGroupKey, {
+      mainCategory: { id: 'unassigned', name: 'Unassigned Category' },
+      products: []
+    });
+
+    // Group each product by robust main category resolution
+    productsList.forEach(p => {
+      const mainId = resolveMainCategoryId(p, categories);
+      if (groupsMap.has(mainId)) {
+        groupsMap.get(mainId).products.push(p);
+      } else {
+        groupsMap.get(unassignedGroupKey).products.push(p);
+      }
+    });
+
+    const activeGroups = Array.from(groupsMap.values());
+
+    return {
+      mainCategories: mainCats,
+      mainCategoryGroups: activeGroups,
+      stats: {
+        total: productsList.length,
+        withCategory: productsList.filter(p => resolveMainCategoryId(p, categories) !== 'unassigned').length,
+        unassigned: productsList.filter(p => resolveMainCategoryId(p, categories) === 'unassigned').length
+      }
+    };
+  }, [categories, productsList]);
+
+  // Filtered Products List for Table View
+  const filteredProducts = useMemo(() => {
+    return productsList.filter(p => {
+      // Category filter
+      if (activeCategoryFilter !== 'all') {
+        const pMainId = resolveMainCategoryId(p, categories);
+        if (pMainId !== activeCategoryFilter) return false;
+      }
+
+      // Search text filter
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        p.name.toLowerCase().includes(q) ||
+        (p.sku && p.sku.toLowerCase().includes(q)) ||
+        (p.category?.name && p.category.name.toLowerCase().includes(q)) ||
+        (p.subcategory?.name && p.subcategory.name.toLowerCase().includes(q))
+      );
+    });
+  }, [productsList, categories, activeCategoryFilter, searchQuery]);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* Products Header Row */}
-      <div className={styles.cardContainer}>
-        <div className={styles.cardHeaderRow}>
-          <h3 className={styles.cardTitle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FiBox style={{ color: '#d99b26' }} />
-            <span>All Products ({productsList.length})</span>
-          </h3>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      
+      {/* Header Banner: Title, Interactive Category Filter Buttons, Searchbar & Add Button */}
+      <div className={styles.cardContainer} style={{ background: '#ffffff', padding: '1.25rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+          <div>
+            <h3 className={styles.cardTitle} style={{ fontSize: '1.2rem', color: '#0f172a' }}>
+              Products Management ({filteredProducts.length} {filteredProducts.length === 1 ? 'Product' : 'Products'})
+            </h3>
+            <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: '#64748b' }}>
+              Click any category pill to filter products in List View
+            </p>
+          </div>
+
+          {/* Interactive Main Category Filter Pills with Live Product Counts */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            
+            {/* 'All Products' Filter Pill */}
+            <button
+              type="button"
+              onClick={() => setActiveCategoryFilter('all')}
+              style={{
+                background: activeCategoryFilter === 'all' ? '#fffcf5' : '#f8fafc',
+                border: activeCategoryFilter === 'all' ? '1.5px solid #d99b26' : '1px solid #e2e8f0',
+                padding: '0.4rem 0.85rem',
+                borderRadius: '20px',
+                fontSize: '0.82rem',
+                fontWeight: activeCategoryFilter === 'all' ? '700' : '600',
+                color: activeCategoryFilter === 'all' ? '#92400e' : '#475569',
+                cursor: 'pointer',
+                boxShadow: activeCategoryFilter === 'all' ? '0 2px 6px rgba(217, 155, 38, 0.2)' : 'none',
+                transition: 'all 0.15s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}
+            >
+              <span>All Products:</span>
+              <strong style={{ background: activeCategoryFilter === 'all' ? '#d99b26' : '#cbd5e1', color: '#ffffff', fontSize: '0.72rem', padding: '0.1rem 0.45rem', borderRadius: '10px' }}>
+                {stats.total}
+              </strong>
+            </button>
+
+            {/* Main Category Filter Pills */}
+            {mainCategoryGroups.map(group => {
+              // Skip unassigned if count is 0
+              if (group.products.length === 0 && group.mainCategory.id === 'unassigned') return null;
+              
+              const isSelected = activeCategoryFilter === group.mainCategory.id;
+              return (
+                <button
+                  key={group.mainCategory.id}
+                  type="button"
+                  onClick={() => setActiveCategoryFilter(isSelected ? 'all' : group.mainCategory.id)}
+                  style={{
+                    background: isSelected ? '#fffcf5' : '#ffffff',
+                    border: isSelected ? '1.5px solid #d99b26' : '1px solid #fde68a',
+                    padding: '0.4rem 0.85rem',
+                    borderRadius: '20px',
+                    fontSize: '0.82rem',
+                    fontWeight: isSelected ? '700' : '600',
+                    color: isSelected ? '#92400e' : '#b45309',
+                    cursor: 'pointer',
+                    boxShadow: isSelected ? '0 2px 8px rgba(217, 155, 38, 0.25)' : 'none',
+                    transition: 'all 0.15s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                  }}
+                >
+                  <span>{group.mainCategory.name}:</span>
+                  <span
+                    style={{
+                      background: '#d99b26',
+                      color: '#ffffff',
+                      fontSize: '0.72rem',
+                      padding: '0.1rem 0.45rem',
+                      borderRadius: '10px',
+                      fontWeight: '800',
+                    }}
+                  >
+                    {group.products.length}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right Side Corner Container: Searchbar & Add New Product Button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: 'auto', flexWrap: 'wrap' }}>
+            
+            {/* Search Input on Right Side Corner */}
+            <div style={{ position: 'relative', width: '260px' }}>
+              <input
+                type="text"
+                placeholder="Search products by name, SKU..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={styles.searchInput}
+                style={{
+                  paddingLeft: '0.85rem',
+                  paddingRight: searchQuery ? '2rem' : '0.85rem',
+                  width: '100%',
+                  height: '38px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                }}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  style={{ position: 'absolute', right: '0.6rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.9rem' }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Add New Product Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setMaxSlots(1);
+                handleOpenAddProduct(activeCategoryFilter !== 'all' && activeCategoryFilter !== 'unassigned' ? activeCategoryFilter : '');
+              }}
+              style={{
+                background: 'linear-gradient(135deg, #d99b26 0%, #b87c12 100%)',
+                color: '#ffffff',
+                fontWeight: '700',
+                fontSize: '0.85rem',
+                padding: '0.55rem 1.2rem',
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 3px 10px rgba(217, 155, 38, 0.35)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              + Add New Product
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Add / Edit Product Modal Window */}
+      {showProductForm && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+        >
+          <form
+            onSubmit={handleProductSubmit}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '1.75rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+              maxWidth: '720px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
+              <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700', color: '#1e293b' }}>
+                {editingProduct ? `Edit Product — ${editingProduct.name}` : 'Add New Product'}
+              </h4>
+              <button type="button" onClick={handleCloseModal} style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', fontSize: '1rem', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            </div>
+
+            {/* Row 1: Name + SKU */}
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Product Name *</label>
+                <input type="text" name="name" required value={productForm.name} onChange={handleProductFormChange} placeholder="e.g. Premium Gift Hamper" className={styles.searchInput} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>SKU</label>
+                <input type="text" name="sku" value={productForm.sku} onChange={handleProductFormChange} placeholder="e.g. GH-2024-001" className={styles.searchInput} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
+              </div>
+            </div>
+
+            {/* Row 2: Price + Compare Price + Stock + Weight */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Price (₹) *</label>
+                <input type="number" name="price" required min="0" step="0.01" value={productForm.price} onChange={handleProductFormChange} placeholder="999" className={`${styles.searchInput} ${styles.noSpinner}`} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Compare Price (₹)</label>
+                <input type="number" name="comparePrice" min="0" step="0.01" value={productForm.comparePrice} onChange={handleProductFormChange} placeholder="1299" className={`${styles.searchInput} ${styles.noSpinner}`} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Stock Qty *</label>
+                <input type="number" name="stock" min="0" value={productForm.stock} onChange={handleProductFormChange} placeholder="50" className={`${styles.searchInput} ${styles.noSpinner}`} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Weight (kg)</label>
+                <input type="number" name="weight" min="0" step="0.01" value={productForm.weight} onChange={handleProductFormChange} placeholder="0.5" className={`${styles.searchInput} ${styles.noSpinner}`} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
+              </div>
+            </div>
+
+            {/* Row 3: Main Category & Subcategory Selection */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Main Category *</label>
+                <select
+                  name="categoryId"
+                  required
+                  value={productForm.categoryId}
+                  onChange={handleProductFormChange}
+                  className={styles.searchInput}
+                  style={{ paddingLeft: '0.85rem', width: '100%', cursor: 'pointer', height: '42px', borderRadius: '8px' }}
+                >
+                  <option value="">— Select Main Category —</option>
+                  {mainCategories.map(mainCat => (
+                    <option key={mainCat.id} value={mainCat.id}>{mainCat.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Subcategory (Optional)</label>
+                <select
+                  name="subCategoryId"
+                  value={productForm.subCategoryId || ''}
+                  onChange={handleProductFormChange}
+                  disabled={!productForm.categoryId}
+                  className={styles.searchInput}
+                  style={{
+                    paddingLeft: '0.85rem',
+                    width: '100%',
+                    cursor: !productForm.categoryId ? 'not-allowed' : 'pointer',
+                    height: '42px',
+                    borderRadius: '8px',
+                    opacity: !productForm.categoryId ? 0.6 : 1,
+                    background: !productForm.categoryId ? '#f1f5f9' : '#ffffff',
+                  }}
+                >
+                  <option value="">
+                    {!productForm.categoryId ? '— Select Main Category First —' : '— Select Subcategory (Optional) —'}
+                  </option>
+                  {productForm.categoryId &&
+                    categories
+                      .filter(c => c.parentId === productForm.categoryId)
+                      .map(subCat => (
+                        <option key={subCat.id} value={subCat.id}>
+                          {subCat.name}
+                        </option>
+                      ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                Description *
+              </label>
+              <textarea
+                name="description"
+                required
+                rows={3}
+                value={productForm.description || ''}
+                onChange={handleProductFormChange}
+                placeholder="Describe the product in detail..."
+                className={styles.searchInput}
+                style={{ padding: '0.65rem 0.85rem', width: '100%', resize: 'vertical', fontFamily: 'inherit', borderRadius: '8px' }}
+              />
+            </div>
+
+            {/* Specifications */}
+            <div>
+              <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                Specifications <span style={{ fontWeight: 400, color: '#94a3b8' }}>(Key: Value pairs)</span>
+              </label>
+              <textarea
+                name="specifications"
+                rows={3}
+                value={productForm.specifications || ''}
+                onChange={handleProductFormChange}
+                placeholder="Material: Genuine Leather&#10;Dimensions: 15cm x 10cm&#10;Color: Matte Black"
+                className={styles.searchInput}
+                style={{ padding: '0.65rem 0.85rem', width: '100%', resize: 'vertical', fontFamily: 'inherit', borderRadius: '8px' }}
+              />
+            </div>
+
+            {/* Product Image Slots */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>
+                  Product Images
+                </label>
+                {maxSlots < 4 && (
+                  <button
+                    type="button"
+                    onClick={() => setMaxSlots((prev) => Math.min(prev + 1, 4))}
+                    style={{ background: 'none', border: 'none', color: '#d99b26', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    + Add More Image Slot
+                  </button>
+                )}
+              </div>
+
+              {(() => {
+                const imageList = parseImages(productForm.images);
+                const slotsCount = Math.max(1, maxSlots, imageList.length);
+                const slots = Array.from({ length: slotsCount });
+
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '0.75rem' }}>
+                    {slots.map((_, idx) => {
+                      const imgUrl = imageList[idx] || '';
+                      return (
+                        <div
+                          key={idx}
+                          style={{
+                            border: '1px border #cbd5e1',
+                            borderRadius: '8px',
+                            background: '#f8fafc',
+                            overflow: 'hidden',
+                            height: '110px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            position: 'relative',
+                          }}
+                        >
+                          {imgUrl ? (
+                            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                              <img src={imgUrl} alt={`Product ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <div style={{ position: 'absolute', bottom: '4px', right: '4px', display: 'flex', gap: '4px' }}>
+                                <label style={{ background: '#ffffff', color: '#334155', padding: '0.2rem 0.4rem', borderRadius: '4px', fontSize: '0.68rem', cursor: 'pointer', fontWeight: 700 }}>
+                                  Edit
+                                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleImageFileUpload(e.target.files?.[0], idx, imageList, handleProductFormChange)} />
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = [...imageList];
+                                    updated.splice(idx, 1);
+                                    handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
+                                  }}
+                                  style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '0.2rem 0.4rem', borderRadius: '4px', fontSize: '0.68rem', cursor: 'pointer', fontWeight: 700 }}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <label style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: '0.3rem', color: '#64748b' }}>
+                              <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>+ Upload Image</span>
+                              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleImageFileUpload(e.target.files?.[0], idx, imageList, handleProductFormChange)} />
+                            </label>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Toggles */}
+            <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+                <input type="checkbox" name="featured" checked={productForm.featured} onChange={handleProductFormChange} style={{ width: '17px', height: '17px', cursor: 'pointer', accentColor: '#d99b26' }} />
+                Featured Product
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+                <input type="checkbox" name="isActive" checked={productForm.isActive} onChange={handleProductFormChange} style={{ width: '17px', height: '17px', cursor: 'pointer', accentColor: '#059669' }} />
+                Active (visible on store)
+              </label>
+            </div>
+
+            {/* Form Actions */}
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <button type="button" onClick={handleCloseModal} style={{ padding: '0.65rem 1.4rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', color: '#475569' }}>Cancel</button>
+              <button
+                type="submit"
+                disabled={savingProduct}
+                style={{ padding: '0.65rem 1.75rem', background: '#059669', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(5,150,105,0.25)' }}
+              >
+                {savingProduct ? 'Saving...' : editingProduct ? 'Update Product' : 'Add Product'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* MAIN PRODUCTS DISPLAY - LIST VIEW TABLE */}
+      {loadingProducts ? (
+        <div className={styles.cardContainer} style={{ padding: '2.5rem', textAlign: 'center', color: '#64748b' }}>
+          Loading products from database...
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className={styles.cardContainer} style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+          <p style={{ fontSize: '1rem', margin: 0 }}>No products found matching your search/category filter.</p>
           <button
             type="button"
-            className={styles.viewAllBtn}
             onClick={() => {
               setMaxSlots(1);
               handleOpenAddProduct();
             }}
-            style={{
-              background: 'linear-gradient(135deg, #d99b26 0%, #b87c12 100%)',
-              color: '#ffffff',
-              fontWeight: '800',
-              fontSize: '0.92rem',
-              padding: '0.65rem 1.4rem',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 3px 10px rgba(217, 155, 38, 0.35)',
-              transition: 'all 0.15s ease',
-            }}
+            style={{ marginTop: '0.75rem', padding: '0.5rem 1.2rem', background: '#d99b26', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
           >
-            + Add New Product
+            + Add Product
           </button>
         </div>
+      ) : (
+        <div className={styles.cardContainer} style={{ overflowX: 'auto' }}>
+          <table className={styles.ordersTable}>
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Product Name</th>
+                <th>Main Category</th>
+                <th>Subcategory</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProducts.map(product => {
+                const mainId = resolveMainCategoryId(product, categories);
+                const mainCat = categories.find(c => c.id === mainId);
+                const mainCatName = mainCat?.name || product.category?.name || 'Unassigned';
+                const subCatName = product.subcategory?.name || product.subCategory?.name;
 
-        {/* Add / Edit Product Modal Window */}
-        {showProductForm && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(15, 23, 42, 0.65)',
-              backdropFilter: 'blur(4px)',
-              zIndex: 9999,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '1rem',
-            }}
-          >
-            <form
-              onSubmit={handleProductSubmit}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '16px',
-                padding: '1.75rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem',
-                maxWidth: '720px',
-                width: '100%',
-                maxHeight: '90vh',
-                overflowY: 'auto',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
-                <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700', color: '#1e293b' }}>
-                  {editingProduct ? `Edit Product — ${editingProduct.name}` : 'Add New Product'}
-                </h4>
-                <button type="button" onClick={handleCloseModal} style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', fontSize: '1rem', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-              </div>
-
-              {/* Row 1: Name + SKU */}
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Product Name *</label>
-                  <input type="text" name="name" required value={productForm.name} onChange={handleProductFormChange} placeholder="e.g. Premium Gift Hamper" className={styles.searchInput} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>SKU</label>
-                  <input type="text" name="sku" value={productForm.sku} onChange={handleProductFormChange} placeholder="e.g. GH-2024-001" className={styles.searchInput} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
-                </div>
-              </div>
-
-              {/* Row 2: Price + Compare Price + Stock + Weight */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Price (₹) *</label>
-                  <input type="number" name="price" required min="0" step="0.01" value={productForm.price} onChange={handleProductFormChange} placeholder="999" className={`${styles.searchInput} ${styles.noSpinner}`} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Compare Price (₹)</label>
-                  <input type="number" name="comparePrice" min="0" step="0.01" value={productForm.comparePrice} onChange={handleProductFormChange} placeholder="1299" className={`${styles.searchInput} ${styles.noSpinner}`} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Stock Qty *</label>
-                  <input type="number" name="stock" min="0" value={productForm.stock} onChange={handleProductFormChange} placeholder="50" className={`${styles.searchInput} ${styles.noSpinner}`} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Weight (kg)</label>
-                  <input type="number" name="weight" min="0" step="0.01" value={productForm.weight} onChange={handleProductFormChange} placeholder="0.5" className={`${styles.searchInput} ${styles.noSpinner}`} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
-                </div>
-              </div>
-
-              {/* Row 3: Main Category & Related Subcategory */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Main Category *</label>
-                  <select
-                    name="categoryId"
-                    required
-                    value={productForm.categoryId}
-                    onChange={handleProductFormChange}
-                    className={styles.searchInput}
-                    style={{ paddingLeft: '0.85rem', width: '100%', cursor: 'pointer', height: '42px', borderRadius: '8px' }}
-                  >
-                    <option value="">— Select Main Category —</option>
-                    {categories.filter(c => !c.parentId).map(mainCat => (
-                      <option key={mainCat.id} value={mainCat.id}>{mainCat.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Related Subcategory (Optional)</label>
-                  <select
-                    name="subCategoryId"
-                    value={productForm.subCategoryId || ''}
-                    onChange={handleProductFormChange}
-                    disabled={!productForm.categoryId}
-                    className={styles.searchInput}
-                    style={{
-                      paddingLeft: '0.85rem',
-                      width: '100%',
-                      cursor: !productForm.categoryId ? 'not-allowed' : 'pointer',
-                      height: '42px',
-                      borderRadius: '8px',
-                      opacity: !productForm.categoryId ? 0.6 : 1,
-                      background: !productForm.categoryId ? '#f1f5f9' : '#ffffff',
-                    }}
-                  >
-                    <option value="">
-                      {!productForm.categoryId ? '— First Select Main Category —' : '— Select Related Subcategory —'}
-                    </option>
-                    {productForm.categoryId &&
-                      categories
-                        .filter(c => c.parentId === productForm.categoryId)
-                        .map(subCat => (
-                          <option key={subCat.id} value={subCat.id}>
-                            {subCat.name}
-                          </option>
-                        ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Row 4: Single Form Fields Stacked */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {/* 1. Description */}
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
-                    Description *
-                  </label>
-                  <textarea
-                    name="description"
-                    required
-                    rows={3}
-                    value={productForm.description || ''}
-                    onChange={handleProductFormChange}
-                    placeholder="Describe the product in detail..."
-                    className={styles.searchInput}
-                    style={{ padding: '0.65rem 0.85rem', width: '100%', resize: 'vertical', fontFamily: 'inherit', borderRadius: '8px' }}
-                  />
-                </div>
-
-                {/* 2. Specifications */}
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
-                    Specifications <span style={{ fontWeight: 400, color: '#94a3b8' }}>(Key: Value pairs formatted into a clean table on product page)</span>
-                  </label>
-                  <textarea
-                    name="specifications"
-                    rows={4}
-                    value={productForm.specifications || ''}
-                    onChange={handleProductFormChange}
-                    placeholder="Material: Genuine Italian Leather & Stainless Steel&#10;Dimensions: 15cm x 10cm x 5cm&#10;Weight: 350 grams&#10;Branding: High Precision Laser Engraving&#10;Color Options: Matte Black & Gold Accent"
-                    className={styles.searchInput}
-                    style={{ padding: '0.65rem 0.85rem', width: '100%', resize: 'vertical', fontFamily: 'inherit', borderRadius: '8px' }}
-                  />
-                </div>
-
-                {/* 2b. Customization Options */}
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
-                    Customization Details <span style={{ fontWeight: 400, color: '#94a3b8' }}>(Logo uploading guidelines, engraving limits & packaging options)</span>
-                  </label>
-                  <textarea
-                    name="customization"
-                    rows={3}
-                    value={productForm.customization || ''}
-                    onChange={handleProductFormChange}
-                    placeholder="Custom logo laser engraving available. Max 25 characters name engraving. Comes with premium black velvet gift box."
-                    className={styles.searchInput}
-                    style={{ padding: '0.65rem 0.85rem', width: '100%', resize: 'vertical', fontFamily: 'inherit', borderRadius: '8px' }}
-                  />
-                </div>
-
-                {/* 2c. Shipping & Returns */}
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
-                    Shipping & Returns Info <span style={{ fontWeight: 400, color: '#94a3b8' }}>(Delivery timeline & return policies)</span>
-                  </label>
-                  <textarea
-                    name="shippingReturns"
-                    rows={2}
-                    value={productForm.shippingReturns || ''}
-                    onChange={handleProductFormChange}
-                    placeholder="Dispatches in 2-3 business days. Free standard shipping on orders above ₹999. 7 days return & replacement policy."
-                    className={styles.searchInput}
-                    style={{ padding: '0.65rem 0.85rem', width: '100%', resize: 'vertical', fontFamily: 'inherit', borderRadius: '8px' }}
-                  />
-                </div>
-
-                {/* 3. Reviews & Rating */}
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
-                      Rating (1.0 - 5.0)
-                    </label>
-                    <input
-                      type="number"
-                      name="rating"
-                      step="0.1"
-                      min="1"
-                      max="5"
-                      value={productForm.rating || '4.8'}
-                      onChange={handleProductFormChange}
-                      className={styles.searchInput}
-                      style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }}
-                    />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
-                      Reviews Count
-                    </label>
-                    <input
-                      type="number"
-                      name="reviewsCount"
-                      value={productForm.reviewsCount || '128'}
-                      onChange={handleProductFormChange}
-                      className={styles.searchInput}
-                      style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }}
-                    />
-                  </div>
-                </div>
-
-                {/* 6. Extra Tags */}
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
-                    Extra Product Tags <span style={{ fontWeight: 400, color: '#94a3b8' }}>(comma-separated e.g. Best Seller, Trending, Eco-Friendly, Luxury)</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="tags"
-                    value={productForm.tags || ''}
-                    onChange={handleProductFormChange}
-                    placeholder="Best Seller, Trending, New Arrival, Corporate, Personalized"
-                    className={styles.searchInput}
-                    style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }}
-                  />
-                </div>
-
-                {/* Homepage Collection Badges & Tabs Checkboxes */}
-                <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '0.5rem' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-                    Homepage Collections &amp; Filter Tabs
-                  </label>
-                  <p style={{ fontSize: '0.76rem', color: '#64748b', margin: '0 0 0.85rem 0' }}>
-                    Select which collection tabs on the homepage (&quot;Explore Our Collections&quot;) this product should appear in when ticked:
-                  </p>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ffffff', padding: '0.55rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
-                      <input
-                        type="checkbox"
-                        name="isFeatured"
-                        checked={!!productForm.isFeatured || !!productForm.featured}
-                        onChange={handleProductFormChange}
-                        style={{ width: '16px', height: '16px', accentColor: '#1b4332', cursor: 'pointer' }}
-                      />
-                      <span>Featured Products</span>
-                    </label>
-
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ffffff', padding: '0.55rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
-                      <input
-                        type="checkbox"
-                        name="isBestseller"
-                        checked={!!productForm.isBestseller}
-                        onChange={handleProductFormChange}
-                        style={{ width: '16px', height: '16px', accentColor: '#1b4332', cursor: 'pointer' }}
-                      />
-                      <span>Best Sellers</span>
-                    </label>
-
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ffffff', padding: '0.55rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
-                      <input
-                        type="checkbox"
-                        name="isPopular"
-                        checked={!!productForm.isPopular}
-                        onChange={handleProductFormChange}
-                        style={{ width: '16px', height: '16px', accentColor: '#1b4332', cursor: 'pointer' }}
-                      />
-                      <span>Popular Products</span>
-                    </label>
-
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ffffff', padding: '0.55rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
-                      <input
-                        type="checkbox"
-                        name="isNewArrival"
-                        checked={!!productForm.isNewArrival}
-                        onChange={handleProductFormChange}
-                        style={{ width: '16px', height: '16px', accentColor: '#1b4332', cursor: 'pointer' }}
-                      />
-                      <span>New Arrivals</span>
-                    </label>
-
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ffffff', padding: '0.55rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
-                      <input
-                        type="checkbox"
-                        name="isMostLoved"
-                        checked={!!productForm.isMostLoved}
-                        onChange={handleProductFormChange}
-                        style={{ width: '16px', height: '16px', accentColor: '#1b4332', cursor: 'pointer' }}
-                      />
-                      <span>Most Loved</span>
-                    </label>
-
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ffffff', padding: '0.55rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
-                      <input
-                        type="checkbox"
-                        name="isGiftSet"
-                        checked={!!productForm.isGiftSet}
-                        onChange={handleProductFormChange}
-                        style={{ width: '16px', height: '16px', accentColor: '#1b4332', cursor: 'pointer' }}
-                      />
-                      <span>Gift Sets</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 5: Product Images Upload Slots (Matching User's Screenshot Design) */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
-                    Product Images <span style={{ color: '#64748b', fontWeight: 400 }}>(max {Math.max(maxSlots, parseImages(productForm.images).length)})</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setMaxSlots((prev) => prev + 1)}
-                    style={{
-                      background: '#ecfdf5',
-                      color: '#059669',
-                      border: '1px solid #a7f3d0',
-                      borderRadius: '6px',
-                      fontSize: '0.75rem',
-                      fontWeight: '700',
-                      padding: '0.25rem 0.65rem',
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                    }}
-                  >
-                    <FiPlus /> Add More Image Option
-                  </button>
-                </div>
-
-                {/* Grid of Dashed Upload Boxes */}
-                {(() => {
-                  const imageList = parseImages(productForm.images);
-                  const totalSlotsCount = Math.max(maxSlots, imageList.length);
-
-                  return (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
-                      {Array.from({ length: totalSlotsCount }).map((_, idx) => {
-                        const imgUrl = imageList[idx];
-                        const slotLabel = idx === 0 ? 'IMAGE 1 • PRIMARY' : idx === 1 ? 'IMAGE 2 • HOVER' : `IMAGE ${idx + 1} • GALLERY`;
-
-                        return (
-                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                            <span style={{ fontSize: '0.68rem', fontWeight: 800, color: idx === 0 ? '#d99b26' : idx === 1 ? '#2563eb' : '#64748b', letterSpacing: '0.5px' }}>
-                              {slotLabel}
-                            </span>
-                            <div
-                              style={{
-                                height: '180px',
-                                border: imgUrl ? '1.5px solid #cbd5e1' : '2px dashed #cbd5e1',
-                                borderRadius: '12px',
-                                background: imgUrl ? '#ffffff' : '#f8fafc',
-                                position: 'relative',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                overflow: 'hidden',
-                                transition: 'all 0.15s ease',
-                              }}
-                            >
-                              {imgUrl ? (
-                                <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                                  <img src={imgUrl} alt={`Product Image ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                  
-                                  {/* Floating top right delete badge */}
-                                  <button
-                                    type="button"
-                                    title="Remove image"
-                                    onClick={() => {
-                                      const updated = [...imageList];
-                                      updated.splice(idx, 1);
-                                      handleProductFormChange({ target: { name: 'images', value: updated.join(', ') } });
-                                    }}
-                                    style={{
-                                      position: 'absolute',
-                                      top: '6px',
-                                      right: '6px',
-                                      width: '24px',
-                                      height: '24px',
-                                      borderRadius: '50%',
-                                      background: '#ef4444',
-                                      color: '#ffffff',
-                                      border: 'none',
-                                      fontSize: '0.75rem',
-                                      fontWeight: '900',
-                                      cursor: 'pointer',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-                                      zIndex: 2,
-                                    }}
-                                  >
-                                    ✕
-                                  </button>
-
-                                  {/* Bottom Action Bar: Change Image + Remove Image */}
-                                  <div
-                                    style={{
-                                      position: 'absolute',
-                                      bottom: 0,
-                                      left: 0,
-                                      right: 0,
-                                      background: 'rgba(15, 23, 42, 0.88)',
-                                      padding: '0.35rem 0.5rem',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'space-between',
-                                      zIndex: 3,
-                                    }}
-                                  >
-                                    <label
-                                      title="Change / Replace Image"
-                                      style={{
-                                        color: '#38bdf8',
-                                        fontSize: '0.68rem',
-                                        fontWeight: '700',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '2px',
-                                      }}
-                                    >
-                                      🔄 Change
-                                      <input
-                                        type="file"
-                                        accept="image/*"
-                                        style={{ display: 'none' }}
-                                        onChange={(e) => handleImageFileUpload(e.target.files?.[0], idx, imageList, handleProductFormChange)}
-                                      />
-                                    </label>
-
-                                    <button
-                                      type="button"
-                                      title="Remove image"
-                                      onClick={() => {
-                                        const updated = [...imageList];
-                                        updated.splice(idx, 1);
-                                        handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
-                                      }}
-                                      style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        color: '#f87171',
-                                        fontSize: '0.68rem',
-                                        fontWeight: '700',
-                                        cursor: 'pointer',
-                                        padding: 0,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '2px',
-                                      }}
-                                    >
-                                      🗑️ Remove
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <label
-                                  style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    gap: '0.4rem',
-                                    color: '#64748b',
-                                  }}
-                                >
-                                  <FiImage style={{ fontSize: '2rem', color: '#94a3b8' }} />
-                                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#64748b' }}>Upload</span>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    style={{ display: 'none' }}
-                                    onChange={(e) => handleImageFileUpload(e.target.files?.[0], idx, imageList, handleProductFormChange)}
-                                  />
-                                </label>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
-
-                <p style={{ margin: '0.75rem 0 0 0', fontSize: '0.78rem', color: '#64748b', fontStyle: 'italic' }}>
-                  Image 1 is shown by default. Image 2 appears on hover in the product listing.
-                </p>
-              </div>
-
-              {/* Row 6: Toggles without emojis */}
-              <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
-                  <input type="checkbox" name="featured" checked={productForm.featured} onChange={handleProductFormChange} style={{ width: '17px', height: '17px', cursor: 'pointer', accentColor: '#d99b26' }} />
-                  Featured Product
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
-                  <input type="checkbox" name="isActive" checked={productForm.isActive} onChange={handleProductFormChange} style={{ width: '17px', height: '17px', cursor: 'pointer', accentColor: '#059669' }} />
-                  Active (visible on store)
-                </label>
-              </div>
-
-              {/* Form Actions without icon */}
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                <button type="button" onClick={handleCloseModal} style={{ padding: '0.65rem 1.4rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', color: '#475569' }}>Cancel</button>
-                <button
-                  type="submit"
-                  disabled={savingProduct}
-                  style={{ padding: '0.65rem 1.75rem', background: '#d99b26', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(217,155,38,0.3)' }}
-                >
-                  {savingProduct ? 'Saving...' : editingProduct ? 'Update Product' : 'Add Product'}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Products Table */}
-        {loadingProducts ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading products from database...</div>
-        ) : productsList.length === 0 ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
-            <FiBox style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.3 }} />
-            <p>No products yet. Click <strong>"+ Add New Product"</strong> to get started.</p>
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto', marginTop: '1rem' }}>
-            <table className={styles.ordersTable}>
-              <thead>
-                <tr>
-                  <th>Image</th>
-                  <th>Product Name</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Stock</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {productsList.map(product => (
+                return (
                   <tr key={product.id}>
                     <td>
                       {product.images?.[0] ? (
-                        <img src={product.images[0]} alt={product.name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #e2e8f0' }} onError={(e) => { e.target.style.display='none'; }} />
+                        <img src={product.images[0]} alt={product.name} style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0' }} onError={(e) => { e.target.style.display='none'; }} />
                       ) : (
-                        <div style={{ width: '48px', height: '48px', background: '#f1f5f9', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '1.2rem' }}>📦</div>
+                        <div style={{ width: '44px', height: '44px', background: '#f1f5f9', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>No Img</div>
                       )}
                     </td>
                     <td>
-                      <strong style={{ display: 'block' }}>{product.name}</strong>
-                      {product.sku && <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>SKU: {product.sku}</span>}
+                      <strong style={{ display: 'block', color: '#0f172a', fontSize: '0.9rem' }}>{product.name}</strong>
+                      {product.sku && <span style={{ fontSize: '0.72rem', color: '#64748b' }}>SKU: {product.sku}</span>}
                     </td>
-                    <td><span style={{ background: '#f1f5f9', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '600' }}>{product.category?.name || '—'}</span></td>
                     <td>
-                      <strong style={{ color: '#d99b26' }}>₹{product.price?.toLocaleString('en-IN')}</strong>
+                      <span style={{ background: '#fffcf5', color: '#92400e', border: '1px solid #fde68a', padding: '0.2rem 0.65rem', borderRadius: '12px', fontSize: '0.78rem', fontWeight: '700' }}>
+                        {mainCatName}
+                      </span>
+                    </td>
+                    <td>
+                      {subCatName ? (
+                        <span style={{ background: '#f1f5f9', color: '#475569', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.78rem', fontWeight: '600' }}>
+                          {subCatName}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>None</span>
+                      )}
+                    </td>
+                    <td>
+                      <strong style={{ color: '#d99b26', fontSize: '0.9rem' }}>₹{product.price?.toLocaleString('en-IN')}</strong>
                       {product.comparePrice && <div style={{ fontSize: '0.72rem', color: '#94a3b8', textDecoration: 'line-through' }}>₹{product.comparePrice?.toLocaleString('en-IN')}</div>}
                     </td>
                     <td>
@@ -718,12 +688,12 @@ const ProductsSection = ({
                       </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

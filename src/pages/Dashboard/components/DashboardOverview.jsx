@@ -9,7 +9,8 @@ import {
   FiMoreVertical, 
   FiArchive, 
   FiXCircle, 
-  FiUserPlus
+  FiUserPlus,
+  FiMessageSquare
 } from 'react-icons/fi';
 import { formatOrderId } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
@@ -48,38 +49,40 @@ const DashboardOverview = ({
 
   // 1. Dynamic Metric Calculations
   const metrics = useMemo(() => {
+    const ordersToUse = activeOrders;
+
     // Total Revenue
-    let revenueSum = activeOrders.reduce((acc, o) => {
+    let revenueSum = ordersToUse.reduce((acc, o) => {
       const amt = typeof o.rawAmount === 'number' ? o.rawAmount : parseFloat((o.amount || '0').replace(/[^0-9.]/g, '')) || 0;
       return acc + amt;
     }, 0);
-    if (backendStats?.totalRevenue && backendStats.totalRevenue > revenueSum) {
-      revenueSum = backendStats.totalRevenue;
-    }
-    if (revenueSum === 0) revenueSum = 1245890;
 
     // Total Orders
-    const totalOrdersCount = backendStats?.totalOrders || activeOrders.length || 1246;
+    const totalOrdersCount = ordersList.length > 0 ? ordersList.length : ordersToUse.length;
 
     // Pending Orders (Pending + Processing)
-    let pendingCount = activeOrders.filter(o => o.status === 'Pending' || o.status === 'Processing').length;
-    if (backendStats?.pendingOrdersCount !== undefined) {
-      pendingCount = (backendStats.pendingOrdersCount || 0) + (backendStats.processingOrdersCount || 0);
-    }
-    if (pendingCount === 0) pendingCount = 86;
+    const pendingCount = ordersToUse.filter(o => {
+      const s = String(o.status || '').toUpperCase();
+      return s === 'PENDING' || s === 'PROCESSING';
+    }).length;
 
-    // Completed Orders
-    let completedCount = activeOrders.filter(o => o.status === 'Delivered' || o.status === 'Completed').length;
-    if (backendStats?.completedOrdersCount !== undefined) {
-      completedCount = backendStats.completedOrdersCount;
-    }
-    if (completedCount === 0) completedCount = 1088;
+    // Completed Orders (Delivered + Completed)
+    const completedCount = ordersToUse.filter(o => {
+      const s = String(o.status || '').toUpperCase();
+      return s === 'DELIVERED' || s === 'COMPLETED';
+    }).length;
 
     // Total Customers
-    const customersCount = backendStats?.totalUsers || customersList.length || 2345;
+    const customersCount = customersList.length > 0 ? customersList.length : 0;
 
     // New Quotes
-    const quotesCount = corporateQuotes.filter(q => q.status === 'New').length || corporateQuotes.length || 32;
+    const quotesCount = corporateQuotes.filter(q => String(q.status || '').toUpperCase() === 'NEW').length;
+
+    // New Enquiries (New / Pending enquiries)
+    const newEnquiriesCount = enquiriesList.filter(e => {
+      const s = String(e.status || '').toUpperCase();
+      return s === 'NEW' || s === 'PENDING' || s === 'IN PROGRESS';
+    }).length || enquiriesList.length;
 
     return {
       totalRevenue: revenueSum,
@@ -88,52 +91,52 @@ const DashboardOverview = ({
       completedOrders: completedCount,
       totalCustomers: customersCount,
       newQuotes: quotesCount,
+      newEnquiries: newEnquiriesCount,
     };
-  }, [activeOrders, backendStats, customersList, corporateQuotes]);
+  }, [activeOrders, ordersList.length, customersList, corporateQuotes, enquiriesList]);
 
   // 2. Dynamic Mini Alert Cards Calculations
   const alerts = useMemo(() => {
     let lowStock = productsList.filter(p => p.stock > 0 && p.stock <= 10).length;
     if (backendStats?.lowStockCount !== undefined) lowStock = backendStats.lowStockCount;
-    if (lowStock === 0 && productsList.length === 0) lowStock = 12;
 
     let outOfStock = productsList.filter(p => p.stock === 0).length;
     if (backendStats?.outOfStockCount !== undefined) outOfStock = backendStats.outOfStockCount;
-    if (outOfStock === 0 && productsList.length === 0) outOfStock = 5;
 
-    const newCustomersCount = customersList.length > 0 ? customersList.length : 38;
-    const bulkQuotesCount = corporateQuotes.length > 0 ? corporateQuotes.length : 14;
+    const newCustomersCount = customersList.length;
+    const bulkQuotesCount = corporateQuotes.length;
 
     return { lowStock, outOfStock, newCustomersCount, bulkQuotesCount };
   }, [productsList, backendStats, customersList, corporateQuotes]);
 
   // 3. Dynamic Order Status Breakdown
   const orderStatusData = useMemo(() => {
+    const ordersToUse = activeOrders;
     const statusCounts = { Delivered: 0, Processing: 0, Pending: 0, Cancelled: 0 };
-    activeOrders.forEach(o => {
-      const st = o.status || 'Pending';
-      if (st === 'Delivered' || st === 'Completed') statusCounts.Delivered++;
-      else if (st === 'Processing') statusCounts.Processing++;
-      else if (st === 'Cancelled') statusCounts.Cancelled++;
+    ordersToUse.forEach(o => {
+      const st = String(o.status || '').toUpperCase();
+      if (st === 'DELIVERED' || st === 'COMPLETED') statusCounts.Delivered++;
+      else if (st === 'PROCESSING') statusCounts.Processing++;
+      else if (st === 'CANCELLED') statusCounts.Cancelled++;
       else statusCounts.Pending++;
     });
 
-    const total = activeOrders.length || 1;
-    const deliveredPct = Math.round((statusCounts.Delivered / total) * 100) || 87.3;
-    const processingPct = Math.round((statusCounts.Processing / total) * 100) || 6.9;
-    const pendingPct = Math.round((statusCounts.Pending / total) * 100) || 3.7;
-    const cancelledPct = Math.round((statusCounts.Cancelled / total) * 100) || 2.1;
+    const total = ordersToUse.length || 1;
+    const deliveredPct = Math.round((statusCounts.Delivered / total) * 100);
+    const processingPct = Math.round((statusCounts.Processing / total) * 100);
+    const pendingPct = Math.round((statusCounts.Pending / total) * 100);
+    const cancelledPct = Math.round((statusCounts.Cancelled / total) * 100);
 
     return {
-      delivered: statusCounts.Delivered || 1088,
-      processing: statusCounts.Processing || 86,
-      pending: statusCounts.Pending || 46,
-      cancelled: statusCounts.Cancelled || 26,
+      delivered: statusCounts.Delivered,
+      processing: statusCounts.Processing,
+      pending: statusCounts.Pending,
+      cancelled: statusCounts.Cancelled,
       deliveredPct,
       processingPct,
       pendingPct,
       cancelledPct,
-      totalOrdersDisplay: activeOrders.length || 1246,
+      totalOrdersDisplay: ordersToUse.length,
     };
   }, [activeOrders]);
 
@@ -275,6 +278,21 @@ const DashboardOverview = ({
           <div className={styles.kpiFooter}>
             <span className={styles.trendGreen}><FiTrendingUp /> 9.5%</span>
             <span className={styles.kpiSubtext}>vs previous period</span>
+          </div>
+        </div>
+
+        {/* Card 6: New Enquiries */}
+        <div className={styles.kpiCard} onClick={() => handleTabChange('enquiries')} style={{ cursor: 'pointer' }} title="View New Customer Enquiries">
+          <div className={styles.kpiHeader}>
+            <div className={`${styles.kpiIconCircle} ${styles.bgTeal || styles.bgPurple}`}>
+              <FiMessageSquare />
+            </div>
+            <span className={styles.kpiTitle}>New Enquiries</span>
+          </div>
+          <h2 className={styles.kpiValue}>{metrics.newEnquiries.toLocaleString('en-IN')}</h2>
+          <div className={styles.kpiFooter}>
+            <span className={styles.trendGreen}><FiTrendingUp /> Live</span>
+            <span className={styles.kpiSubtext}>Customer Messages</span>
           </div>
         </div>
       </div>

@@ -745,8 +745,15 @@ const DEFAULT_STORE_PRODUCTS = [
     setShowProductForm(false);
   };
 
-  const handleOpenAddProduct = () => {
+  const handleOpenAddProduct = (categoryId = '', subCategoryId = '') => {
     resetProductForm();
+    if (categoryId || subCategoryId) {
+      setProductForm(prev => ({
+        ...prev,
+        categoryId: categoryId || prev.categoryId,
+        subCategoryId: subCategoryId || prev.subCategoryId,
+      }));
+    }
     setShowProductForm(true);
   };
 
@@ -962,8 +969,11 @@ const DEFAULT_STORE_PRODUCTS = [
     setShowCategoryForm(false);
   };
 
-  const handleOpenAddCategory = () => {
+  const handleOpenAddCategory = (parentId = '') => {
     resetCategoryForm();
+    if (parentId) {
+      setCategoryForm(prev => ({ ...prev, parentId }));
+    }
     setShowCategoryForm(true);
   };
 
@@ -1088,8 +1098,15 @@ const DEFAULT_STORE_PRODUCTS = [
     }
   };
 
-  // CSV Exports
-  const downloadCSV = (filename, headers, rows) => {
+  // Download Confirmation & File Preview Modal Window State
+  const [downloadModalData, setDownloadModalData] = useState(null);
+  const [showFilePreview, setShowFilePreview] = useState(false);
+
+  // Executed when user clicks "Confirm & Download Now" inside the popup modal window
+  const executeDownload = () => {
+    if (!downloadModalData) return;
+    const { filename, headers, rows } = downloadModalData;
+
     const csvContent = [
       headers.join(','),
       ...rows.map(row => row.map(cell => `"${(cell || '').toString().replace(/"/g, '""')}"`).join(','))
@@ -1103,7 +1120,21 @@ const DEFAULT_STORE_PRODUCTS = [
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success(`${filename} CSV downloaded successfully!`);
+
+    toast.success(`${filename.replace(/_/g, ' ')} downloaded successfully!`);
+    setDownloadModalData(null);
+    setShowFilePreview(false);
+  };
+
+  const triggerDownloadConfirmation = (filename, reportTitle, headers, rows) => {
+    setShowFilePreview(false);
+    setDownloadModalData({
+      filename,
+      reportTitle,
+      headers,
+      rows,
+      recordsCount: rows.length,
+    });
   };
 
   const handleExportOrdersCSV = () => {
@@ -1116,7 +1147,7 @@ const DEFAULT_STORE_PRODUCTS = [
       o.date || '',
       o.status || 'Pending',
     ]);
-    downloadCSV('Store_Orders_Sales_Report', headers, rows);
+    triggerDownloadConfirmation('Store_Orders_Sales_Report', 'Orders & Sales Report', headers, rows);
   };
 
   const handleExportProductsCSV = () => {
@@ -1124,7 +1155,7 @@ const DEFAULT_STORE_PRODUCTS = [
     const rows = (productsList || []).map(p => [
       p.id, p.name, p.sku || 'N/A', p.category?.name || 'General', p.price || 0, p.comparePrice || 0, p.stock || 0, p.isActive ? 'Active' : 'Inactive',
     ]);
-    downloadCSV('Products_Inventory_Report', headers, rows);
+    triggerDownloadConfirmation('Products_Inventory_Report', 'Products Inventory Report', headers, rows);
   };
 
   const handleExportQuotesCSV = () => {
@@ -1132,7 +1163,7 @@ const DEFAULT_STORE_PRODUCTS = [
     const rows = (corporateQuotes || []).map(q => [
       q.id, q.name, q.company, q.email, q.phone, q.quantity, q.date, q.status,
     ]);
-    downloadCSV('Corporate_Quotes_Report', headers, rows);
+    triggerDownloadConfirmation('Corporate_Quotes_Report', 'Corporate Quotes Report', headers, rows);
   };
 
   const handleExportCustomersCSV = () => {
@@ -1140,7 +1171,7 @@ const DEFAULT_STORE_PRODUCTS = [
     const rows = (customersList || []).map(c => [
       c.id, c.name, c.email, c.phone || 'N/A', c.role || 'CUSTOMER', c.ordersCount || 0, c.totalSpent || 0, c.joinedDate || 'Recent', c.status || 'Active',
     ]);
-    downloadCSV('Customer_Database_Report', headers, rows);
+    triggerDownloadConfirmation('Customer_Database_Report', 'Customer Database Report', headers, rows);
   };
 
   const handleExportEnquiriesCSV = () => {
@@ -1148,7 +1179,7 @@ const DEFAULT_STORE_PRODUCTS = [
     const rows = (enquiriesList || []).map(e => [
       e.id, e.name, e.email, e.phone || 'N/A', e.subject || e.category || 'General Inquiry', e.message || '', e.createdAt || e.date || 'Recent', e.status || 'New',
     ]);
-    downloadCSV('Customer_Enquiries_Report', headers, rows);
+    triggerDownloadConfirmation('Customer_Enquiries_Report', 'Customer Enquiries Report', headers, rows);
   };
 
   const handleHeaderExport = () => {
@@ -1189,6 +1220,7 @@ const DEFAULT_STORE_PRODUCTS = [
           corporateQuotes={corporateQuotes}
           customersList={customersList}
           productsList={productsList}
+          categories={categories}
         />
 
         {/* Inner Content Workspace */}
@@ -1402,6 +1434,132 @@ const DEFAULT_STORE_PRODUCTS = [
           )}
         </div>
       </main>
+
+      {/* ── DOWNLOAD CONFIRMATION & FILE PREVIEW MODAL POPUP WINDOW ── */}
+      {downloadModalData && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 10000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '1.75rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.2rem',
+              maxWidth: showFilePreview ? '820px' : '540px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
+              <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: '#0f172a' }}>
+                View & Download Report File
+              </h4>
+              <button
+                type="button"
+                onClick={() => setDownloadModalData(null)}
+                style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', fontSize: '1rem', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* File Info Box */}
+            <div style={{ background: '#fffcf5', border: '1px solid #fde68a', borderRadius: '12px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+              <div style={{ fontSize: '0.98rem', fontWeight: '700', color: '#92400e' }}>
+                {downloadModalData.reportTitle}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                Filename: <code style={{ background: '#ffffff', padding: '0.15rem 0.4rem', borderRadius: '4px', border: '1px solid #cbd5e1', color: '#0f172a', fontWeight: 600 }}>{downloadModalData.filename}_{new Date().toISOString().slice(0, 10)}.csv</code>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '0.25rem', fontSize: '0.78rem', color: '#b45309', fontWeight: '600' }}>
+                <span>Format: CSV Document (.csv)</span>
+                <span>•</span>
+                <span>Total Records: {downloadModalData.recordsCount} Rows</span>
+              </div>
+            </div>
+
+            {/* Interactive View Data Preview Section */}
+            {showFilePreview && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Report Data Records ({downloadModalData.recordsCount} Total)</span>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>Live Data Preview</span>
+                </div>
+
+                <div style={{ maxHeight: '250px', overflowX: 'auto', overflowY: 'auto', border: '1px solid #cbd5e1', borderRadius: '8px', background: '#fafafa' }}>
+                  <table className={styles.ordersTable} style={{ fontSize: '0.8rem' }}>
+                    <thead>
+                      <tr>
+                        {downloadModalData.headers.map((h, i) => (
+                          <th key={i} style={{ padding: '0.55rem 0.75rem', background: '#f1f5f9', whiteSpace: 'nowrap', color: '#1e293b' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {downloadModalData.rows.map((row, rIdx) => (
+                        <tr key={rIdx}>
+                          {row.map((cell, cIdx) => (
+                            <td key={cIdx} style={{ padding: '0.45rem 0.75rem', whiteSpace: 'nowrap', color: '#334155' }}>{String(cell || '')}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Action Buttons */}
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setShowFilePreview(!showFilePreview)}
+                style={{ padding: '0.6rem 1.1rem', background: showFilePreview ? '#eff6ff' : '#ffffff', border: showFilePreview ? '1.5px solid #2563eb' : '1px solid #cbd5e1', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', color: showFilePreview ? '#1d4ed8' : '#334155', fontSize: '0.85rem' }}
+              >
+                {showFilePreview ? 'Hide Data Preview' : 'View File Data'}
+              </button>
+
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setDownloadModalData(null)}
+                  style={{ padding: '0.6rem 1.2rem', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', color: '#475569', fontSize: '0.85rem' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={executeDownload}
+                  style={{ padding: '0.65rem 1.5rem', background: 'linear-gradient(135deg, #d99b26 0%, #b87c12 100%)', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(217, 155, 38, 0.3)', fontSize: '0.85rem' }}
+                >
+                  Download File Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
