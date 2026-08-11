@@ -67,6 +67,9 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
 
+  // Sidebar Mobile Toggle State
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   // Tab State with localStorage persistence
   const [activeTab, setActiveTab] = useState(() => {
     try {
@@ -1197,13 +1200,21 @@ const DEFAULT_STORE_PRODUCTS = [
   };
 
   return (
-    <div className={styles.dashboardContainer}>
+    <div className={`${styles.dashboardContainer} ${sidebarOpen ? styles.sidebarOpen : ''}`}
+      onClick={(e) => {
+        if (sidebarOpen && window.innerWidth <= 768 && e.target === e.currentTarget) {
+          setSidebarOpen(false);
+        }
+      }}
+    >
       {/* Sidebar Component */}
       <DashboardSidebar
         activeTab={activeTab}
         handleTabChange={handleTabChange}
         user={user}
         handleLogout={handleLogout}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
       />
 
       {/* Main Workspace */}
@@ -1221,6 +1232,8 @@ const DEFAULT_STORE_PRODUCTS = [
           customersList={customersList}
           productsList={productsList}
           categories={categories}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
         />
 
         {/* Inner Content Workspace */}

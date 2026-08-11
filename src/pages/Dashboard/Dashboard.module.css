@@ -274,16 +274,45 @@
     flex-direction: column;
   }
   .sidebar {
-    width: 100%;
-    min-width: 100%;
-    height: auto;
-    position: static;
-    border-right: none;
-    border-bottom: 1px solid #1e2229;
-    max-height: 70vh;
+    width: 260px;
+    min-width: 260px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    border-right: 1px solid #1e2229;
+    border-bottom: none;
+    max-height: none;
+  }
+  .sidebarOpen {
+    transform: translateX(0);
   }
   .navMenu {
-    max-height: 300px;
+    max-height: calc(100vh - 200px);
+  }
+  .dashboardContainer {
+    position: relative;
+  }
+  .dashboardContainer::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.4);
+    z-index: 997;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .dashboardContainer.sidebarOpen::after {
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 
@@ -305,6 +334,14 @@
   .sidebarProfile {
     flex-direction: column;
     gap: 0.5rem;
+  }
+}
+
+/* Desktop: Show sidebar normally */
+@media (min-width: 641px) {
+  .sidebar {
+    position: sticky !important;
+    transform: translateX(0) !important;
   }
 }
 
@@ -353,7 +390,7 @@
   cursor: pointer;
   padding: 0.4rem;
   border-radius: 6px;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
 }
@@ -361,6 +398,12 @@
 .navToggleBtn:hover {
   background: #f1f5f9;
   color: #0f172a;
+}
+
+@media (max-width: 640px) {
+  .navToggleBtn {
+    display: flex;
+  }
 }
 
 /* Top Search Bar */
@@ -550,6 +593,16 @@
   justify-content: space-between;
   position: relative;
   z-index: 10;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .headerBanner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
 }
 
 .pageHeaderTitle {
@@ -564,6 +617,33 @@
   font-size: 0.875rem;
   color: #64748b;
   margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .pageHeaderTitle {
+    font-size: 1.4rem;
+  }
+  .pageHeaderSub {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .pageHeaderTitle {
+    font-size: 1.2rem;
+  }
+  .pageHeaderSub {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageHeaderTitle {
+    font-size: 1rem;
+  }
+  .pageHeaderSub {
+    font-size: 0.7rem;
+  }
 }
 
 .datePickerPill {
@@ -586,12 +666,50 @@
   background: #f8fafc;
 }
 
+@media (max-width: 768px) {
+  .datePickerPill {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.78rem;
+    gap: 0.35rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .datePickerPill {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.72rem;
+  }
+}
+
 /* ── HEADER ACTION CONTROLS ─────────────────────────────────────── */
 .headerActions {
   display: flex;
   align-items: center;
   gap: 0.625rem;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .headerActions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .headerActions {
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .headerActions {
+    gap: 0.4rem;
+    width: 100%;
+  }
 }
 
 /* Shared action button base */
@@ -608,6 +726,30 @@
   transition: all 0.18s ease;
   white-space: nowrap;
   line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .headerActionBtn {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.75rem;
+    gap: 0.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .headerActionBtn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.7rem;
+    gap: 0.25rem;
+  }
+
+  .headerActionBtn span {
+    display: none;
+  }
+
+  .headerActionBtn svg {
+    margin: 0;
+  }
 }
 
 /* Filter Button */
@@ -717,16 +859,16 @@
   to   { transform: rotate(360deg); }
 }
 
-/* Export Excel Button */
+/* Export Excel / Download Button */
 .excelBtn {
-  background: linear-gradient(135deg, #1d6f42 0%, #21a05c 100%);
+  background: linear-gradient(135deg, #d99b26 0%, #b87c12 100%);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 2px 8px rgba(29,111,66,0.28);
+  box-shadow: 0 2px 10px rgba(217, 155, 38, 0.35);
 }
 .excelBtn:hover {
-  background: linear-gradient(135deg, #165c36 0%, #1b8a4e 100%);
-  box-shadow: 0 4px 12px rgba(29,111,66,0.38);
+  background: linear-gradient(135deg, #c78a1f 0%, #a16c0e 100%);
+  box-shadow: 0 4px 14px rgba(217, 155, 38, 0.45);
   transform: translateY(-1px);
 }
 .excelBtn svg {
@@ -1628,15 +1770,72 @@
   text-decoration: underline;
 }
 
-@media (max-width: 480px) {
-  .dashboardLayout {
-    flex-direction: column;
-  }
+/* Off-Canvas Dark Backdrop Overlay */
+.sidebarOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 99990;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Desktop & Laptop View (>768px): Sidebar is ALWAYS VISIBLE on the left */
+@media (min-width: 769px) {
   .sidebar {
-    width: 100%;
-    position: static;
-    height: auto;
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 260px !important;
+    min-width: 260px !important;
+    height: 100vh !important;
+    transform: none !important;
+    box-shadow: none !important;
+    display: flex !important;
+    z-index: 100 !important;
   }
+  .sidebarOverlay {
+    display: none !important;
+  }
+}
+
+/* Mobile View (<=768px): Sidebar becomes Off-Canvas Side Drawer */
+@media (max-width: 768px) {
+  .dashboardContainer {
+    position: relative;
+  }
+
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 82vw !important;
+    height: 100vh !important;
+    z-index: 99999 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 4px 0 25px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .sidebar.sidebarOpen,
+  .sidebarOpen .sidebar {
+    transform: translateX(0) !important;
+  }
+
+  .mainWorkspace {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
   .mainContent {
     padding: 1rem;
   }

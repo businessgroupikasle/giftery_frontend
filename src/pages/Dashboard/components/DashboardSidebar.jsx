@@ -45,9 +45,26 @@ const sidebarItems = [
   { id: 'settings', label: 'Settings', icon: FiSettings, hasCaret: false },
 ];
 
-const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout }) => {
+const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout, sidebarOpen = false, setSidebarOpen = () => {} }) => {
+  const handleNavClick = (tabId) => {
+    handleTabChange(tabId);
+    // Close sidebar on mobile after navigation
+    if (window.innerWidth <= 1024) {
+      setSidebarOpen(false);
+    }
+  };
+
   return (
-    <aside className={styles.sidebar}>
+    <>
+      {/* Dark Backdrop Overlay for Mobile Side Drawer */}
+      {sidebarOpen && (
+        <div
+          className={styles.sidebarOverlay}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
       {/* Brand Header */}
       <div className={styles.brandBox}>
         <GiftLogoSvg />
@@ -67,7 +84,7 @@ const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout }) =>
               key={item.id}
               type="button"
               className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
-              onClick={() => handleTabChange(item.id)}
+              onClick={() => handleNavClick(item.id)}
             >
               <div className={styles.navItemLeft}>
                 <IconComp className={styles.navIcon} />
@@ -102,6 +119,7 @@ const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout }) =>
         </button>
       </div>
     </aside>
+    </>
   );
 };
 

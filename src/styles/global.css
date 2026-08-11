@@ -91,3 +91,57 @@ input, textarea, select {
   button { padding: 0.35rem 0.6rem; font-size: 0.75rem; }
   input, textarea, select { font-size: 16px; padding: 0.4rem; }
 }
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE TOAST NOTIFICATIONS (ReactToastify)
+   ═══════════════════════════════════════════════════════ */
+.Toastify__toast-container {
+  width: 380px;
+  max-width: 92vw;
+  padding: 0.5rem;
+}
+
+.Toastify__toast {
+  border-radius: 10px !important;
+  font-family: var(--font-primary), 'Inter', sans-serif !important;
+  font-size: 0.88rem !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12) !important;
+  padding: 0.75rem 1rem !important;
+  min-height: auto !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.Toastify__toast-body {
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+@media (max-width: 600px) {
+  .Toastify__toast-container {
+    width: 100% !important;
+    max-width: 94vw !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    top: 10px !important;
+    padding: 0 !important;
+  }
+
+  .Toastify__toast {
+    font-size: 0.82rem !important;
+    padding: 0.6rem 0.85rem !important;
+    border-radius: 8px !important;
+    margin-bottom: 0.4rem !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .Toastify__toast-container {
+    max-width: 96vw !important;
+  }
+
+  .Toastify__toast {
+    font-size: 0.78rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+}

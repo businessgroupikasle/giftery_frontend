@@ -111,6 +111,8 @@ const App = () => {
       <Routes>
         {/* Public */}
         <Route path={ROUTES.HOME}       element={<Home />} />
+        <Route path="/home"             element={<Home />} />
+        <Route path="/index.html"       element={<Home />} />
         <Route path="/shop"             element={<Navigate to={ROUTES.CORPORATE_GIFTS} replace />} />
         <Route path={ROUTES.PRODUCT}    element={<Product />} />
         {/* Categories page removed — redirect all /categories/* to Corporate Gifts */}

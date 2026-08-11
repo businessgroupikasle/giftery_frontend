@@ -41,7 +41,36 @@ const GiftLogoSvg = () => (
 
 const DEFAULT_LOGO_URL = '/images/store-logo.png';
 
+const corporateLinks = [
+  { name: 'All Corporate Gifts', path: ROUTES.CORPORATE_GIFTS },
+  { name: 'Work Anniversary Gifts', path: ROUTES.CORPORATE_GIFTS },
+  { name: 'Diaries & Notebooks', path: ROUTES.CORPORATE_GIFTS },
+  { name: 'Apparel', path: ROUTES.CORPORATE_GIFTS },
+  { name: 'Drinkware', path: ROUTES.CORPORATE_GIFTS },
+  { name: 'Lifestyle', path: ROUTES.CORPORATE_GIFTS },
+  { name: 'Tech Accessories', path: ROUTES.CORPORATE_GIFTS },
+  { name: 'Bags & Travel', path: ROUTES.CORPORATE_GIFTS },
+  { name: 'Office Essentials', path: ROUTES.CORPORATE_GIFTS },
+  { name: 'Awards & Trophies', path: ROUTES.CORPORATE_GIFTS },
+  { name: 'Eco Friendly Gifts', path: ROUTES.CORPORATE_GIFTS },
+];
+
+const toysLinks = [
+  { name: 'All Toys', path: ROUTES.TOYS },
+  { name: 'Educational Toys', path: ROUTES.TOYS },
+  { name: 'Soft Toys', path: ROUTES.TOYS },
+  { name: 'Remote Control Toys', path: ROUTES.TOYS },
+  { name: 'Building Blocks', path: ROUTES.TOYS },
+  { name: 'Dolls & Doll Houses', path: ROUTES.TOYS },
+  { name: 'Ride On Toys', path: ROUTES.TOYS },
+  { name: 'Outdoor Toys', path: ROUTES.TOYS },
+  { name: 'Board Games', path: ROUTES.TOYS },
+];
+
 const Footer = () => {
+  const [showMoreCorporate, setShowMoreCorporate] = useState(false);
+  const [showMoreToys, setShowMoreToys] = useState(false);
+
   const [customLogo, setCustomLogo] = useState(() => {
     try {
       return localStorage.getItem('giftery_store_logo') || null;
@@ -68,6 +97,9 @@ const Footer = () => {
       window.removeEventListener('storage', handleLogoUpdate);
     };
   }, []);
+
+  const visibleCorporate = showMoreCorporate ? corporateLinks : corporateLinks.slice(0, 7);
+  const visibleToys = showMoreToys ? toysLinks : toysLinks.slice(0, 7);
 
   return (
     <footer className={styles.footer}>
@@ -114,9 +146,6 @@ const Footer = () => {
               <li><Link to={ROUTES.HOME}><FaChevronRight className={styles.chevron} /> Home</Link></li>
               <li><Link to={ROUTES.ABOUT}><FaChevronRight className={styles.chevron} /> About Us</Link></li>
               <li><Link to={ROUTES.SHOP}><FaChevronRight className={styles.chevron} /> Products</Link></li>
-              {/* <li><Link to={ROUTES.CORPORATE}><FaChevronRight className={styles.chevron} /> Solutions</Link></li>
-              <li><Link to={ROUTES.CORPORATE}><FaChevronRight className={styles.chevron} /> Industries</Link></li>
-              <li><Link to={ROUTES.GALLERY || '/gallery'}><FaChevronRight className={styles.chevron} /> Gallery</Link></li> */}
               <li><Link to={ROUTES.FAQ || '/faq'}><FaChevronRight className={styles.chevron} /> FAQs</Link></li>
               <li><Link to={ROUTES.CONTACT}><FaChevronRight className={styles.chevron} /> Contact Us</Link></li>
               <li><Link to={ROUTES.TERMS}><FaChevronRight className={styles.chevron} /> Terms &amp; Conditions</Link></li>
@@ -128,47 +157,55 @@ const Footer = () => {
           <div className={styles.col}>
             <h3 className={styles.colTitle}>CORPORATE GIFTS</h3>
             <ul className={styles.linkList}>
-              <li><Link to={ROUTES.CORPORATE}><FaChevronRight className={styles.chevron} /> All Corporate Gifts</Link></li>
-              <li><Link to={ROUTES.CORPORATE}><FaChevronRight className={styles.chevron} /> Work Anniversary Gifts</Link></li>
-              <li><Link to={ROUTES.CORPORATE}><FaChevronRight className={styles.chevron} /> Diaries &amp; Notebooks</Link></li>
-              <li><Link to={ROUTES.CORPORATE}><FaChevronRight className={styles.chevron} /> Apparel</Link></li>
-              <li><Link to={ROUTES.CORPORATE}><FaChevronRight className={styles.chevron} /> Drinkware</Link></li>
-              <li><Link to={ROUTES.CORPORATE}><FaChevronRight className={styles.chevron} /> Lifestyle</Link></li>
-              <li><Link to={ROUTES.CORPORATE}><FaChevronRight className={styles.chevron} /> Tech Accessories</Link></li>
-              <li><Link to={ROUTES.CORPORATE}><FaChevronRight className={styles.chevron} /> Bags &amp; Travel</Link></li>
-              <li><Link to={ROUTES.CORPORATE}><FaChevronRight className={styles.chevron} /> Office Essentials</Link></li>
-              <li><Link to={ROUTES.CORPORATE}><FaChevronRight className={styles.chevron} /> Awards &amp; Trophies</Link></li>
-              <li><Link to={ROUTES.CORPORATE}><FaChevronRight className={styles.chevron} /> Eco Friendly Gifts</Link></li>
+              {visibleCorporate.map((item, idx) => (
+                <li key={idx}>
+                  <Link to={item.path}><FaChevronRight className={styles.chevron} /> {item.name}</Link>
+                </li>
+              ))}
             </ul>
+            {corporateLinks.length > 7 && (
+              <button
+                type="button"
+                onClick={() => setShowMoreCorporate(!showMoreCorporate)}
+                className={styles.toggleMoreBtn}
+              >
+                {showMoreCorporate ? '– View Less' : `+ View ${corporateLinks.length - 7} More`}
+              </button>
+            )}
           </div>
 
-          {/* Column 5: PERSONALIZED GIFTS */}
+          {/* Column 4: PERSONALIZED GIFTS */}
           <div className={styles.col}>
             <h3 className={styles.colTitle}>PERSONALIZED GIFTS</h3>
             <ul className={styles.linkList}>
-              <li><Link to={ROUTES.PERSONALIZED}><FaChevronRight className={styles.chevron} /> All Personalized Gifts</Link></li>
-              <li><Link to={ROUTES.PERSONALIZED}><FaChevronRight className={styles.chevron} /> Photo Frames</Link></li>
-              <li><Link to={ROUTES.PERSONALIZED}><FaChevronRight className={styles.chevron} /> Acrylic Frames</Link></li>
-              <li><Link to={ROUTES.PERSONALIZED}><FaChevronRight className={styles.chevron} /> Caricatures</Link></li>
-              <li><Link to={ROUTES.PERSONALIZED}><FaChevronRight className={styles.chevron} /> Clocks</Link></li>
-              <li><Link to={ROUTES.PERSONALIZED}><FaChevronRight className={styles.chevron} /> Wooden Photo Engraving</Link></li>
+              <li><Link to={ROUTES.PERSONALIZED_GIFTS}><FaChevronRight className={styles.chevron} /> All Personalized Gifts</Link></li>
+              <li><Link to={ROUTES.PERSONALIZED_GIFTS}><FaChevronRight className={styles.chevron} /> Photo Frames</Link></li>
+              <li><Link to={ROUTES.PERSONALIZED_GIFTS}><FaChevronRight className={styles.chevron} /> Acrylic Frames</Link></li>
+              <li><Link to={ROUTES.PERSONALIZED_GIFTS}><FaChevronRight className={styles.chevron} /> Caricatures</Link></li>
+              <li><Link to={ROUTES.PERSONALIZED_GIFTS}><FaChevronRight className={styles.chevron} /> Clocks</Link></li>
+              <li><Link to={ROUTES.PERSONALIZED_GIFTS}><FaChevronRight className={styles.chevron} /> Wooden Photo Engraving</Link></li>
             </ul>
           </div>
 
-          {/* Column 6: TOYS */}
+          {/* Column 5: TOYS */}
           <div className={styles.col}>
             <h3 className={styles.colTitle}>TOYS</h3>
             <ul className={styles.linkList}>
-              <li><Link to={ROUTES.TOYS}><FaChevronRight className={styles.chevron} /> All Toys</Link></li>
-              <li><Link to={ROUTES.TOYS}><FaChevronRight className={styles.chevron} /> Educational Toys</Link></li>
-              <li><Link to={ROUTES.TOYS}><FaChevronRight className={styles.chevron} /> Soft Toys</Link></li>
-              <li><Link to={ROUTES.TOYS}><FaChevronRight className={styles.chevron} /> Remote Control Toys</Link></li>
-              <li><Link to={ROUTES.TOYS}><FaChevronRight className={styles.chevron} /> Building Blocks</Link></li>
-              <li><Link to={ROUTES.TOYS}><FaChevronRight className={styles.chevron} /> Dolls &amp; Doll Houses</Link></li>
-              <li><Link to={ROUTES.TOYS}><FaChevronRight className={styles.chevron} /> Ride On Toys</Link></li>
-              <li><Link to={ROUTES.TOYS}><FaChevronRight className={styles.chevron} /> Outdoor Toys</Link></li>
-              <li><Link to={ROUTES.TOYS}><FaChevronRight className={styles.chevron} /> Board Games</Link></li>
+              {visibleToys.map((item, idx) => (
+                <li key={idx}>
+                  <Link to={item.path}><FaChevronRight className={styles.chevron} /> {item.name}</Link>
+                </li>
+              ))}
             </ul>
+            {toysLinks.length > 7 && (
+              <button
+                type="button"
+                onClick={() => setShowMoreToys(!showMoreToys)}
+                className={styles.toggleMoreBtn}
+              >
+                {showMoreToys ? '– View Less' : `+ View ${toysLinks.length - 7} More`}
+              </button>
+            )}
           </div>
 
           {/* Column 7: STORE INFORMATION */}

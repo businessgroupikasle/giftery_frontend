@@ -50,6 +50,8 @@ const DashboardNavbar = ({
   customersList = [],
   productsList = [],
   categories = [],
+  sidebarOpen = false,
+  setSidebarOpen = () => {},
 }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef(null);
@@ -277,7 +279,12 @@ const DashboardNavbar = ({
 
   return (
     <header className={styles.topNavbar}>
-      <button type="button" className={styles.navToggleBtn} title="Toggle Sidebar">
+      <button
+        type="button"
+        className={styles.navToggleBtn}
+        title="Toggle Sidebar"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+      >
         <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>☰</span>
       </button>
 
