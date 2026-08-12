@@ -68,11 +68,12 @@ const Wishlist = () => {
         apiProducts = extracted;
       } catch (err) {}
 
-      const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-      const combined = [...localProducts];
-      apiProducts.forEach(ap => {
-        if (!combined.find(c => c.id === ap.id || c.slug === ap.slug)) combined.push(ap);
-      });
+      let combined = apiProducts;
+      if (apiProducts.length > 0) {
+        localStorage.setItem('giftery_products', JSON.stringify(apiProducts));
+      } else {
+        combined = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+      }
 
       if (combined.length > 0) {
         // Exclude items already in wishlist

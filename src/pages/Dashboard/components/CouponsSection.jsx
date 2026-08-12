@@ -64,8 +64,16 @@ const CouponsSection = ({ initialCoupons }) => {
     setShowModal(true);
   };
 
+  const [deletingCoupon, setDeletingCoupon] = useState(null);
+
   const handleDeleteCoupon = (id, code) => {
-    if (!window.confirm(`Are you sure you want to delete coupon code "${code}"?`)) return;
+    setDeletingCoupon({ id, code });
+  };
+
+  const confirmDeleteCoupon = () => {
+    if (!deletingCoupon) return;
+    const { id, code } = deletingCoupon;
+    setDeletingCoupon(null);
     const updated = coupons.filter((c) => c.id !== id);
     updateCouponsState(updated);
     toast.success(`Coupon "${code}" deleted successfully`);
@@ -369,6 +377,104 @@ const CouponsSection = ({ initialCoupons }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Coupon Confirmation Modal Popup */}
+      {deletingCoupon && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.72)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+          onClick={() => setDeletingCoupon(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#ffffff',
+              borderRadius: '16px',
+              maxWidth: '440px',
+              width: '100%',
+              padding: '1.85rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
+              border: '1px solid #e2e8f0',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                background: '#fee2e2',
+                color: '#dc2626',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.75rem',
+                margin: '0 auto 1.2rem auto',
+                boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+              }}
+            >
+              ⚠️
+            </div>
+
+            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>
+              Delete Coupon Code?
+            </h3>
+
+            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#475569', lineHeight: '1.6' }}>
+              Delete coupon <strong style={{ color: '#0f172a' }}>"{deletingCoupon.code}"</strong>? Customers will no longer be able to apply this discount.
+            </p>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setDeletingCoupon(null)}
+                style={{
+                  padding: '0.65rem 1.4rem',
+                  background: '#f1f5f9',
+                  color: '#475569',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmDeleteCoupon}
+                style={{
+                  padding: '0.65rem 1.6rem',
+                  background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '700',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.35)',
+                }}
+              >
+                Yes, Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

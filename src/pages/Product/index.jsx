@@ -140,46 +140,39 @@ const Product = () => {
     setError(null);
 
     const fetchProduct = async () => {
-      // 1. Check LocalStorage for custom saved products
-      const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-      const normalizedSlug = slug ? slug.toLowerCase().trim() : '';
-      const localFound = localProducts.find(p => (
-        p.slug === normalizedSlug ||
-        p.id === slug ||
-        (p.name && p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') === normalizedSlug)
-      ));
-
-      if (localFound && isMounted) {
-        setProduct(localFound);
-        const imgs = parseImagesArray(localFound.images || localFound.image, 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80');
-        setSelectedImage(imgs[0]);
-        setQuantity(localFound.minOrder || 1);
-        setLoading(false);
-        return;
-      }
-
-      // 2. Fetch from Backend API
+      let foundProduct = null;
+      // 1. Fetch from Backend API first
       try {
         const res = await axiosInstance.get(`${ENDPOINTS.PRODUCTS.LIST}/${slug}`);
-        const data = res.data?.product || res.data?.data || res.data;
-        if (data && isMounted) {
-          setProduct(data);
-          const imgs = parseImagesArray(data.images || data.image, 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80');
-          setSelectedImage(imgs[0]);
-          setQuantity(data.minOrder || 1);
+        const data = res.product || res.data?.product || res.data?.data || res.data;
+        if (data && (data.id || data.slug)) {
+          foundProduct = data;
         }
-      } catch (err) {
-        console.warn(`Product API fetch for slug "${slug}" fallback to dataset:`, err.message);
-        // Fallback to Master Dataset
-        const found = MASTER_PRODUCTS.find(p => p.slug === slug) || MASTER_PRODUCTS[0];
-        if (isMounted) {
-          setProduct({ ...found, name: found.slug === slug ? found.name : slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) });
-          const imgs = parseImagesArray(found.images || found.image);
-          setSelectedImage(imgs[0]);
-          setQuantity(found.minOrder || 1);
-        }
-      } finally {
-        if (isMounted) setLoading(false);
+      } catch (err) {}
+
+      // 2. Fallback to LocalStorage
+      if (!foundProduct) {
+        const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+        const normalizedSlug = slug ? slug.toLowerCase().trim() : '';
+        foundProduct = localProducts.find(p => (
+          p.slug === normalizedSlug ||
+          p.id === slug ||
+          (p.name && p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') === normalizedSlug)
+        ));
+      }
+
+      // 3. Fallback to Master Dataset
+      if (!foundProduct) {
+        const masterFound = MASTER_PRODUCTS.find(p => p.slug === slug) || MASTER_PRODUCTS[0];
+        foundProduct = { ...masterFound, name: masterFound.slug === slug ? masterFound.name : slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) };
+      }
+
+      if (isMounted && foundProduct) {
+        setProduct(foundProduct);
+        const imgs = parseImagesArray(foundProduct.images || foundProduct.image, 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80');
+        setSelectedImage(imgs[0]);
+        setQuantity(foundProduct.minOrder || 1);
+        setLoading(false);
       }
     };
 
@@ -197,11 +190,30 @@ const Product = () => {
         apiProducts = extracted;
       } catch (err) {}
 
-      const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-      const combined = [...localProducts];
-      apiProducts.forEach(ap => {
-        if (!combined.find(c => c.id === ap.id || c.slug === ap.slug)) combined.push(ap);
+      const deletedIds = new Set(JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]'));
+      const localProds = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+      const combinedMap = new Map();
+
+      localProds.forEach(p => {
+        const idStr = String(p.id || '');
+        const slugStr = String(p.slug || '');
+        if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
+          combinedMap.set(idStr || slugStr, p);
+        }
       });
+
+      apiProducts.forEach(p => {
+        const idStr = String(p.id || '');
+        const slugStr = String(p.slug || '');
+        if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
+          if (!combinedMap.has(idStr) && !combinedMap.has(slugStr)) {
+            combinedMap.set(idStr || slugStr, p);
+          }
+        }
+      });
+
+      const combined = Array.from(combinedMap.values());
+      localStorage.setItem('giftery_products', JSON.stringify(combined));
 
       if (combined.length > 0 && isMounted) {
         const normalizedSlug = slug ? slug.toLowerCase().trim() : '';
@@ -299,52 +311,118 @@ const Product = () => {
 
     let rows = [];
 
-    if (typeof specContent === 'object' && !Array.isArray(specContent)) {
-      rows = Object.entries(specContent).map(([k, v]) => ({ key: k, value: String(v) }));
+    const formatKey = (str) => {
+      if (!str) return '';
+      const result = str
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, (s) => s.toUpperCase())
+        .trim();
+      return result.charAt(0).toUpperCase() + result.slice(1);
+    };
+
+    const processLine = (line) => {
+      const cleanLine = line.replace(/^[•\-\*\s]+/, '').trim();
+      if (!cleanLine) return;
+
+      if (cleanLine.includes(':')) {
+        const parts = cleanLine.split(':');
+        const key = parts[0].trim();
+        const val = parts.slice(1).join(':').trim();
+        if (key && val) {
+          rows.push({ key: formatKey(key), value: val });
+          return;
+        }
+      }
+
+      if (cleanLine.includes('=')) {
+        const parts = cleanLine.split('=');
+        const key = parts[0].trim();
+        const val = parts.slice(1).join('=').trim();
+        if (key && val) {
+          rows.push({ key: formatKey(key), value: val });
+          return;
+        }
+      }
+
+      if (cleanLine.includes('-') && !cleanLine.startsWith('-')) {
+        const parts = cleanLine.split('-');
+        const key = parts[0].trim();
+        const val = parts.slice(1).join('-').trim();
+        if (key && val) {
+          rows.push({ key: formatKey(key), value: val });
+          return;
+        }
+      }
+
+      rows.push({ key: 'Feature / Spec', value: cleanLine });
+    };
+
+    if (typeof specContent === 'object' && specContent !== null) {
+      if (Array.isArray(specContent)) {
+        specContent.forEach((item) => {
+          if (typeof item === 'object' && item !== null) {
+            Object.entries(item).forEach(([k, v]) => rows.push({ key: formatKey(k), value: String(v) }));
+          } else {
+            processLine(String(item));
+          }
+        });
+      } else {
+        rows = Object.entries(specContent).map(([k, v]) => ({ key: formatKey(k), value: String(v) }));
+      }
     } else if (typeof specContent === 'string') {
       const trimmed = specContent.trim();
-      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
         try {
           const parsed = JSON.parse(trimmed);
-          if (typeof parsed === 'object' && !Array.isArray(parsed)) {
-            rows = Object.entries(parsed).map(([k, v]) => ({ key: k, value: String(v) }));
+          if (typeof parsed === 'object' && parsed !== null) {
+            if (Array.isArray(parsed)) {
+              parsed.forEach((item) => {
+                if (typeof item === 'object' && item !== null) {
+                  Object.entries(item).forEach(([k, v]) => rows.push({ key: formatKey(k), value: String(v) }));
+                } else {
+                  processLine(String(item));
+                }
+              });
+            } else {
+              rows = Object.entries(parsed).map(([k, v]) => ({ key: formatKey(k), value: String(v) }));
+            }
           }
         } catch (e) {}
       }
 
       if (rows.length === 0) {
-        const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
-        lines.forEach((line) => {
-          if (line.includes(':')) {
-            const parts = line.split(':');
-            const key = parts[0].trim();
-            const val = parts.slice(1).join(':').trim();
-            rows.push({ key, value: val });
-          } else if (line.includes('-') && !line.startsWith('-')) {
-            const parts = line.split('-');
-            const key = parts[0].trim();
-            const val = parts.slice(1).join('-').trim();
-            rows.push({ key, value: val });
-          } else {
-            rows.push({ key: 'Feature / Spec', value: line.replace(/^[•\-\*]\s*/, '') });
+        let lines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+        if (lines.length === 1 && (trimmed.includes(',') || trimmed.includes(';') || trimmed.includes('|'))) {
+          const delimiter = trimmed.includes('|') ? '|' : (trimmed.includes(';') ? ';' : ',');
+          const parts = trimmed.split(delimiter).map(p => p.trim()).filter(Boolean);
+          if (parts.length > 1 && parts.some(p => p.includes(':'))) {
+            lines = parts;
           }
-        });
+        }
+
+        lines.forEach((line) => processLine(line));
       }
     }
 
     if (rows.length === 0) {
-      return <p style={{ color: '#475569', lineHeight: '1.7' }}>{String(specContent)}</p>;
+      return (
+        <div style={{ padding: '1.25rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', color: '#475569', lineHeight: '1.7' }}>
+          {String(specContent)}
+        </div>
+      );
     }
 
     return (
-      <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '12px', background: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+      <div style={{ overflowX: 'auto', border: '1px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', boxShadow: '0 4px 16px rgba(0,0,0,0.03)', marginTop: '0.5rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
           <thead>
-            <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-              <th style={{ padding: '0.9rem 1.25rem', fontSize: '0.82rem', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.5px', width: '35%' }}>
-                Specification Feature
+            <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
+              <th style={{ padding: '0.85rem 1.25rem', fontSize: '0.82rem', fontWeight: '800', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px', width: '35%' }}>
+                Specification
               </th>
-              <th style={{ padding: '0.9rem 1.25rem', fontSize: '0.82rem', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <th style={{ padding: '0.85rem 1.25rem', fontSize: '0.82rem', fontWeight: '800', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Details & Material Info
               </th>
             </tr>
@@ -355,13 +433,14 @@ const Product = () => {
                 key={idx}
                 style={{
                   background: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
-                  borderBottom: idx === rows.length - 1 ? 'none' : '1px solid #f1f5f9',
+                  borderBottom: idx === rows.length - 1 ? 'none' : '1px solid #e2e8f0',
+                  transition: 'background 0.15s ease',
                 }}
               >
-                <td style={{ padding: '0.85rem 1.25rem', fontSize: '0.88rem', fontWeight: '700', color: '#0f172a', borderRight: '1px solid #f1f5f9', textTransform: 'capitalize' }}>
+                <td style={{ padding: '0.85rem 1.25rem', fontWeight: '700', color: '#1e293b', borderRight: '1px solid #e2e8f0', width: '35%', verticalAlign: 'top' }}>
                   {row.key}
                 </td>
-                <td style={{ padding: '0.85rem 1.25rem', fontSize: '0.88rem', fontWeight: '500', color: '#475569', lineHeight: '1.5' }}>
+                <td style={{ padding: '0.85rem 1.25rem', fontWeight: '500', color: '#475569', lineHeight: '1.6', verticalAlign: 'top' }}>
                   {row.value}
                 </td>
               </tr>

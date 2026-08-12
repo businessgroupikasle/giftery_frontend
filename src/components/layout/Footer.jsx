@@ -124,16 +124,16 @@ const Footer = () => {
             </p>
 
             <div className={styles.socialIcons}>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className={styles.socialBtn}>
+              <a href="https://www.facebook.com/giftery2023" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className={styles.socialBtn}>
                 <FaFacebookF />
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={styles.socialBtn}>
+              <a href="https://www.instagram.com/giftery.india/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={styles.socialBtn}>
                 <FaInstagram />
               </a>
               <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className={styles.socialBtn}>
                 <FaLinkedinIn />
               </a>
-              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className={styles.socialBtn}>
+              <a href="https://www.youtube.com/@gifteryindia" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className={styles.socialBtn}>
                 <FaYoutube />
               </a>
             </div>

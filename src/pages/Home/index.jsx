@@ -58,7 +58,7 @@ const Home = () => {
                 </svg>
               </div>
               <div>
-                <div className={styles.statVal}>1000+</div>
+                <div className={styles.statVal}>10k+</div>
                 <div className={styles.statLbl}>Happy Clients</div>
               </div>
             </div>
@@ -72,7 +72,7 @@ const Home = () => {
                 </svg>
               </div>
               <div>
-                <div className={styles.statVal}>5000+</div>
+                <div className={styles.statVal}>50000+</div>
                 <div className={styles.statLbl}>Products</div>
               </div>
             </div>

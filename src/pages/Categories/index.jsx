@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '@components/layout/Layout';
 import ProductGrid from '@components/product/ProductGrid';
-import useFetch from '@hooks/useFetch';
+import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { ROUTES } from '@constants/routes';
 import styles from './Categories.module.css';
@@ -96,8 +96,57 @@ const Categories = () => {
       }
     : null;
 
-  const { data, loading } = useFetch(ENDPOINTS.PRODUCTS.LIST + '?limit=12');
-  const products = Array.isArray(data?.data) ? data.data : (data?.data?.data || []);
+  const [liveProducts, setLiveProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadCategoryProducts = async () => {
+    setLoading(true);
+    let apiProds = [];
+    try {
+      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200');
+      const data = res.data?.data || res.data?.products || res.data || res;
+      if (Array.isArray(data)) apiProds = data;
+    } catch (e) {}
+
+    const deletedIds = new Set(JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]'));
+    const localProds = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+    const combinedMap = new Map();
+
+    localProds.forEach(p => {
+      const idStr = String(p.id || '');
+      const slugStr = String(p.slug || '');
+      if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
+        combinedMap.set(idStr || slugStr, p);
+      }
+    });
+
+    apiProds.forEach(p => {
+      const idStr = String(p.id || '');
+      const slugStr = String(p.slug || '');
+      if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
+        if (!combinedMap.has(idStr) && !combinedMap.has(slugStr)) {
+          combinedMap.set(idStr || slugStr, p);
+        }
+      }
+    });
+
+    const result = Array.from(combinedMap.values());
+    localStorage.setItem('giftery_products', JSON.stringify(result));
+    setLiveProducts(result.filter(p => p.isActive !== false));
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadCategoryProducts();
+    window.addEventListener('products_updated', loadCategoryProducts);
+    window.addEventListener('storage', loadCategoryProducts);
+    return () => {
+      window.removeEventListener('products_updated', loadCategoryProducts);
+      window.removeEventListener('storage', loadCategoryProducts);
+    };
+  }, []);
+
+  const products = liveProducts;
 
   return (
     <Layout>

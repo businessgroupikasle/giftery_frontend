@@ -55,7 +55,7 @@
   align-items: center;
   gap: 4.5rem;
   width: max-content;
-  animation: scrollTickerLeftToRight 30s linear infinite;
+  animation: scrollTickerLeftToRight 65s linear infinite;
   padding: 0.5rem 0;
 }
 
@@ -65,10 +65,10 @@
 
 @keyframes scrollTickerLeftToRight {
   0% {
-    transform: translateX(-33.333%);
+    transform: translateX(0%);
   }
   100% {
-    transform: translateX(0%);
+    transform: translateX(-50%);
   }
 }
 
@@ -90,13 +90,20 @@
   transform: scale(1.08) translateY(-3px);
 }
 
+.logoImg {
+  height: 60px;
+  max-width: 180px;
+  object-fit: contain;
+  display: block;
+}
+
 @media (max-width: 768px) {
   .trustedSection {
     padding: 2.5rem 0;
   }
   .tickerTrack {
     gap: 2.5rem;
-    animation-duration: 20s;
+    animation-duration: 50s;
   }
   .trustedTitle {
     font-size: 1rem;

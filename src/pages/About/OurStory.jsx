@@ -35,7 +35,7 @@ const OurStory = () => {
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
             </div>
-            <div className={styles.cardHighlight}>1000+</div>
+            <div className={styles.cardHighlight}>10k+</div>
             <h3 className={styles.cardTitle}>Happy Clients</h3>
             <p className={styles.cardSubtitle}>Trusted by leading brands across industries</p>
           </div>
@@ -48,7 +48,7 @@ const OurStory = () => {
                 <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
               </svg>
             </div>
-            <div className={styles.cardHighlight}>5000+</div>
+            <div className={styles.cardHighlight}>50000+</div>
             <h3 className={styles.cardTitle}>Products</h3>
             <p className={styles.cardSubtitle}>Wide range of premium gifting solutions</p>
           </div>

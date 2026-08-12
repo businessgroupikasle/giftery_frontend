@@ -338,7 +338,9 @@ const Dashboard = () => {
   const [savingProduct, setSavingProduct] = useState(false);
   const [productForm, setProductForm] = useState({
     name: '', description: '', price: '', comparePrice: '', stock: '0',
-    images: '', sku: '', weight: '', featured: false, categoryId: '', subCategoryId: '', isActive: true,
+    images: '', sku: '', tags: '', featured: false, isFeatured: false, isBestseller: false,
+    isPopular: false, isNewArrival: false, isMostLoved: false, isGiftSet: false,
+    categoryId: '', subCategoryId: '', isActive: true,
   });
 
   const [showCategoryForm, setShowCategoryForm] = useState(false);
@@ -521,99 +523,30 @@ const Dashboard = () => {
     } catch (err) {
       console.warn('Products fetch error:', err.message);
     } finally {
-const DEFAULT_STORE_PRODUCTS = [
-  {
-    id: 'prod-corp-1',
-    name: 'Luxury Executive Onboarding Gift Set',
-    categoryName: 'Corporate Gifts',
-    price: 1249,
-    stock: 50,
-    images: ['/images/prod_gift_set.png'],
-    description: 'Premium corporate welcome box featuring thermal bottle, leather diary, and gold pen.',
-    isFeatured: true,
-    isGiftSet: true,
-    tags: ['Corporate Gifts', 'featured', 'giftsets'],
-    isActive: true,
-  },
-  {
-    id: 'prod-corp-2',
-    name: 'Executive Laptop Backpack',
-    categoryName: 'Corporate Gifts',
-    price: 1999,
-    stock: 35,
-    images: ['/images/prod_laptop_bag.png'],
-    description: 'Ergonomic water-resistant laptop bag for modern professionals.',
-    isBestseller: true,
-    isPopular: true,
-    tags: ['Corporate Gifts', 'bestsellers', 'popular'],
-    isActive: true,
-  },
-  {
-    id: 'prod-pers-1',
-    name: 'Custom Engraved Wooden Photo Frame',
-    categoryName: 'Personalized Gifts',
-    price: 699,
-    stock: 40,
-    images: ['/images/prod_notebook_pen.png'],
-    description: 'High precision laser engraved solid beechwood photo frame.',
-    isPopular: true,
-    isMostLoved: true,
-    tags: ['Personalized Gifts', 'popular', 'loved'],
-    isActive: true,
-  },
-  {
-    id: 'prod-pers-2',
-    name: 'Customized Acrylic Table Stand & Desk Clock',
-    categoryName: 'Personalized Gifts',
-    price: 899,
-    stock: 25,
-    images: ['/images/cat_welcome.png'],
-    description: 'Crystal clear acrylic desk accent customized with name and logo.',
-    isNewArrival: true,
-    isMostLoved: true,
-    tags: ['Personalized Gifts', 'new', 'loved'],
-    isActive: true,
-  },
-  {
-    id: 'prod-toy-1',
-    name: 'Educational STEM Building Blocks Set',
-    categoryName: 'Toys',
-    price: 799,
-    stock: 60,
-    images: ['/images/cat_tech.png'],
-    description: 'Interactive building block set encouraging creative thinking for kids.',
-    isNewArrival: true,
-    isGiftSet: true,
-    tags: ['Toys', 'new', 'giftsets'],
-    isActive: true,
-  },
-  {
-    id: 'prod-toy-2',
-    name: 'Remote Control High Speed Stunt Car',
-    categoryName: 'Toys',
-    price: 1499,
-    stock: 30,
-    images: ['/images/prod_power_bank.png'],
-    description: '360 degree rotating rechargeable remote control car with LED lights.',
-    isBestseller: true,
-    isFeatured: true,
-    tags: ['Toys', 'bestsellers', 'featured'],
-    isActive: true,
-  },
-];
-
+      const deletedIds = new Set(JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]'));
       const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-      let merged = [...localProducts];
-      apiProducts.forEach(ap => {
-        if (!merged.find(m => m.id === ap.id || m.slug === ap.slug)) {
-          merged.push(ap);
+      const combinedMap = new Map();
+      // 1. Local products take priority (so custom/newly added products are preserved)
+      localProducts.forEach(p => {
+        const idStr = String(p.id || '');
+        const slugStr = String(p.slug || '');
+        if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
+          combinedMap.set(idStr || slugStr, p);
         }
       });
-      if (merged.length === 0) {
-        merged = DEFAULT_STORE_PRODUCTS;
-        localStorage.setItem('giftery_products', JSON.stringify(DEFAULT_STORE_PRODUCTS));
-      }
+      // 2. Add API products that are not deleted and not already in localProducts
+      apiProducts.forEach(p => {
+        const idStr = String(p.id || '');
+        const slugStr = String(p.slug || '');
+        if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
+          if (!combinedMap.has(idStr) && !combinedMap.has(slugStr)) {
+            combinedMap.set(idStr || slugStr, p);
+          }
+        }
+      });
+      const merged = Array.from(combinedMap.values());
       setProductsList(merged);
+      localStorage.setItem('giftery_products', JSON.stringify(merged));
       setLoadingProducts(false);
     }
   };
@@ -712,13 +645,18 @@ const DEFAULT_STORE_PRODUCTS = [
       };
       fetchOrders();
     };
+    const handleProductsUpdated = () => {
+      fetchProducts();
+    };
     window.addEventListener('registered_users_updated', handleNewUser);
     window.addEventListener('enquiries_updated', handleNewEnquiry);
     window.addEventListener('orders_updated', handleNewOrder);
+    window.addEventListener('products_updated', handleProductsUpdated);
     return () => {
       window.removeEventListener('registered_users_updated', handleNewUser);
       window.removeEventListener('enquiries_updated', handleNewEnquiry);
       window.removeEventListener('orders_updated', handleNewOrder);
+      window.removeEventListener('products_updated', handleProductsUpdated);
     };
   }, []);
 
@@ -738,8 +676,13 @@ const DEFAULT_STORE_PRODUCTS = [
       stock: '0',
       images: '',
       sku: '',
-      weight: '',
       featured: false,
+      isFeatured: false,
+      isBestseller: false,
+      isPopular: false,
+      isNewArrival: false,
+      isMostLoved: false,
+      isGiftSet: false,
       categoryId: '',
       subCategoryId: '',
       isActive: true,
@@ -776,7 +719,6 @@ const DEFAULT_STORE_PRODUCTS = [
       stock: product.stock?.toString() || '0',
       images: Array.isArray(product.images) ? product.images.join('|||') : (product.images || ''),
       sku: product.sku || '',
-      weight: product.weight?.toString() || '',
       featured: product.featured || false,
       isFeatured: product.isFeatured || product.featured || (Array.isArray(product.tags) && product.tags.includes('featured')),
       isBestseller: product.isBestseller || (Array.isArray(product.tags) && product.tags.includes('bestsellers')),
@@ -872,7 +814,6 @@ const DEFAULT_STORE_PRODUCTS = [
       stock: parseInt(productForm.stock) || 0,
       images: imagesArr,
       sku: productForm.sku || undefined,
-      weight: productForm.weight ? parseFloat(productForm.weight) : undefined,
       featured: isFeaturedVal,
       isFeatured: isFeaturedVal,
       isBestseller: isBestsellerVal,
@@ -884,7 +825,6 @@ const DEFAULT_STORE_PRODUCTS = [
       subCategoryId: productForm.subCategoryId || undefined,
       isActive: productForm.isActive,
     };
-    // Save locally to localStorage so it works offline & syncs immediately across all pages!
     const generatedSlug = payload.name ? payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : `prod-${Date.now()}`;
     const selectedCatObj = categories.find(c => c.id === payload.categoryId);
     const selectedSubCatObj = categories.find(c => c.id === payload.subCategoryId);
@@ -921,48 +861,70 @@ const DEFAULT_STORE_PRODUCTS = [
       createdAt: editingProduct ? editingProduct.createdAt : new Date().toISOString(),
     };
 
-    const existingCustom = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-    let updatedCustom;
-    if (editingProduct) {
-      updatedCustom = existingCustom.map(p => (p.id === editingProduct.id || p.slug === savedProduct.slug) ? { ...p, ...savedProduct } : p);
-    } else {
-      updatedCustom = [savedProduct, ...existingCustom.filter(p => p.id !== savedProduct.id)];
-    }
-    localStorage.setItem('giftery_products', JSON.stringify(updatedCustom));
-    window.dispatchEvent(new Event('products_updated'));
+    // Ensure product ID and slug are removed from deleted tracking list
+    const deletedList = JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]');
+    const cleanDeleted = deletedList.filter(d => d !== savedProduct.id && d !== savedProduct.slug);
+    localStorage.setItem('giftery_deleted_products', JSON.stringify(cleanDeleted));
 
     try {
+      let finalProduct = savedProduct;
       if (editingProduct) {
         const res = await axiosInstance.put(ENDPOINTS.PRODUCTS.UPDATE(editingProduct.id), payload);
-        const updated = (res.data || res).product || (res.data || res);
-        setProductsList(prev => prev.map(p => p.id === editingProduct.id ? { ...p, ...savedProduct, ...updated } : p));
-        toast.success('Product updated successfully!');
+        const updated = res.product || res.data?.product || res.data || res;
+        if (updated && (updated.id || updated.slug)) {
+          finalProduct = { ...savedProduct, ...updated };
+        }
+        toast.success(`Product "${savedProduct.name}" updated successfully!`);
       } else {
         const res = await axiosInstance.post(ENDPOINTS.PRODUCTS.CREATE, payload);
-        const created = (res.data || res).product || (res.data || res);
-        setProductsList(prev => [created || savedProduct, ...prev.filter(p => p.id !== savedProduct.id)]);
-        toast.success('Product added to the store!');
+        const created = res.product || res.data?.product || res.data || res;
+        if (created && (created.id || created.slug)) {
+          finalProduct = { ...savedProduct, ...created };
+        }
+        toast.success(`Product "${savedProduct.name}" added to store!`);
       }
+
+      setProductsList(prev => {
+        let updatedList;
+        if (editingProduct) {
+          updatedList = prev.map(p => (p.id === editingProduct.id || p.slug === finalProduct.slug) ? finalProduct : p);
+        } else {
+          updatedList = [finalProduct, ...prev.filter(p => p.id !== finalProduct.id)];
+        }
+        localStorage.setItem('giftery_products', JSON.stringify(updatedList));
+        return updatedList;
+      });
+      window.dispatchEvent(new Event('products_updated'));
       resetProductForm();
     } catch (err) {
-      console.warn('Backend API save warning, product saved to localStorage:', err.message);
-      setProductsList(prev => [savedProduct, ...prev.filter(p => p.id !== savedProduct.id)]);
-      toast.success('Product saved to store!');
+      console.warn('Backend API save fallback:', err.message);
+      setProductsList(prev => {
+        let updatedList;
+        if (editingProduct) {
+          updatedList = prev.map(p => (p.id === editingProduct.id || p.slug === savedProduct.slug) ? savedProduct : p);
+        } else {
+          updatedList = [savedProduct, ...prev.filter(p => p.id !== savedProduct.id)];
+        }
+        localStorage.setItem('giftery_products', JSON.stringify(updatedList));
+        return updatedList;
+      });
+      window.dispatchEvent(new Event('products_updated'));
+      toast.success(editingProduct ? `Product "${savedProduct.name}" updated!` : `Product "${savedProduct.name}" saved to store!`);
       resetProductForm();
     } finally {
       setSavingProduct(false);
     }
   };
 
-  const handleDeleteProduct = async (productId, productName) => {
-    if (!window.confirm(`Delete "${productName}"? This cannot be undone.`)) return;
-    try {
-      await axiosInstance.delete(ENDPOINTS.PRODUCTS.DELETE(productId));
-      setProductsList(prev => prev.filter(p => p.id !== productId));
-      toast.success('Product deleted successfully');
-    } catch (err) {
-      toast.error(err?.response?.data?.message || 'Failed to delete product');
-    }
+  // Delete Confirmation Modal State & Handlers
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState(null);
+
+  const handleDeleteProduct = (productId, productName) => {
+    setDeleteConfirmModal({
+      type: 'product',
+      id: productId,
+      name: productName,
+    });
   };
 
   // Category CRUD Handlers
@@ -1071,22 +1033,61 @@ const DEFAULT_STORE_PRODUCTS = [
     }
   };
 
-  const handleDeleteCategory = async (catId, catName) => {
-    if (!window.confirm(`Delete category "${catName}"? This cannot be undone.`)) return;
+  const handleDeleteCategory = (catId, catName) => {
+    setDeleteConfirmModal({
+      type: 'category',
+      id: catId,
+      name: catName,
+    });
+  };
 
-    const existingCustomCats = JSON.parse(localStorage.getItem('giftery_categories') || '[]');
-    const updatedCustomCats = existingCustomCats.filter(c => c.id !== catId);
-    localStorage.setItem('giftery_categories', JSON.stringify(updatedCustomCats));
-    window.dispatchEvent(new Event('categories_updated'));
+  const confirmExecuteDelete = async () => {
+    if (!deleteConfirmModal) return;
+    const { type, id, name } = deleteConfirmModal;
+    setDeleteConfirmModal(null);
 
-    setCategories(prev => prev.filter(c => c.id !== catId));
+    if (type === 'product') {
+      // 1. Save to deleted tracking list
+      const deletedList = JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]');
+      if (!deletedList.includes(id)) deletedList.push(id);
+      localStorage.setItem('giftery_deleted_products', JSON.stringify(deletedList));
 
-    try {
-      await axiosInstance.delete(ENDPOINTS.CATEGORIES.DELETE(catId));
-      toast.success('Category deleted successfully');
-    } catch (err) {
-      console.warn('Backend API category delete warning:', err.message);
-      toast.success('Category removed from store');
+      // 2. Clean from localStorage & component state
+      const existingCustom = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+      const updatedCustom = existingCustom.filter(p => p.id !== id && p.slug !== id);
+      localStorage.setItem('giftery_products', JSON.stringify(updatedCustom));
+      setProductsList(prev => prev.filter(p => p.id !== id && p.slug !== id));
+      window.dispatchEvent(new Event('products_updated'));
+
+      // 3. Sync backend API delete
+      try {
+        await axiosInstance.delete(ENDPOINTS.PRODUCTS.DELETE(id));
+      } catch (err) {
+        console.warn('Backend API delete note:', err?.response?.data?.message || err.message);
+      }
+
+      toast.success(`Product "${name}" deleted successfully!`);
+    } else if (type === 'category') {
+      // 1. Save to deleted categories list
+      const deletedCats = JSON.parse(localStorage.getItem('giftery_deleted_categories') || '[]');
+      if (!deletedCats.includes(id)) deletedCats.push(id);
+      localStorage.setItem('giftery_deleted_categories', JSON.stringify(deletedCats));
+
+      // 2. Clean from localStorage & component state
+      const existingCustomCats = JSON.parse(localStorage.getItem('giftery_categories') || '[]');
+      const updatedCustomCats = existingCustomCats.filter(c => c.id !== id && c.slug !== id);
+      localStorage.setItem('giftery_categories', JSON.stringify(updatedCustomCats));
+      setCategories(prev => prev.filter(c => c.id !== id && c.slug !== id));
+      window.dispatchEvent(new Event('categories_updated'));
+
+      // 3. Sync backend API delete
+      try {
+        await axiosInstance.delete(ENDPOINTS.CATEGORIES.DELETE(id));
+        toast.success(`Category "${name}" deleted successfully!`);
+      } catch (err) {
+        console.warn('Backend API category delete warning:', err.message);
+        toast.success(`Category "${name}" removed from store`);
+      }
     }
   };
 
@@ -1569,6 +1570,106 @@ const DEFAULT_STORE_PRODUCTS = [
                   Download File Now
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── CUSTOM MODERN DELETE CONFIRMATION MODAL POPUP WINDOW ── */}
+      {deleteConfirmModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.72)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+          onClick={() => setDeleteConfirmModal(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#ffffff',
+              borderRadius: '16px',
+              maxWidth: '460px',
+              width: '100%',
+              padding: '1.85rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
+              border: '1px solid #e2e8f0',
+              textAlign: 'center',
+            }}
+          >
+            {/* Warning Icon Circle */}
+            <div
+              style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: '#fee2e2',
+                color: '#dc2626',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.8rem',
+                margin: '0 auto 1.25rem auto',
+                boxShadow: '0 6px 16px rgba(220, 38, 38, 0.18)',
+              }}
+            >
+              ⚠️
+            </div>
+
+            <h3 style={{ margin: '0 0 0.6rem 0', fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>
+              Are you sure you want to delete?
+            </h3>
+
+            <p style={{ margin: '0 0 1.6rem 0', fontSize: '0.9rem', color: '#475569', lineHeight: '1.6' }}>
+              Delete <strong style={{ color: '#0f172a' }}>"{deleteConfirmModal.name}"</strong>? This action cannot be undone and will permanently remove this {deleteConfirmModal.type} from the store catalog.
+            </p>
+
+            <div style={{ display: 'flex', gap: '0.85rem', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmModal(null)}
+                style={{
+                  padding: '0.65rem 1.4rem',
+                  background: '#f1f5f9',
+                  color: '#475569',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmExecuteDelete}
+                style={{
+                  padding: '0.65rem 1.6rem',
+                  background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '700',
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.35)',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                Yes, Delete
+              </button>
             </div>
           </div>
         </div>

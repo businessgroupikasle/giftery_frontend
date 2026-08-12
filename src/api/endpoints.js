@@ -104,6 +104,23 @@ export const ENDPOINTS = {
     STATS: '/dashboard/stats',
     RECENT_ORDERS: '/dashboard/recent-orders',
     REVENUE: '/dashboard/revenue',
+    PRODUCTS: {
+      LIST: '/dashboard/products',
+      DETAIL: (id) => `/dashboard/products/${id}`,
+      CREATE: '/dashboard/products',
+      UPDATE: (id) => `/dashboard/products/${id}`,
+      DELETE: (id) => `/dashboard/products/${id}`,
+      CLONE: (id) => `/dashboard/products/${id}/clone`,
+      STATUS: (id) => `/dashboard/products/${id}/status`,
+      INVENTORY: (id) => `/dashboard/products/${id}/inventory`,
+      LOW_STOCK: '/dashboard/products/stock/low',
+      OUT_OF_STOCK: '/dashboard/products/stock/outofstock',
+      BY_STATUS: (status) => `/dashboard/products/status/${status}`,
+      TOP_SELLING: '/dashboard/products/top-selling',
+      STATS: '/dashboard/products/stats',
+      BULK_STATUS: '/dashboard/products/batch/status',
+      BULK_DELETE: '/dashboard/products/batch/delete',
+    },
   },
 
   // ── Settings ──────────────────────────────────────────────

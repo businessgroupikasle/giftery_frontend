@@ -20,6 +20,8 @@ import { ROUTES } from '@constants/routes';
 import { useCartContext } from '@context/CartContext';
 import { addItem } from '@store/slices/cartSlice';
 import { addToWishlistAlias, removeFromWishlistAlias, selectWishlistItems } from '@store/slices/wishlistSlice';
+import axiosInstance from '@api/axiosInstance';
+import { ENDPOINTS } from '@api/endpoints';
 import styles from './ShopByCategory.module.css';
 
 const filterCategories = [
@@ -102,18 +104,43 @@ const ShopByCategory = () => {
   const wishlistItems = useSelector(selectWishlistItems);
   const { openCart } = useCartContext();
 
-  const loadProducts = () => {
+  const loadProducts = async () => {
+    let apiProds = [];
     try {
-      const stored = localStorage.getItem('giftery_products');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setProductsList(parsed);
-          return;
+      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
+      if (Array.isArray(res)) apiProds = res;
+      else if (res?.data && Array.isArray(res.data)) apiProds = res.data;
+      else if (res?.data?.data && Array.isArray(res.data.data)) apiProds = res.data.data;
+      else if (res?.data?.products && Array.isArray(res.data.products)) apiProds = res.data.products;
+    } catch (e) {}
+
+    const deletedIds = new Set(JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]'));
+    const localProds = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+    const combinedMap = new Map();
+
+    localProds.forEach(p => {
+      const idStr = String(p.id || '');
+      const slugStr = String(p.slug || '');
+      if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
+        combinedMap.set(idStr || slugStr, p);
+      }
+    });
+
+    apiProds.forEach(p => {
+      const idStr = String(p.id || '');
+      const slugStr = String(p.slug || '');
+      if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
+        if (!combinedMap.has(idStr) && !combinedMap.has(slugStr)) {
+          combinedMap.set(idStr || slugStr, p);
         }
       }
-    } catch (e) {}
-    setProductsList(sampleProducts);
+    });
+
+    let result = Array.from(combinedMap.values());
+    if (result.length === 0) result = sampleProducts;
+
+    setProductsList(result);
+    localStorage.setItem('giftery_products', JSON.stringify(result));
   };
 
   useEffect(() => {
@@ -152,7 +179,7 @@ const ShopByCategory = () => {
     });
 
     if (matches.length > 0) return matches.slice(0, 6);
-    return sampleProducts;
+    return listToFilter.slice(0, 6);
   };
 
   const displayProducts = getFilteredProducts();

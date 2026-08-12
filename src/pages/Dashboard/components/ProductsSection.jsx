@@ -171,11 +171,13 @@ const ProductsSection = ({
       // Search text filter
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
+      const tagsStr = Array.isArray(p.tags) ? p.tags.join(' ') : String(p.tags || '');
       return (
         p.name.toLowerCase().includes(q) ||
         (p.sku && p.sku.toLowerCase().includes(q)) ||
         (p.category?.name && p.category.name.toLowerCase().includes(q)) ||
-        (p.subcategory?.name && p.subcategory.name.toLowerCase().includes(q))
+        (p.subcategory?.name && p.subcategory.name.toLowerCase().includes(q)) ||
+        tagsStr.toLowerCase().includes(q)
       );
     });
   }, [productsList, categories, activeCategoryFilter, searchQuery]);
@@ -382,8 +384,8 @@ const ProductsSection = ({
               </div>
             </div>
 
-            {/* Row 2: Price + Compare Price + Stock + Weight */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+            {/* Row 2: Price + Compare Price + Stock */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
               <div>
                 <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Price (₹) *</label>
                 <input type="number" name="price" required min="0" step="0.01" value={productForm.price} onChange={handleProductFormChange} placeholder="999" className={`${styles.searchInput} ${styles.noSpinner}`} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
@@ -395,10 +397,6 @@ const ProductsSection = ({
               <div>
                 <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Stock Qty *</label>
                 <input type="number" name="stock" min="0" value={productForm.stock} onChange={handleProductFormChange} placeholder="50" className={`${styles.searchInput} ${styles.noSpinner}`} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Weight (kg)</label>
-                <input type="number" name="weight" min="0" step="0.01" value={productForm.weight} onChange={handleProductFormChange} placeholder="0.5" className={`${styles.searchInput} ${styles.noSpinner}`} style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }} />
               </div>
             </div>
 
@@ -486,6 +484,22 @@ const ProductsSection = ({
               />
             </div>
 
+            {/* Product Tags / Search Keywords */}
+            <div>
+              <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                Product Tags & Search Keywords <span style={{ fontWeight: 400, color: '#94a3b8' }}>(Comma separated, e.g. luxury, leather, onboarding, office)</span>
+              </label>
+              <input
+                type="text"
+                name="tags"
+                value={productForm.tags || ''}
+                onChange={handleProductFormChange}
+                placeholder="e.g. luxury, leather, onboarding, corporate gift, bottle"
+                className={styles.searchInput}
+                style={{ paddingLeft: '0.85rem', width: '100%', height: '42px', borderRadius: '8px' }}
+              />
+            </div>
+
             {/* Product Image Slots */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
@@ -562,16 +576,92 @@ const ProductsSection = ({
               })()}
             </div>
 
-            {/* Toggles */}
-            <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
-                <input type="checkbox" name="featured" checked={productForm.featured} onChange={handleProductFormChange} style={{ width: '17px', height: '17px', cursor: 'pointer', accentColor: '#d99b26' }} />
-                Featured Product
+            {/* Homepage Display Collections & Store Visibility */}
+            <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: '0.65rem' }}>
+                Show Product on Homepage Tabs & Store Collections:
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
-                <input type="checkbox" name="isActive" checked={productForm.isActive} onChange={handleProductFormChange} style={{ width: '17px', height: '17px', cursor: 'pointer', accentColor: '#059669' }} />
-                Active (visible on store)
-              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.75rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                  <input
+                    type="checkbox"
+                    name="isFeatured"
+                    checked={!!productForm.isFeatured || !!productForm.featured}
+                    onChange={(e) => {
+                      handleProductFormChange(e);
+                      handleProductFormChange({ target: { name: 'featured', value: e.target.checked, type: 'checkbox', checked: e.target.checked } });
+                    }}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
+                  />
+                  Featured Products
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                  <input
+                    type="checkbox"
+                    name="isBestseller"
+                    checked={!!productForm.isBestseller}
+                    onChange={handleProductFormChange}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
+                  />
+                  Best Sellers
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                  <input
+                    type="checkbox"
+                    name="isPopular"
+                    checked={!!productForm.isPopular}
+                    onChange={handleProductFormChange}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
+                  />
+                  Popular Products
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                  <input
+                    type="checkbox"
+                    name="isNewArrival"
+                    checked={!!productForm.isNewArrival}
+                    onChange={handleProductFormChange}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
+                  />
+                  New Arrivals
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                  <input
+                    type="checkbox"
+                    name="isMostLoved"
+                    checked={!!productForm.isMostLoved}
+                    onChange={handleProductFormChange}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
+                  />
+                  Most Loved
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                  <input
+                    type="checkbox"
+                    name="isGiftSet"
+                    checked={!!productForm.isGiftSet}
+                    onChange={handleProductFormChange}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
+                  />
+                  Gift Sets
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700, color: '#059669' }}>
+                  <input
+                    type="checkbox"
+                    name="isActive"
+                    checked={productForm.isActive !== false}
+                    onChange={handleProductFormChange}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#059669' }}
+                  />
+                  Active (Store Visible)
+                </label>
+              </div>
             </div>
 
             {/* Form Actions */}

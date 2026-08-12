@@ -139,13 +139,30 @@ const PersonalizedGifts = () => {
         console.warn('Fallback to catalog products:', err.message);
       }
 
-      const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-      const combined = [...localProducts];
-      apiProducts.forEach(ap => {
-        if (!combined.find(c => c.id === ap.id || c.slug === ap.slug)) {
-          combined.push(ap);
+      const deletedIds = new Set(JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]'));
+      const localProds = JSON.parse(localStorage.getItem('giftery_products') || '[]');
+      const combinedMap = new Map();
+
+      localProds.forEach(p => {
+        const idStr = String(p.id || '');
+        const slugStr = String(p.slug || '');
+        if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
+          combinedMap.set(idStr || slugStr, p);
         }
       });
+
+      apiProducts.forEach(p => {
+        const idStr = String(p.id || '');
+        const slugStr = String(p.slug || '');
+        if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
+          if (!combinedMap.has(idStr) && !combinedMap.has(slugStr)) {
+            combinedMap.set(idStr || slugStr, p);
+          }
+        }
+      });
+
+      const combined = Array.from(combinedMap.values());
+      localStorage.setItem('giftery_products', JSON.stringify(combined));
 
       if (combined.length > 0) {
         const formatted = combined
