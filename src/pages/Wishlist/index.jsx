@@ -11,6 +11,7 @@ import { ROUTES } from '@constants/routes';
 import { addToCart } from '@store/slices/cartSlice';
 import { removeFromWishlist, clearWishlist } from '@store/slices/wishlistSlice';
 import { formatCurrency } from '@utils/formatters';
+import { getImageUrl } from '@utils/imageUrl';
 import styles from './Wishlist.module.css';
 
 const Wishlist = () => {
@@ -68,17 +69,10 @@ const Wishlist = () => {
         apiProducts = extracted;
       } catch (err) {}
 
-      let combined = apiProducts;
       if (apiProducts.length > 0) {
-        localStorage.setItem('giftery_products', JSON.stringify(apiProducts));
-      } else {
-        combined = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-      }
-
-      if (combined.length > 0) {
         // Exclude items already in wishlist
         const wishlistIds = new Set(wishlistItems.map(i => i.id));
-        const filtered = combined
+        const filtered = apiProducts
           .filter(p => !wishlistIds.has(p.id))
           .slice(0, 3)
           .map(p => ({
@@ -223,7 +217,12 @@ const Wishlist = () => {
                 {wishlistItems.map((item) => (
                   <div key={item.id} className={styles.itemCard}>
                     <div className={styles.imageArea}>
-                      <img src={item.image} alt={item.name} className={styles.itemImg} />
+                      <img
+                        src={getImageUrl(item.image)}
+                        alt={item.name}
+                        className={styles.itemImg}
+                        onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                      />
                       {item.discount && <span className={styles.discountTag}>{item.discount}</span>}
                       <button
                         className={styles.removeBadgeBtn}

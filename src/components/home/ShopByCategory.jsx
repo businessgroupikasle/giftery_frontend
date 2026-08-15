@@ -105,81 +105,74 @@ const ShopByCategory = () => {
   const { openCart } = useCartContext();
 
   const loadProducts = async () => {
-    let apiProds = [];
     try {
-      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
+      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=100');
+      let apiProds = [];
       if (Array.isArray(res)) apiProds = res;
       else if (res?.data && Array.isArray(res.data)) apiProds = res.data;
       else if (res?.data?.data && Array.isArray(res.data.data)) apiProds = res.data.data;
       else if (res?.data?.products && Array.isArray(res.data.products)) apiProds = res.data.products;
-    } catch (e) {}
+      else if (res?.products && Array.isArray(res.products)) apiProds = res.products;
 
-    const deletedIds = new Set(JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]'));
-    const localProds = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-    const combinedMap = new Map();
+      const formatted = apiProds.map(p => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        description: p.description,
+        price: p.price,
+        comparePrice: p.comparePrice,
+        stock: p.stock,
+        rating: p.rating || 4.8,
+        reviewsCount: p.reviewsCount || p._count?.reviews || 24,
+        image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : (p.image || '/placeholder.jpg'),
+        images: Array.isArray(p.images) ? p.images : [p.image || '/placeholder.jpg'],
+        isFeatured: Boolean(p.featured || p.isFeatured),
+        featured: Boolean(p.featured || p.isFeatured),
+        isBestseller: Boolean(p.isBestseller),
+        isPopular: Boolean(p.isPopular),
+        isNewArrival: Boolean(p.isNewArrival),
+        isMostLoved: Boolean(p.isMostLoved),
+        isGiftSet: Boolean(p.isGiftSet),
+        tags: Array.isArray(p.tags) ? p.tags : [],
+        categoryName: p.category?.name || p.categoryName || '',
+      }));
 
-    localProds.forEach(p => {
-      const idStr = String(p.id || '');
-      const slugStr = String(p.slug || '');
-      if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
-        combinedMap.set(idStr || slugStr, p);
-      }
-    });
-
-    apiProds.forEach(p => {
-      const idStr = String(p.id || '');
-      const slugStr = String(p.slug || '');
-      if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
-        if (!combinedMap.has(idStr) && !combinedMap.has(slugStr)) {
-          combinedMap.set(idStr || slugStr, p);
-        }
-      }
-    });
-
-    let result = Array.from(combinedMap.values());
-    if (result.length === 0) result = sampleProducts;
-
-    setProductsList(result);
-    localStorage.setItem('giftery_products', JSON.stringify(result));
+      setProductsList(formatted);
+    } catch (e) {
+      console.warn('ShopByCategory live products fetch note:', e.message);
+    }
   };
 
   useEffect(() => {
     loadProducts();
     window.addEventListener('products_updated', loadProducts);
-    window.addEventListener('storage', loadProducts);
     return () => {
       window.removeEventListener('products_updated', loadProducts);
-      window.removeEventListener('storage', loadProducts);
     };
   }, []);
 
   const getFilteredProducts = () => {
-    const listToFilter = productsList.length > 0 ? productsList : sampleProducts;
-    const matches = listToFilter.filter(product => {
-      const tags = Array.isArray(product.tags) ? product.tags.map(t => String(t).toLowerCase()) : [];
+    return productsList.filter(product => {
       if (activeFilter === 'featured') {
-        return product.isFeatured || product.featured || tags.includes('featured');
+        return Boolean(product.featured || product.isFeatured);
       }
       if (activeFilter === 'bestsellers') {
-        return product.isBestseller || tags.includes('bestsellers') || tags.includes('bestseller') || tags.includes('best seller');
+        return Boolean(product.isBestseller);
       }
       if (activeFilter === 'popular') {
-        return product.isPopular || tags.includes('popular');
+        return Boolean(product.isPopular);
       }
       if (activeFilter === 'new') {
-        return product.isNewArrival || tags.includes('new') || tags.includes('new arrival');
+        return Boolean(product.isNewArrival);
       }
       if (activeFilter === 'loved') {
-        return product.isMostLoved || tags.includes('loved') || tags.includes('most loved');
+        return Boolean(product.isMostLoved);
       }
       if (activeFilter === 'giftsets') {
-        return product.isGiftSet || tags.includes('giftsets') || tags.includes('gift set') || tags.includes('giftset');
+        return Boolean(product.isGiftSet);
       }
-      return true;
-    });
-
-    if (matches.length > 0) return matches.slice(0, 6);
-    return listToFilter.slice(0, 6);
+      return false;
+    }).slice(0, 8);
   };
 
   const displayProducts = getFilteredProducts();

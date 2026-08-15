@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import Layout from '@components/layout/Layout';
 import { removeFromCart, updateQuantity, clearCart, addToCart } from '@store/slices/cartSlice';
 import { formatCurrency } from '@utils/formatters';
+import { getImageUrl } from '@utils/imageUrl';
 import { ROUTES } from '@constants/routes';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
@@ -33,16 +34,9 @@ const Cart = () => {
         apiProducts = extracted;
       } catch (err) {}
 
-      let combined = apiProducts;
       if (apiProducts.length > 0) {
-        localStorage.setItem('giftery_products', JSON.stringify(apiProducts));
-      } else {
-        combined = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-      }
-
-      if (combined.length > 0) {
         const cartIds = new Set(cartItems.map(i => i.id));
-        const filtered = combined
+        const filtered = apiProducts
           .filter(p => !cartIds.has(p.id))
           .slice(0, 6)
           .map(p => ({
@@ -278,7 +272,11 @@ const Cart = () => {
                           <div className={styles.colProduct}>
                             <div className={styles.productFlex}>
                               <div className={styles.itemImgBox}>
-                                <img src={item.image} alt={item.name} />
+                                <img
+                                  src={getImageUrl(item.image)}
+                                  alt={item.name}
+                                  onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                                />
                               </div>
                               <div className={styles.itemDetails}>
                                 <h3 className={styles.itemName}>{item.name}</h3>
@@ -460,7 +458,11 @@ const Cart = () => {
                 {suggestedProducts.map((prod) => (
                   <div key={prod.id} className={styles.suggestedCard} onClick={() => navigate(ROUTES.PRODUCT_PATH(prod.slug))}>
                     <div className={styles.suggestedImgBox}>
-                      <img src={prod.image} alt={prod.name} />
+                      <img
+                        src={getImageUrl(prod.image)}
+                        alt={prod.name}
+                        onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                      />
                     </div>
                     <div className={styles.suggestedInfo}>
                       <h4 className={styles.suggestedName}>{prod.name}</h4>

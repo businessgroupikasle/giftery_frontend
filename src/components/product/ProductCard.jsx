@@ -6,6 +6,7 @@ import { selectIsWishlisted } from '@store/slices/wishlistSlice';
 import useWishlist from '@hooks/useWishlist';
 import StarRating from './StarRating';
 import { formatCurrency } from '@utils/formatters';
+import { getProductThumbnail } from '@utils/imageUrl';
 import { ROUTES } from '@constants/routes';
 import { toast } from 'react-toastify';
 import styles from './ProductCard.module.css';
@@ -18,28 +19,13 @@ const ProductCard = ({ product }) => {
   const { addToWishlist, removeFromWishlist } = useWishlist();
 
   const {
-    id, name, slug, price, comparePrice, images, rating = 4.8, _count,
+    id, name, slug, price, comparePrice, rating = 4.8, _count,
   } = product;
 
   const discount = comparePrice ? Math.round(((comparePrice - price) / comparePrice) * 100) : null;
   const isWishlisted = useSelector(selectIsWishlisted(id));
   
-  let image = '/placeholder.jpg';
-  if (Array.isArray(images) && images.length > 0) {
-    image = images[0];
-  } else if (typeof images === 'string' && images.trim()) {
-    const trimmed = images.trim();
-    if (trimmed.startsWith('[')) {
-      try {
-        const parsed = JSON.parse(trimmed);
-        if (Array.isArray(parsed) && parsed.length > 0) image = parsed[0];
-      } catch (e) {}
-    } else {
-      image = trimmed.split(',')[0].trim();
-    }
-  } else if (product.image) {
-    image = product.image;
-  }
+  const image = getProductThumbnail(product);
 
   const productUrl = ROUTES.PRODUCT_PATH ? ROUTES.PRODUCT_PATH(slug) : `/product/${slug}`;
 
@@ -67,7 +53,13 @@ const ProductCard = ({ product }) => {
     <article className={styles.card} aria-label={name}>
       <div className={styles.imageWrapper}>
         <Link to={productUrl} className={styles.imageLink}>
-          <img src={image} alt={name} className={styles.image} loading="lazy" />
+          <img
+            src={image}
+            alt={name}
+            className={styles.image}
+            loading="lazy"
+            onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+          />
         </Link>
         {discount && <span className={styles.badge}>-{discount}%</span>}
 

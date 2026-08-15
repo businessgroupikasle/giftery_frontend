@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import axiosInstance from '@api/axiosInstance';
 import { toast } from 'react-toastify';
+import { getImageUrl, getProductThumbnail } from '@utils/imageUrl';
 import styles from '../Dashboard.module.css';
 
 const parseImages = (imgs) => {
@@ -34,17 +35,17 @@ const handleImageFileUpload = (file, idx, imageList, handleProductFormChange) =>
     if (!dataUrl) return;
 
     try {
-      const res = await axiosInstance.post('/upload', { image: dataUrl });
-      const uploadedUrl = res.data?.data?.url || res.data?.url;
+      const res = await axiosInstance.post('/uploads', { image: dataUrl });
+      const uploadedUrl = res.data?.url || res.url || res.data?.data?.url;
       if (uploadedUrl) {
         const updated = [...imageList];
         updated[idx] = uploadedUrl;
         handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
-        toast.success('Image saved directly to backend Uploads directory!');
+        toast.success('Image saved directly to backend storage!');
         return;
       }
     } catch (err) {
-      console.warn('Backend upload endpoint fallback:', err.message);
+      console.warn('Backend image upload fallback:', err.message);
     }
 
     const updated = [...imageList];
@@ -543,7 +544,12 @@ const ProductsSection = ({
                         >
                           {imgUrl ? (
                             <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                              <img src={imgUrl} alt={`Product ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img
+                                src={getImageUrl(imgUrl)}
+                                alt={`Product ${idx + 1}`}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                              />
                               <div style={{ position: 'absolute', bottom: '4px', right: '4px', display: 'flex', gap: '4px' }}>
                                 <label style={{ background: '#ffffff', color: '#334155', padding: '0.2rem 0.4rem', borderRadius: '4px', fontSize: '0.68rem', cursor: 'pointer', fontWeight: 700 }}>
                                   Edit
@@ -723,11 +729,12 @@ const ProductsSection = ({
                 return (
                   <tr key={product.id}>
                     <td>
-                      {product.images?.[0] ? (
-                        <img src={product.images[0]} alt={product.name} style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0' }} onError={(e) => { e.target.style.display='none'; }} />
-                      ) : (
-                        <div style={{ width: '44px', height: '44px', background: '#f1f5f9', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>No Img</div>
-                      )}
+                      <img
+                        src={getProductThumbnail(product)}
+                        alt={product.name}
+                        style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0' }}
+                        onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                      />
                     </td>
                     <td>
                       <strong style={{ display: 'block', color: '#0f172a', fontSize: '0.9rem' }}>{product.name}</strong>

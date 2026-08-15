@@ -10,6 +10,7 @@ import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { ROUTES } from '@constants/routes';
 import { toast } from 'react-toastify';
+import { getImageUrl } from '@utils/imageUrl';
 import styles from './Product.module.css';
 
 /* ── Fallback Master Products Dataset (for rich catalog fallback by slug) ── */
@@ -133,114 +134,78 @@ const Product = () => {
     setQuantityInput(String(quantity));
   }, [quantity]);
 
-  // Fetch Product from LocalStorage or Backend by Slug, with master dataset fallback
+  // Fetch Product directly from Live Backend API by Slug or ID
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
     setError(null);
 
     const fetchProduct = async () => {
-      let foundProduct = null;
-      // 1. Fetch from Backend API first
       try {
         const res = await axiosInstance.get(`${ENDPOINTS.PRODUCTS.LIST}/${slug}`);
         const data = res.product || res.data?.product || res.data?.data || res.data;
         if (data && (data.id || data.slug)) {
-          foundProduct = data;
+          if (isMounted) {
+            setProduct(data);
+            const imgs = parseImagesArray(data.images || data.image, 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80');
+            setSelectedImage(imgs[0]);
+            setQuantity(data.minOrder || 1);
+            setLoading(false);
+          }
+          return;
         }
-      } catch (err) {}
-
-      // 2. Fallback to LocalStorage
-      if (!foundProduct) {
-        const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-        const normalizedSlug = slug ? slug.toLowerCase().trim() : '';
-        foundProduct = localProducts.find(p => (
-          p.slug === normalizedSlug ||
-          p.id === slug ||
-          (p.name && p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') === normalizedSlug)
-        ));
+      } catch (err) {
+        console.warn('Live product fetch note:', err.message);
       }
 
-      // 3. Fallback to Master Dataset
-      if (!foundProduct) {
-        const masterFound = MASTER_PRODUCTS.find(p => p.slug === slug) || MASTER_PRODUCTS[0];
-        foundProduct = { ...masterFound, name: masterFound.slug === slug ? masterFound.name : slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) };
-      }
-
-      if (isMounted && foundProduct) {
-        setProduct(foundProduct);
-        const imgs = parseImagesArray(foundProduct.images || foundProduct.image, 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80');
-        setSelectedImage(imgs[0]);
-        setQuantity(foundProduct.minOrder || 1);
+      if (isMounted) {
+        setProduct(null);
         setLoading(false);
       }
     };
 
     // Related Products from Live Catalog
     const fetchLiveRelated = async () => {
-      let apiProducts = [];
       try {
-        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
+        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=20');
         let extracted = [];
         if (Array.isArray(res)) extracted = res;
         else if (res?.data && Array.isArray(res.data)) extracted = res.data;
         else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
         else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
         else if (res?.products && Array.isArray(res.products)) extracted = res.products;
-        apiProducts = extracted;
-      } catch (err) {}
 
-      const deletedIds = new Set(JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]'));
-      const localProds = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-      const combinedMap = new Map();
-
-      localProds.forEach(p => {
-        const idStr = String(p.id || '');
-        const slugStr = String(p.slug || '');
-        if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
-          combinedMap.set(idStr || slugStr, p);
+        if (extracted.length > 0 && isMounted) {
+          const normalizedSlug = slug ? slug.toLowerCase().trim() : '';
+          const filtered = extracted
+            .filter(p => p.slug !== normalizedSlug && p.id !== slug)
+            .slice(0, 4)
+            .map(p => ({
+              id: p.id,
+              name: p.name,
+              price: p.price,
+              image: Array.isArray(p.images) ? p.images[0] : (p.image || '/placeholder.jpg'),
+              slug: p.slug,
+            }));
+          setRelatedProducts(filtered);
         }
-      });
-
-      apiProducts.forEach(p => {
-        const idStr = String(p.id || '');
-        const slugStr = String(p.slug || '');
-        if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
-          if (!combinedMap.has(idStr) && !combinedMap.has(slugStr)) {
-            combinedMap.set(idStr || slugStr, p);
-          }
-        }
-      });
-
-      const combined = Array.from(combinedMap.values());
-      localStorage.setItem('giftery_products', JSON.stringify(combined));
-
-      if (combined.length > 0 && isMounted) {
-        const normalizedSlug = slug ? slug.toLowerCase().trim() : '';
-        const filtered = combined
-          .filter(p => p.slug !== normalizedSlug && p.id !== slug)
-          .slice(0, 4)
-          .map(p => ({
-            id: p.id,
-            name: p.name,
-            price: p.price,
-            image: Array.isArray(p.images) ? p.images[0] : (p.image || '/placeholder.jpg'),
-            slug: p.slug,
-          }));
-        setRelatedProducts(filtered);
+      } catch (err) {
+        console.warn('Live related products fetch error:', err.message);
       }
     };
 
     fetchProduct();
     fetchLiveRelated();
 
-    window.addEventListener('products_updated', () => {
+    const handleUpdate = () => {
       fetchProduct();
       fetchLiveRelated();
-    });
+    };
+
+    window.addEventListener('products_updated', handleUpdate);
     return () => {
       isMounted = false;
-      window.removeEventListener('products_updated', fetchProduct);
+      window.removeEventListener('products_updated', handleUpdate);
     };
   }, [slug]);
 
@@ -578,7 +543,11 @@ const Product = () => {
                     className={`${styles.thumbBtn} ${selectedImage === imgUrl ? styles.thumbActive : ''}`}
                     onClick={() => setSelectedImage(imgUrl)}
                   >
-                    <img src={imgUrl} alt={`${name} thumb ${idx + 1}`} />
+                    <img
+                      src={getImageUrl(imgUrl)}
+                      alt={`${name} thumb ${idx + 1}`}
+                      onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                    />
                   </button>
                 ))}
                 <button type="button" className={styles.thumbScrollNav}>∨</button>
@@ -586,7 +555,12 @@ const Product = () => {
 
               {/* Main Image Box */}
               <div className={styles.mainImageBox}>
-                <img src={selectedImage || galleryImages[0]} alt={name} className={styles.mainImg} />
+                <img
+                  src={getImageUrl(selectedImage || galleryImages[0])}
+                  alt={name}
+                  className={styles.mainImg}
+                  onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                />
                 <button type="button" className={styles.wishlistOverlayBtn} onClick={handleWishlistToggle} aria-label="Add to wishlist">
                   ♡
                 </button>

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { FiSearch, FiBell, FiX, FiPackage, FiShoppingBag, FiUsers, FiFolder, FiMessageSquare, FiFileText } from 'react-icons/fi';
+import { getProductThumbnail } from '@utils/imageUrl';
 import styles from '../Dashboard.module.css';
 
 const INITIAL_NOTIFICATIONS = [
@@ -378,11 +379,12 @@ const DashboardNavbar = ({
                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                          {p.images?.[0] ? (
-                            <img src={p.images[0]} alt={p.name} style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover' }} />
-                          ) : (
-                            <div style={{ width: '28px', height: '28px', borderRadius: '4px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#94a3b8' }}>Img</div>
-                          )}
+                          <img
+                            src={getProductThumbnail(p)}
+                            alt={p.name}
+                            style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover' }}
+                            onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                          />
                           <span style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: 600 }}>{p.name}</span>
                         </div>
                         <span style={{ fontSize: '0.8rem', color: '#d99b26', fontWeight: 700 }}>₹{p.price?.toLocaleString('en-IN')}</span>

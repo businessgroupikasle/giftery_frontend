@@ -26,48 +26,28 @@ const Shop = () => {
 
   const loadAllProducts = async () => {
     setLoading(true);
-    let apiProds = [];
     try {
       const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200');
-      const data = res.data?.data || res.data?.products || res.data || res;
-      if (Array.isArray(data)) apiProds = data;
-    } catch (e) {}
+      let apiProds = [];
+      if (Array.isArray(res)) apiProds = res;
+      else if (res?.data && Array.isArray(res.data)) apiProds = res.data;
+      else if (res?.data?.data && Array.isArray(res.data.data)) apiProds = res.data.data;
+      else if (res?.data?.products && Array.isArray(res.data.products)) apiProds = res.data.products;
+      else if (res?.products && Array.isArray(res.products)) apiProds = res.products;
 
-    const deletedIds = new Set(JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]'));
-    const localProds = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-    const combinedMap = new Map();
-
-    localProds.forEach(p => {
-      const idStr = String(p.id || '');
-      const slugStr = String(p.slug || '');
-      if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
-        combinedMap.set(idStr || slugStr, p);
-      }
-    });
-
-    apiProds.forEach(p => {
-      const idStr = String(p.id || '');
-      const slugStr = String(p.slug || '');
-      if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
-        if (!combinedMap.has(idStr) && !combinedMap.has(slugStr)) {
-          combinedMap.set(idStr || slugStr, p);
-        }
-      }
-    });
-
-    const result = Array.from(combinedMap.values());
-    localStorage.setItem('giftery_products', JSON.stringify(result));
-    setLiveProducts(result.filter(p => p.isActive !== false));
-    setLoading(false);
+      setLiveProducts(apiProds.filter(p => p.isActive !== false));
+    } catch (e) {
+      console.warn('Shop products fetch error:', e.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadAllProducts();
     window.addEventListener('products_updated', loadAllProducts);
-    window.addEventListener('storage', loadAllProducts);
     return () => {
       window.removeEventListener('products_updated', loadAllProducts);
-      window.removeEventListener('storage', loadAllProducts);
     };
   }, []);
 

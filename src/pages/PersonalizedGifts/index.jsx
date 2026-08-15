@@ -120,52 +120,23 @@ const PersonalizedGifts = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Live Products State from Database
+  // Live Products State from PostgreSQL Database via API
   const [liveProducts, setLiveProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchLiveProducts = async () => {
-      let apiProducts = [];
+      setLoading(true);
       try {
-        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
+        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200');
         let extracted = [];
         if (Array.isArray(res)) extracted = res;
         else if (res?.data && Array.isArray(res.data)) extracted = res.data;
         else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
         else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
         else if (res?.products && Array.isArray(res.products)) extracted = res.products;
-        apiProducts = extracted;
-      } catch (err) {
-        console.warn('Fallback to catalog products:', err.message);
-      }
 
-      const deletedIds = new Set(JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]'));
-      const localProds = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-      const combinedMap = new Map();
-
-      localProds.forEach(p => {
-        const idStr = String(p.id || '');
-        const slugStr = String(p.slug || '');
-        if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
-          combinedMap.set(idStr || slugStr, p);
-        }
-      });
-
-      apiProducts.forEach(p => {
-        const idStr = String(p.id || '');
-        const slugStr = String(p.slug || '');
-        if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
-          if (!combinedMap.has(idStr) && !combinedMap.has(slugStr)) {
-            combinedMap.set(idStr || slugStr, p);
-          }
-        }
-      });
-
-      const combined = Array.from(combinedMap.values());
-      localStorage.setItem('giftery_products', JSON.stringify(combined));
-
-      if (combined.length > 0) {
-        const formatted = combined
+        const formatted = extracted
           .map((p) => {
             const imgList = Array.isArray(p.images)
               ? p.images
@@ -178,6 +149,7 @@ const PersonalizedGifts = () => {
               name: p.name,
               price: p.price,
               comparePrice: p.comparePrice,
+              stock: p.stock !== undefined ? p.stock : 0,
               rating: p.rating || 4.8,
               reviewsCount: p.reviewsCount || p._count?.reviews || 24,
               discount: p.comparePrice ? `${Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100)}%` : null,
@@ -186,8 +158,8 @@ const PersonalizedGifts = () => {
               slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
               categoryId: p.categoryId || null,
               subCategoryId: p.subCategoryId || null,
-              categoryName: p.category?.name || p.categoryName || '',
-              categorySlug: p.category?.slug || p.categorySlug || '',
+              categoryName: p.category?.name || p.categoryName || 'Personalized Gifts',
+              categorySlug: p.category?.slug || p.categorySlug || 'personalized-gifts',
               subCategoryName: p.subCategory?.name || p.subCategoryName || '',
               _catName: catName,
               _catSlug: catSlug,
@@ -203,13 +175,17 @@ const PersonalizedGifts = () => {
             if (c) {
               return c.includes('personal') || c.includes('photo') || c.includes('frame') || c.includes('acrylic') ||
                      c.includes('caricature') || c.includes('clock') || c.includes('engrav') || c.includes('custom') ||
-                     c.includes('monogram') || c.includes('keepsake');
+                     c.includes('monogram') || c.includes('keepsake') || c.includes('leather');
             }
             const n = (p.name || '').toLowerCase();
             if (n.includes('corporate') || n.includes('onboarding') || n.includes('desk gyro')) return false;
             return true;
           });
         setLiveProducts(formatted);
+      } catch (err) {
+        console.warn('Live Personalized Gifts fetch note:', err.message);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -218,8 +194,8 @@ const PersonalizedGifts = () => {
     return () => window.removeEventListener('products_updated', fetchLiveProducts);
   }, []);
 
-  // Base raw products catalog
-  const rawProducts = liveProducts.length > 0 ? liveProducts : PRODUCTS_LIST;
+  // Base raw products catalog from PostgreSQL
+  const rawProducts = liveProducts;
 
   // ── Dynamic Categories built from real DB products ──────────────
   const dynamicCategories = (() => {

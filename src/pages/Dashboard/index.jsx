@@ -510,7 +510,6 @@ const Dashboard = () => {
 
   const fetchProducts = async () => {
     setLoadingProducts(true);
-    let apiProducts = [];
     try {
       const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200&showAll=true');
       let extracted = [];
@@ -519,34 +518,11 @@ const Dashboard = () => {
       else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
       else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
       else if (res?.products && Array.isArray(res.products)) extracted = res.products;
-      apiProducts = extracted;
+      setProductsList(extracted);
     } catch (err) {
       console.warn('Products fetch error:', err.message);
+      toast.error(`Failed to fetch live products: ${err.message}`);
     } finally {
-      const deletedIds = new Set(JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]'));
-      const localProducts = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-      const combinedMap = new Map();
-      // 1. Local products take priority (so custom/newly added products are preserved)
-      localProducts.forEach(p => {
-        const idStr = String(p.id || '');
-        const slugStr = String(p.slug || '');
-        if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
-          combinedMap.set(idStr || slugStr, p);
-        }
-      });
-      // 2. Add API products that are not deleted and not already in localProducts
-      apiProducts.forEach(p => {
-        const idStr = String(p.id || '');
-        const slugStr = String(p.slug || '');
-        if ((idStr || slugStr) && !deletedIds.has(idStr) && !deletedIds.has(slugStr)) {
-          if (!combinedMap.has(idStr) && !combinedMap.has(slugStr)) {
-            combinedMap.set(idStr || slugStr, p);
-          }
-        }
-      });
-      const merged = Array.from(combinedMap.values());
-      setProductsList(merged);
-      localStorage.setItem('giftery_products', JSON.stringify(merged));
       setLoadingProducts(false);
     }
   };
@@ -719,13 +695,13 @@ const Dashboard = () => {
       stock: product.stock?.toString() || '0',
       images: Array.isArray(product.images) ? product.images.join('|||') : (product.images || ''),
       sku: product.sku || '',
-      featured: product.featured || false,
-      isFeatured: product.isFeatured || product.featured || (Array.isArray(product.tags) && product.tags.includes('featured')),
-      isBestseller: product.isBestseller || (Array.isArray(product.tags) && product.tags.includes('bestsellers')),
-      isPopular: product.isPopular || (Array.isArray(product.tags) && product.tags.includes('popular')),
-      isNewArrival: product.isNewArrival || (Array.isArray(product.tags) && product.tags.includes('new')),
-      isMostLoved: product.isMostLoved || (Array.isArray(product.tags) && product.tags.includes('loved')),
-      isGiftSet: product.isGiftSet || (Array.isArray(product.tags) && product.tags.includes('giftsets')),
+      featured: Boolean(product.featured || product.isFeatured),
+      isFeatured: Boolean(product.isFeatured || product.featured),
+      isBestseller: Boolean(product.isBestseller),
+      isPopular: Boolean(product.isPopular),
+      isNewArrival: Boolean(product.isNewArrival),
+      isMostLoved: Boolean(product.isMostLoved),
+      isGiftSet: Boolean(product.isGiftSet),
       categoryId: product.categoryId || '',
       subCategoryId: product.subCategoryId || '',
       isActive: product.isActive !== false,
@@ -783,37 +759,27 @@ const Dashboard = () => {
       ? productForm.tags.split(',').map(s => s.trim()).filter(Boolean)
       : [];
 
-    const isFeaturedVal = !!productForm.isFeatured || !!productForm.featured;
-    const isBestsellerVal = !!productForm.isBestseller;
-    const isPopularVal = !!productForm.isPopular;
-    const isNewArrivalVal = !!productForm.isNewArrival;
-    const isMostLovedVal = !!productForm.isMostLoved;
-    const isGiftSetVal = !!productForm.isGiftSet;
-
-    const collectionTagNames = [];
-    if (isFeaturedVal) collectionTagNames.push('featured');
-    if (isBestsellerVal) collectionTagNames.push('bestsellers');
-    if (isPopularVal) collectionTagNames.push('popular');
-    if (isNewArrivalVal) collectionTagNames.push('new');
-    if (isMostLovedVal) collectionTagNames.push('loved');
-    if (isGiftSetVal) collectionTagNames.push('giftsets');
-
-    const finalTags = Array.from(new Set([...tagsArr, ...collectionTagNames]));
+    const isFeaturedVal = Boolean(productForm.isFeatured || productForm.featured);
+    const isBestsellerVal = Boolean(productForm.isBestseller);
+    const isPopularVal = Boolean(productForm.isPopular);
+    const isNewArrivalVal = Boolean(productForm.isNewArrival);
+    const isMostLovedVal = Boolean(productForm.isMostLoved);
+    const isGiftSetVal = Boolean(productForm.isGiftSet);
 
     const payload = {
-      name: productForm.name,
-      description: productForm.description,
-      specifications: productForm.specifications,
-      customization: productForm.customization,
-      shippingReturns: productForm.shippingReturns,
-      tags: finalTags,
+      name: productForm.name.trim(),
+      description: productForm.description ? productForm.description.trim() : productForm.name.trim(),
+      specifications: productForm.specifications || undefined,
+      customization: productForm.customization || undefined,
+      shippingReturns: productForm.shippingReturns || undefined,
+      tags: tagsArr,
       rating: parseFloat(productForm.rating) || 4.8,
-      reviewsCount: parseInt(productForm.reviewsCount) || 128,
+      reviewsCount: parseInt(productForm.reviewsCount, 10) || 128,
       price: parseFloat(productForm.price),
-      comparePrice: productForm.comparePrice ? parseFloat(productForm.comparePrice) : undefined,
-      stock: parseInt(productForm.stock) || 0,
+      comparePrice: productForm.comparePrice ? parseFloat(productForm.comparePrice) : null,
+      stock: parseInt(productForm.stock, 10) || 0,
       images: imagesArr,
-      sku: productForm.sku || undefined,
+      sku: productForm.sku ? productForm.sku.trim() : undefined,
       featured: isFeaturedVal,
       isFeatured: isFeaturedVal,
       isBestseller: isBestsellerVal,
@@ -822,95 +788,26 @@ const Dashboard = () => {
       isMostLoved: isMostLovedVal,
       isGiftSet: isGiftSetVal,
       categoryId: productForm.categoryId,
-      subCategoryId: productForm.subCategoryId || undefined,
-      isActive: productForm.isActive,
+      subCategoryId: productForm.subCategoryId || null,
+      isActive: productForm.isActive !== false,
     };
-    const generatedSlug = payload.name ? payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : `prod-${Date.now()}`;
-    const selectedCatObj = categories.find(c => c.id === payload.categoryId);
-    const selectedSubCatObj = categories.find(c => c.id === payload.subCategoryId);
-    const savedProduct = {
-      id: editingProduct ? editingProduct.id : `prod-${Date.now()}`,
-      slug: (editingProduct && editingProduct.slug) || generatedSlug,
-      name: payload.name,
-      price: payload.price,
-      comparePrice: payload.comparePrice,
-      stock: payload.stock,
-      images: payload.images,
-      description: payload.description,
-      specifications: payload.specifications,
-      customization: payload.customization,
-      shippingReturns: payload.shippingReturns,
-      rating: payload.rating,
-      reviewsCount: payload.reviewsCount,
-      tags: payload.tags,
-      featured: payload.featured,
-      isFeatured: isFeaturedVal,
-      isBestseller: isBestsellerVal,
-      isPopular: isPopularVal,
-      isNewArrival: isNewArrivalVal,
-      isMostLoved: isMostLovedVal,
-      isGiftSet: isGiftSetVal,
-      categoryId: payload.categoryId,
-      subCategoryId: payload.subCategoryId,
-      categoryName: selectedCatObj ? selectedCatObj.name : (editingProduct ? editingProduct.categoryName : ''),
-      categorySlug: selectedCatObj ? selectedCatObj.slug : (editingProduct ? editingProduct.categorySlug : ''),
-      category: selectedCatObj ? { id: selectedCatObj.id, name: selectedCatObj.name, slug: selectedCatObj.slug } : undefined,
-      subCategoryName: selectedSubCatObj ? selectedSubCatObj.name : (editingProduct ? editingProduct.subCategoryName : ''),
-      subCategorySlug: selectedSubCatObj ? selectedSubCatObj.slug : (editingProduct ? editingProduct.subCategorySlug : ''),
-      isActive: payload.isActive,
-      createdAt: editingProduct ? editingProduct.createdAt : new Date().toISOString(),
-    };
-
-    // Ensure product ID and slug are removed from deleted tracking list
-    const deletedList = JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]');
-    const cleanDeleted = deletedList.filter(d => d !== savedProduct.id && d !== savedProduct.slug);
-    localStorage.setItem('giftery_deleted_products', JSON.stringify(cleanDeleted));
 
     try {
-      let finalProduct = savedProduct;
-      if (editingProduct) {
-        const res = await axiosInstance.put(ENDPOINTS.PRODUCTS.UPDATE(editingProduct.id), payload);
-        const updated = res.product || res.data?.product || res.data || res;
-        if (updated && (updated.id || updated.slug)) {
-          finalProduct = { ...savedProduct, ...updated };
-        }
-        toast.success(`Product "${savedProduct.name}" updated successfully!`);
+      if (editingProduct && editingProduct.id && !editingProduct.id.startsWith('prod-')) {
+        await axiosInstance.put(ENDPOINTS.PRODUCTS.UPDATE(editingProduct.id), payload);
+        toast.success(`Product "${payload.name}" updated successfully in database!`);
       } else {
-        const res = await axiosInstance.post(ENDPOINTS.PRODUCTS.CREATE, payload);
-        const created = res.product || res.data?.product || res.data || res;
-        if (created && (created.id || created.slug)) {
-          finalProduct = { ...savedProduct, ...created };
-        }
-        toast.success(`Product "${savedProduct.name}" added to store!`);
+        await axiosInstance.post(ENDPOINTS.PRODUCTS.CREATE, payload);
+        toast.success(`Product "${payload.name}" created and saved to database!`);
       }
 
-      setProductsList(prev => {
-        let updatedList;
-        if (editingProduct) {
-          updatedList = prev.map(p => (p.id === editingProduct.id || p.slug === finalProduct.slug) ? finalProduct : p);
-        } else {
-          updatedList = [finalProduct, ...prev.filter(p => p.id !== finalProduct.id)];
-        }
-        localStorage.setItem('giftery_products', JSON.stringify(updatedList));
-        return updatedList;
-      });
+      await fetchProducts();
       window.dispatchEvent(new Event('products_updated'));
       resetProductForm();
     } catch (err) {
-      console.warn('Backend API save fallback:', err.message);
-      setProductsList(prev => {
-        let updatedList;
-        if (editingProduct) {
-          updatedList = prev.map(p => (p.id === editingProduct.id || p.slug === savedProduct.slug) ? savedProduct : p);
-        } else {
-          updatedList = [savedProduct, ...prev.filter(p => p.id !== savedProduct.id)];
-        }
-        localStorage.setItem('giftery_products', JSON.stringify(updatedList));
-        return updatedList;
-      });
-      window.dispatchEvent(new Event('products_updated'));
-      toast.success(editingProduct ? `Product "${savedProduct.name}" updated!` : `Product "${savedProduct.name}" saved to store!`);
-      resetProductForm();
+      console.error('Database product save error:', err);
+      const errMsg = err.response?.data?.message || err.message || 'Failed to save product to database';
+      toast.error(`Database Error: ${errMsg}`);
     } finally {
       setSavingProduct(false);
     }
@@ -1047,26 +944,16 @@ const Dashboard = () => {
     setDeleteConfirmModal(null);
 
     if (type === 'product') {
-      // 1. Save to deleted tracking list
-      const deletedList = JSON.parse(localStorage.getItem('giftery_deleted_products') || '[]');
-      if (!deletedList.includes(id)) deletedList.push(id);
-      localStorage.setItem('giftery_deleted_products', JSON.stringify(deletedList));
-
-      // 2. Clean from localStorage & component state
-      const existingCustom = JSON.parse(localStorage.getItem('giftery_products') || '[]');
-      const updatedCustom = existingCustom.filter(p => p.id !== id && p.slug !== id);
-      localStorage.setItem('giftery_products', JSON.stringify(updatedCustom));
-      setProductsList(prev => prev.filter(p => p.id !== id && p.slug !== id));
-      window.dispatchEvent(new Event('products_updated'));
-
-      // 3. Sync backend API delete
       try {
         await axiosInstance.delete(ENDPOINTS.PRODUCTS.DELETE(id));
+        setProductsList(prev => prev.filter(p => p.id !== id && p.slug !== id));
+        toast.success(`Product "${name}" deleted successfully from database!`);
+        window.dispatchEvent(new Event('products_updated'));
       } catch (err) {
-        console.warn('Backend API delete note:', err?.response?.data?.message || err.message);
+        console.error('Backend API delete error:', err);
+        const errMsg = err.response?.data?.message || err.message || 'Failed to delete product from database';
+        toast.error(`Delete Error: ${errMsg}`);
       }
-
-      toast.success(`Product "${name}" deleted successfully!`);
     } else if (type === 'category') {
       // 1. Save to deleted categories list
       const deletedCats = JSON.parse(localStorage.getItem('giftery_deleted_categories') || '[]');
