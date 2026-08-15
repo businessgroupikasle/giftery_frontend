@@ -399,12 +399,30 @@ const Dashboard = () => {
     }
 
     const localOrders = JSON.parse(localStorage.getItem('giftery_orders') || '[]');
-    const combined = [...localOrders];
-    apiOrders.forEach(ao => {
-      if (!combined.find(c => String(c.id || c.orderId) === String(ao.id || ao.orderId))) {
-        combined.push(ao);
+    const map = new Map();
+
+    // 1. Add local orders
+    localOrders.forEach((lo) => {
+      const key = String(lo.id || lo.orderId || '');
+      if (key) map.set(key, lo);
+    });
+
+    // 2. Add / override with PostgreSQL DB orders (DB is single source of truth)
+    apiOrders.forEach((ao) => {
+      const key = String(ao.id || ao.orderId || '');
+      if (key) {
+        const local = map.get(key);
+        map.set(key, {
+          ...local,
+          ...ao,
+          id: ao.id,
+          orderId: ao.id,
+          status: (ao.status || local?.status || 'PENDING').toUpperCase(),
+        });
       }
     });
+
+    const combined = Array.from(map.values());
 
     if (combined.length > 0) {
       const formatted = combined.map(o => {
@@ -429,9 +447,11 @@ const Dashboard = () => {
         if (o.status) {
           const s = String(o.status).toUpperCase();
           if (s === 'DELIVERED') statusStr = 'Delivered';
+          else if (s === 'CONFIRMED') statusStr = 'Confirmed';
           else if (s === 'PROCESSING') statusStr = 'Processing';
-          else if (s === 'CANCELLED') statusStr = 'Cancelled';
           else if (s === 'SHIPPED') statusStr = 'Shipped';
+          else if (s === 'CANCELLED') statusStr = 'Cancelled';
+          else if (s === 'REFUNDED') statusStr = 'Refunded';
           else statusStr = 'Pending';
         }
 
@@ -459,7 +479,7 @@ const Dashboard = () => {
     let backendEnquiries = [];
     try {
       const res = await axiosInstance.get(ENDPOINTS.ENQUIRIES.LIST);
-      const responseData = res.data || res;
+      const responseData = res.data?.data || res.data || res;
       const arr = Array.isArray(responseData)
         ? responseData
         : (Array.isArray(responseData?.data) ? responseData.data : []);
@@ -468,33 +488,23 @@ const Dashboard = () => {
       console.warn('Backend enquiry fetch warning:', err.message);
     }
 
-    let localEnquiries = [];
-    try {
-      const stored = localStorage.getItem('customer_enquiries');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) localEnquiries = parsed;
-      }
-    } catch (e) {}
-
-    const merged = [...backendEnquiries];
-    localEnquiries.forEach((le) => {
-      if (!merged.find((e) => e.id === le.id || (e.email === le.email && e.message === le.message))) {
-        merged.push(le);
+    const localEnquiries = JSON.parse(localStorage.getItem('giftery_enquiries') || '[]');
+    const combined = [...localEnquiries];
+    backendEnquiries.forEach(be => {
+      if (!combined.find(c => c.id === be.id)) {
+        combined.push(be);
       }
     });
 
-    const finalEnquiries = merged.length > 0
-      ? [...merged, ...INITIAL_ENQUIRIES.filter((ie) => !merged.find((m) => m.id === ie.id))]
-      : INITIAL_ENQUIRIES;
-
-    setEnquiriesList(finalEnquiries);
+    if (combined.length > 0) {
+      setEnquiriesList(combined);
+    }
   };
 
   const fetchSettings = async () => {
     try {
       const res = await axiosInstance.get(ENDPOINTS.SETTINGS.GET);
-      const data = res.data || res;
+      const data = res.data?.data || res.data || res;
       if (data && typeof data === 'object') {
         setSettingsForm(prev => ({ ...prev, ...data }));
         // Sync logo to localStorage for Header & Footer
@@ -579,59 +589,24 @@ const Dashboard = () => {
     loadCustomers();
   }, []);
 
-  // Listen for new registrations, enquiries, and orders from localStorage events
+  // Listen for new registrations, enquiries, and orders from localStorage / live events
   useEffect(() => {
-    const handleNewUser = () => {
-      loadCustomers();
-    };
-    const handleNewEnquiry = () => {
-      loadCustomers();
-    };
-    const handleNewOrder = () => {
-      const fetchOrders = async () => {
-        let apiOrders = [];
-        try {
-          const res = await axiosInstance.get(ENDPOINTS.ORDERS.LIST);
-          const data = res.data?.data || res.data || res;
-          if (Array.isArray(data)) apiOrders = data;
-        } catch (err) {
-          console.warn('Orders fetch warning:', err.message);
-        }
+    const handleNewUser = () => loadCustomers();
+    const handleNewEnquiry = () => fetchEnquiries();
+    const handleOrdersUpdated = () => fetchOrders();
+    const handleProductsUpdated = () => fetchProducts();
 
-        const localOrders = JSON.parse(localStorage.getItem('giftery_orders') || '[]');
-        const combined = [...localOrders];
-        apiOrders.forEach(ao => {
-          if (!combined.find(c => c.id === ao.id || c.orderId === ao.id)) {
-            combined.push(ao);
-          }
-        });
-
-        if (combined.length > 0) {
-          const formatted = combined.map(o => ({
-            id: o.id?.toString().startsWith('ORD-') ? o.id : `ORD-${o.id}`,
-            customer: o.customerName || o.user?.name || o.shippingAddress?.fullName || 'Customer',
-            date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Recent',
-            itemsCount: o.items?.length || 1,
-            amount: `₹${(o.totalAmount || 0).toLocaleString('en-IN')}`,
-            rawAmount: o.totalAmount || 0,
-            status: o.status ? (o.status === 'DELIVERED' ? 'Delivered' : o.status === 'PROCESSING' ? 'Processing' : o.status === 'CANCELLED' ? 'Cancelled' : 'Pending') : 'Pending',
-          }));
-          setOrdersList(formatted);
-        }
-      };
-      fetchOrders();
-    };
-    const handleProductsUpdated = () => {
-      fetchProducts();
-    };
     window.addEventListener('registered_users_updated', handleNewUser);
     window.addEventListener('enquiries_updated', handleNewEnquiry);
-    window.addEventListener('orders_updated', handleNewOrder);
+    window.addEventListener('orders_updated', handleOrdersUpdated);
+    window.addEventListener('storage', handleOrdersUpdated);
     window.addEventListener('products_updated', handleProductsUpdated);
+
     return () => {
       window.removeEventListener('registered_users_updated', handleNewUser);
       window.removeEventListener('enquiries_updated', handleNewEnquiry);
-      window.removeEventListener('orders_updated', handleNewOrder);
+      window.removeEventListener('orders_updated', handleOrdersUpdated);
+      window.removeEventListener('storage', handleOrdersUpdated);
       window.removeEventListener('products_updated', handleProductsUpdated);
     };
   }, []);
@@ -681,6 +656,40 @@ const Dashboard = () => {
 
   const handleEditProductClick = (product) => {
     setEditingProduct(product);
+
+    // Robustly resolve main category ID and subcategory ID for the form
+    let resolvedMainId = '';
+    let resolvedSubId = '';
+
+    const catId = product.categoryId || (typeof product.category === 'object' ? product.category?.id : product.category);
+    const subId = product.subCategoryId;
+
+    const matchedCat = categories.find(c => c.id === catId || c.slug === catId);
+    if (matchedCat) {
+      if (!matchedCat.parentId) {
+        // Direct main category
+        resolvedMainId = matchedCat.id;
+        resolvedSubId = subId || '';
+      } else {
+        // catId is actually a subcategory!
+        resolvedMainId = matchedCat.parentId;
+        resolvedSubId = matchedCat.id;
+      }
+    } else {
+      resolvedMainId = catId || '';
+      resolvedSubId = subId || '';
+    }
+
+    if (subId && !resolvedSubId) {
+      const matchedSub = categories.find(c => c.id === subId || c.slug === subId);
+      if (matchedSub) {
+        resolvedSubId = matchedSub.id;
+        if (matchedSub.parentId && !resolvedMainId) {
+          resolvedMainId = matchedSub.parentId;
+        }
+      }
+    }
+
     setProductForm({
       name: product.name || '',
       description: product.description || '',
@@ -702,8 +711,8 @@ const Dashboard = () => {
       isNewArrival: Boolean(product.isNewArrival),
       isMostLoved: Boolean(product.isMostLoved),
       isGiftSet: Boolean(product.isGiftSet),
-      categoryId: product.categoryId || '',
-      subCategoryId: product.subCategoryId || '',
+      categoryId: resolvedMainId,
+      subCategoryId: resolvedSubId,
       isActive: product.isActive !== false,
     });
     setShowProductForm(true);

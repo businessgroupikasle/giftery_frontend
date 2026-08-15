@@ -2,42 +2,47 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useCallback } from 'react';
 import {
   selectWishlistItems,
+  addToWishlistAsync,
+  removeFromWishlistAsync,
+  fetchWishlistAsync,
   addToWishlist as addToWishlistAction,
   removeFromWishlist as removeFromWishlistAction,
   setWishlist,
 } from '@store/slices/wishlistSlice';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
+import { getToken } from '@utils/storage';
 
 const useWishlist = () => {
   const dispatch = useDispatch();
   const items = useSelector(selectWishlistItems);
 
   const addToWishlist = useCallback(async (product) => {
-    dispatch(addToWishlistAction(product));
-    try {
-      await axiosInstance.post(ENDPOINTS.WISHLIST.ADD, { productId: product.id });
-    } catch {
-      // Optimistic update — Redux already updated, no rollback needed
+    const prodId = product.id || product.productId;
+    dispatch(addToWishlistAction({ ...product, id: prodId, productId: prodId }));
+    if (getToken()) {
+      try {
+        await axiosInstance.post(ENDPOINTS.WISHLIST.ADD, { productId: prodId });
+      } catch (err) {
+        console.warn('Backend wishlist add sync:', err.message);
+      }
     }
   }, [dispatch]);
 
   const removeFromWishlist = useCallback(async (id) => {
-    dispatch(removeFromWishlistAction(id));
-    try {
-      await axiosInstance.delete(ENDPOINTS.WISHLIST.REMOVE(id));
-    } catch {
-      // Optimistic update — Redux already updated
+    dispatch(removeFromWishlistAction(String(id)));
+    if (getToken()) {
+      try {
+        await axiosInstance.delete(ENDPOINTS.WISHLIST.REMOVE(String(id)));
+      } catch (err) {
+        console.warn('Backend wishlist remove sync:', err.message);
+      }
     }
   }, [dispatch]);
 
   const hydrateWishlist = useCallback(async () => {
-    try {
-      const res = await axiosInstance.get(ENDPOINTS.WISHLIST.GET);
-      const apiItems = res?.wishlist?.items ? res.wishlist.items.map((i) => i.product || i) : [];
-      dispatch(setWishlist(apiItems));
-    } catch {
-      // Not logged in or no backend wishlist yet
+    if (getToken()) {
+      dispatch(fetchWishlistAsync());
     }
   }, [dispatch]);
 

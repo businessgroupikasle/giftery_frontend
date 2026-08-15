@@ -32,9 +32,17 @@ const ProductCard = ({ product }) => {
   const handleBuyNow = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    dispatch(addToCart({ id, name, price, image, slug, quantity: 1 }));
-    toast.success(`Proceeding to checkout with ${name}...`);
-    navigate('/checkout');
+    const buyNowItem = {
+      id: id || `prod-${Date.now()}`,
+      productId: id,
+      name,
+      price: Number(price || 0),
+      comparePrice,
+      image,
+      slug,
+      quantity: 1,
+    };
+    navigate('/checkout', { state: { buyNowItem } });
   };
 
   const handleWishlist = (e) => {

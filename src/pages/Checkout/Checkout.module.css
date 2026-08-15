@@ -121,6 +121,100 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
 }
 
+/* ── SAVED ADDRESSES SELECTOR ── */
+.savedAddressesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.savedAddressCard {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.2rem;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  text-align: left;
+}
+
+.savedAddressCard:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+
+.selectedAddressCard {
+  border-color: #1b4332 !important;
+  background: #f0fdf4 !important;
+  box-shadow: 0 0 0 2px rgba(27, 67, 50, 0.15);
+}
+
+.addrCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.addrCardName {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.defaultBadge {
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.addrCardText {
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.addrCardPhone {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin-top: 0.4rem;
+  font-weight: 500;
+}
+
+.addNewAddressOption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 1.2rem;
+  background: #f8fafc;
+  cursor: pointer;
+  color: #1b4332;
+  font-weight: 700;
+  font-size: 0.88rem;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.addNewAddressOption:hover {
+  border-color: #1b4332;
+  background: #f0fdf4;
+}
+
+.newAddressOptionActive {
+  border-color: #1b4332;
+  background: #f0fdf4;
+}
+
 .cardTitleRow {
   display: flex;
   align-items: center;

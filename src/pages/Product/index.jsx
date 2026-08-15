@@ -505,6 +505,24 @@ const Product = () => {
     toast.success(`Added ${quantity} x ${name} to Cart!`);
   };
 
+  const handleBuyNow = () => {
+    if (maxStock <= 0) {
+      toast.error('Sorry, this product is currently out of stock!');
+      return;
+    }
+    const buyNowItem = {
+      id: id || slug,
+      productId: id,
+      name,
+      price: Number(price || 0),
+      comparePrice,
+      image: selectedImage || galleryImages[0] || '/placeholder.jpg',
+      slug,
+      quantity: quantity > maxStock ? maxStock : (quantity || 1),
+    };
+    navigate('/checkout', { state: { buyNowItem } });
+  };
+
   const handleWishlistToggle = () => {
     addToWishlist({ id: id || slug, name, price, slug, image: selectedImage || galleryImages[0], comparePrice });
     toast.success('Added to Wishlist!');
@@ -637,6 +655,20 @@ const Product = () => {
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                   <span>{maxStock <= 0 ? 'OUT OF STOCK' : 'ADD TO CART'}</span>
+                </button>
+                <button
+                  type="button"
+                  className={styles.addToCartGoldBtn}
+                  onClick={handleBuyNow}
+                  disabled={maxStock <= 0}
+                  style={{
+                    background: '#1b4332',
+                    color: '#ffffff',
+                    opacity: maxStock <= 0 ? 0.6 : 1,
+                    cursor: maxStock <= 0 ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <span>⚡ BUY NOW</span>
                 </button>
                 <button type="button" className={styles.requestQuoteOutlineBtn} onClick={handleRequestQuote}>
                   REQUEST QUOTE

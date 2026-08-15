@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Layout from '@components/layout/Layout';
 import { clearCart, updateQuantity, removeFromCart } from '@store/slices/cartSlice';
@@ -8,15 +8,23 @@ import { formatCurrency } from '@utils/formatters';
 import { ROUTES } from '@constants/routes';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
+import { addressService } from '@services/addressService';
+import { isValidMobile, isValidPincode } from '@utils/validation';
 import styles from './Checkout.module.css';
 
 const Checkout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Buy Now temporary item vs Cart Checkout
+  const buyNowItem = location.state?.buyNowItem || null;
+  const isBuyNow = Boolean(buyNowItem);
 
   const reduxItems = useSelector((state) => state.cart.items) || [];
   const { user, isAuthenticated } = useSelector((state) => state.auth);
-  const cartItems = reduxItems;
+
+  const cartItems = isBuyNow ? [buyNowItem] : reduxItems;
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -25,22 +33,103 @@ const Checkout = () => {
     }
   }, [cartItems.length, navigate]);
 
-  // Active step: 1 = Shopping Cart, 2 = Delivery, 3 = Payment
+  // Active step: 1 = Shopping Cart, 2 = Delivery, 3 = Payment (starts at 2 for Buy Now / direct delivery)
   const [currentStep, setCurrentStep] = useState(2);
+
+  // Saved addresses from Backend DB
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
 
   // Delivery Address Form State
   const [addressForm, setAddressForm] = useState({
-    fullName: user?.name || 'Jane Doe',
-    email: user?.email || 'jane@example.com',
-    phone: '+91 98765 43210',
-    addressLine1: '42 Luxury Avenue, Cyber City',
-    landmark: 'Near DLF Tech Park',
-    city: 'Chennai',
-    state: 'Tamil Nadu',
-    pincode: '600001',
+    fullName: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    addressLine1: '',
+    landmark: '',
+    city: '',
+    state: '',
+    pincode: '',
     country: 'India',
-    saveAddress: true,
+    saveAddress: false,
   });
+
+  // Fetch saved addresses from Backend on mount or auth change
+  useEffect(() => {
+    const fetchUserAddresses = async () => {
+      if (!isAuthenticated) return;
+      setLoadingAddresses(true);
+      try {
+        const { addresses, defaultAddress } = await addressService.getAddresses();
+        setSavedAddresses(addresses);
+
+        if (addresses.length > 0) {
+          const active = defaultAddress || addresses[0];
+          setSelectedAddressId(active.id);
+          setAddressForm({
+            fullName: active.fullName || user?.name || '',
+            email: user?.email || '',
+            phone: active.phone || user?.phone || '',
+            addressLine1: active.street || active.addressLine1 || '',
+            landmark: active.landmark || '',
+            city: active.city || '',
+            state: active.state || '',
+            pincode: active.zip || active.pincode || '',
+            country: active.country || 'India',
+            saveAddress: false,
+          });
+        } else {
+          setSelectedAddressId('new');
+          setAddressForm((prev) => ({
+            ...prev,
+            fullName: user?.name || prev.fullName || '',
+            email: user?.email || prev.email || '',
+            phone: user?.phone || prev.phone || '',
+            saveAddress: true,
+          }));
+        }
+      } catch (err) {
+        console.warn('Failed to load saved addresses from DB:', err.message);
+      } finally {
+        setLoadingAddresses(false);
+      }
+    };
+
+    fetchUserAddresses();
+  }, [isAuthenticated, user?.id]);
+
+  const handleSelectSavedAddress = (addr) => {
+    setSelectedAddressId(addr.id);
+    setAddressForm({
+      fullName: addr.fullName || user?.name || '',
+      email: user?.email || '',
+      phone: addr.phone || user?.phone || '',
+      addressLine1: addr.street || addr.addressLine1 || '',
+      landmark: addr.landmark || '',
+      city: addr.city || '',
+      state: addr.state || '',
+      pincode: addr.zip || addr.pincode || '',
+      country: addr.country || 'India',
+      saveAddress: false,
+    });
+  };
+
+  const handleSelectNewAddress = () => {
+    setSelectedAddressId('new');
+    setAddressForm({
+      fullName: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      addressLine1: '',
+      landmark: '',
+      city: '',
+      state: '',
+      pincode: '',
+      country: 'India',
+      saveAddress: true,
+    });
+  };
 
   // Payment State
   const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay' | 'cod' | 'card'
@@ -71,7 +160,7 @@ const Checkout = () => {
 
   // Totals
   const itemCount = cartItems.length;
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0);
+  const subtotal = cartItems.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 1), 0);
 
   let discountAmount = 0;
   if (appliedCoupon) {
@@ -101,6 +190,18 @@ const Checkout = () => {
 
   const handleAddressChange = (e) => {
     const { name, value, type, checked } = e.target;
+    if (name === 'phone') {
+      const clean = value.replace(/[^0-9+]/g, '');
+      if (clean.length > 13) return;
+      setAddressForm((prev) => ({ ...prev, phone: clean }));
+      return;
+    }
+    if (name === 'pincode') {
+      const digitsOnly = value.replace(/[^0-9]/g, '');
+      if (digitsOnly.length > 6) return;
+      setAddressForm((prev) => ({ ...prev, pincode: digitsOnly }));
+      return;
+    }
     setAddressForm((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
@@ -109,12 +210,20 @@ const Checkout = () => {
 
   const handleQtyChange = (id, newQty) => {
     if (newQty < 1) return;
-    dispatch(updateQuantity({ id, quantity: newQty }));
+    if (isBuyNow) {
+      navigate('/checkout', { state: { buyNowItem: { ...buyNowItem, quantity: newQty } }, replace: true });
+    } else {
+      dispatch(updateQuantity({ id, quantity: newQty }));
+    }
   };
 
   const handleRemoveItem = (id, name) => {
-    dispatch(removeFromCart(id));
-    toast.info(`Removed "${name}" from cart`);
+    if (isBuyNow) {
+      navigate(ROUTES.HOME);
+    } else {
+      dispatch(removeFromCart(id));
+      toast.info(`Removed "${name}" from cart`);
+    }
   };
 
   // Step Navigators
@@ -128,8 +237,16 @@ const Checkout = () => {
 
   const goToPayment = (e) => {
     e.preventDefault();
-    if (!addressForm.fullName || !addressForm.phone || !addressForm.addressLine1 || !addressForm.city || !addressForm.pincode) {
+    if (!addressForm.fullName?.trim() || !addressForm.phone?.trim() || !addressForm.addressLine1?.trim() || !addressForm.city?.trim() || !addressForm.pincode?.trim()) {
       toast.error('Please complete all required address fields (*)');
+      return;
+    }
+    if (!isValidMobile(addressForm.phone)) {
+      toast.error('Please enter a valid 10-digit mobile number (e.g. 9876543210 or +91 9876543210)');
+      return;
+    }
+    if (!isValidPincode(addressForm.pincode)) {
+      toast.error('Please enter a valid 6-digit Pincode / ZIP Code (e.g. 600001)');
       return;
     }
     setCurrentStep(3);
@@ -143,7 +260,19 @@ const Checkout = () => {
       orderId: `ORD-${Date.now().toString().slice(-6)}`,
       items: cartItems,
       totalAmount: grandTotal,
-      shippingAddress: addressForm,
+      shippingAddress: {
+        fullName: addressForm.fullName.trim(),
+        email: addressForm.email.trim(),
+        phone: addressForm.phone.trim(),
+        street: [addressForm.addressLine1.trim(), addressForm.landmark?.trim()].filter(Boolean).join(', '),
+        addressLine1: addressForm.addressLine1.trim(),
+        landmark: addressForm.landmark ? addressForm.landmark.trim() : '',
+        city: addressForm.city.trim(),
+        state: addressForm.state.trim(),
+        zip: addressForm.pincode.trim(),
+        pincode: addressForm.pincode.trim(),
+        country: addressForm.country || 'India',
+      },
       paymentMethod,
       date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
     };
@@ -263,7 +392,7 @@ const Checkout = () => {
     // Emit live event
     window.dispatchEvent(new Event('orders_updated'));
 
-    // Post to backend API as backup
+    // Post order to backend API with exact snapshot of shippingAddress
     try {
       axiosInstance.post(ENDPOINTS.ORDERS.CREATE, {
         items: newPlacedOrder.items,
@@ -275,8 +404,28 @@ const Checkout = () => {
       console.warn('Order post error:', e.message);
     }
 
+    // If user requested to save address for future orders, save to DB via addressService
+    if (addressForm.saveAddress && isAuthenticated) {
+      try {
+        addressService.createAddress({
+          fullName: addressForm.fullName,
+          phone: addressForm.phone,
+          street: [addressForm.addressLine1, addressForm.landmark].filter(Boolean).join(', '),
+          city: addressForm.city,
+          state: addressForm.state,
+          zip: addressForm.pincode,
+          country: addressForm.country || 'India',
+          isDefault: savedAddresses.length === 0,
+        }).catch(e => console.warn('Save address on checkout note:', e.message));
+      } catch (e) {}
+    }
+
     setOrderCompleted(newPlacedOrder);
-    dispatch(clearCart());
+
+    // Only clear persistent Redux Cart if this was a cart checkout (NOT Buy Now)
+    if (!isBuyNow) {
+      dispatch(clearCart());
+    }
     setIsProcessing(false);
   };
 
@@ -388,6 +537,48 @@ const Checkout = () => {
                     <span className={styles.stepBadge}>Step 2 of 3</span>
                   </div>
 
+                  {/* Saved Addresses Selector (if user has saved addresses) */}
+                  {savedAddresses.length > 0 && (
+                    <div style={{ marginBottom: '1.75rem' }}>
+                      <label style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '0.75rem' }}>
+                        Choose from your saved delivery addresses:
+                      </label>
+                      <div className={styles.savedAddressesGrid}>
+                        {savedAddresses.map((addr) => {
+                          const isSelected = selectedAddressId === addr.id;
+                          return (
+                            <div
+                              key={addr.id}
+                              className={`${styles.savedAddressCard} ${isSelected ? styles.selectedAddressCard : ''}`}
+                              onClick={() => handleSelectSavedAddress(addr)}
+                            >
+                              <div className={styles.addrCardHeader}>
+                                <span className={styles.addrCardName}>
+                                  {isSelected ? '✓ ' : ''}{addr.fullName}
+                                </span>
+                                {addr.isDefault && <span className={styles.defaultBadge}>Default</span>}
+                              </div>
+                              <p className={styles.addrCardText}>
+                                {addr.street || addr.addressLine1}
+                                {addr.city ? `, ${addr.city}` : ''}
+                                {addr.state ? `, ${addr.state}` : ''}
+                                {addr.zip || addr.pincode ? ` - ${addr.zip || addr.pincode}` : ''}
+                              </p>
+                              {addr.phone && <div className={styles.addrCardPhone}>📞 {addr.phone}</div>}
+                            </div>
+                          );
+                        })}
+
+                        <div
+                          className={`${styles.addNewAddressOption} ${selectedAddressId === 'new' ? styles.newAddressOptionActive : ''}`}
+                          onClick={handleSelectNewAddress}
+                        >
+                          <span>+ Enter A Different Address</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className={styles.formGrid}>
                     {/* Full Name */}
                     <div className={styles.formGroup}>
@@ -419,25 +610,29 @@ const Checkout = () => {
 
                     {/* Phone Number */}
                     <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Mobile / Phone Number *</label>
+                      <label className={styles.formLabel}>Mobile / Phone Number * (10 Digits)</label>
                       <input
                         type="tel"
                         name="phone"
                         required
+                        maxLength={13}
+                        inputMode="tel"
                         value={addressForm.phone}
                         onChange={handleAddressChange}
-                        placeholder="+91 98765 43210"
+                        placeholder="9876543210"
                         className={styles.formInput}
                       />
                     </div>
 
                     {/* Pincode */}
                     <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Pincode / ZIP Code *</label>
+                      <label className={styles.formLabel}>Pincode / ZIP Code * (6 Digits)</label>
                       <input
                         type="text"
                         name="pincode"
                         required
+                        maxLength={6}
+                        inputMode="numeric"
                         value={addressForm.pincode}
                         onChange={handleAddressChange}
                         placeholder="600001"

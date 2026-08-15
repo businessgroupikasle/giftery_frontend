@@ -18,7 +18,7 @@ const STATUS_COLORS = {
 
 const Orders = () => {
   const reduxUser = useSelector((state) => state.auth.user);
-  const { data, loading: fetchLoading } = useFetch(ENDPOINTS.ORDERS.MY);
+  const { data, loading: fetchLoading, fetch: refetchOrders } = useFetch(ENDPOINTS.ORDERS.MY);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -28,11 +28,13 @@ const Orders = () => {
       // Unpack nested API data structure safely
       const apiOrders = Array.isArray(data?.data?.data)
         ? data.data.data
-        : (Array.isArray(data?.data)
-          ? data.data
-          : (Array.isArray(data?.orders)
-            ? data.orders
-            : (Array.isArray(data) ? data : [])));
+        : (Array.isArray(data?.data?.orders)
+          ? data.data.orders
+          : (Array.isArray(data?.data)
+            ? data.data
+            : (Array.isArray(data?.orders)
+              ? data.orders
+              : (Array.isArray(data) ? data : []))));
 
       // Retrieve local orders saved during checkout
       let localOrders = [];
@@ -54,20 +56,25 @@ const Orders = () => {
           })
         : localOrders;
 
-      // Merge API orders and Local orders uniquely
+      // Merge API orders and Local orders uniquely (PostgreSQL DB orders take precedence)
       const mergedMap = new Map();
 
-      // Add local orders first
+      // 1. Add local orders
       filteredLocal.forEach((o) => {
         const idKey = String(o.id || o.orderId || '');
         if (idKey) mergedMap.set(idKey, o);
       });
 
-      // Add API orders from backend database
+      // 2. Override with live PostgreSQL DB orders (DB is the source of truth)
       apiOrders.forEach((ao) => {
         const idKey = String(ao.id || ao.orderId || '');
-        if (idKey && !mergedMap.has(idKey)) {
-          mergedMap.set(idKey, ao);
+        if (idKey) {
+          const localMatch = mergedMap.get(idKey);
+          mergedMap.set(idKey, {
+            ...localMatch,
+            ...ao,
+            status: (ao.status || localMatch?.status || 'PENDING').toUpperCase(),
+          });
         }
       });
 
@@ -81,9 +88,20 @@ const Orders = () => {
 
     loadOrders();
 
-    window.addEventListener('orders_updated', loadOrders);
-    return () => window.removeEventListener('orders_updated', loadOrders);
-  }, [data, reduxUser]);
+    const handleLiveSync = () => {
+      if (typeof refetchOrders === 'function') {
+        refetchOrders();
+      }
+      loadOrders();
+    };
+
+    window.addEventListener('orders_updated', handleLiveSync);
+    window.addEventListener('storage', handleLiveSync);
+    return () => {
+      window.removeEventListener('orders_updated', handleLiveSync);
+      window.removeEventListener('storage', handleLiveSync);
+    };
+  }, [data, reduxUser, refetchOrders]);
 
   const isLoading = loading && fetchLoading;
 

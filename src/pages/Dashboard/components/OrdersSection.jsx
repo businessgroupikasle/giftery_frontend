@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiShoppingBag, FiMoreVertical, FiEye, FiX } from 'react-icons/fi';
+import { FiShoppingBag, FiMoreVertical, FiEye, FiX, FiSearch, FiFilter } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import axiosInstance from '@api/axiosInstance';
 import { formatOrderId } from '@utils/formatters';
@@ -16,6 +16,7 @@ const INITIAL_ORDERS = [
 
 const OrdersSection = ({ ordersList = [] }) => {
   const [orderFilter, setOrderFilter] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orders, setOrders] = useState(() => {
     try {
@@ -29,29 +30,81 @@ const OrdersSection = ({ ordersList = [] }) => {
   });
 
   useEffect(() => {
-    if (ordersList.length > 0) {
+    if (Array.isArray(ordersList) && ordersList.length > 0) {
       setOrders(ordersList);
     }
   }, [ordersList]);
 
   const handleStatusChange = async (orderId, newStatus) => {
-    const updated = orders.map((o) => (o.id === orderId || o.orderId === orderId ? { ...o, status: newStatus } : o));
+    const uppercaseStatus = String(newStatus).toUpperCase();
+    const displayStatus = newStatus.charAt(0).toUpperCase() + newStatus.slice(1).toLowerCase();
+
+    // 1. Update React local state
+    const updated = orders.map((o) => {
+      const matchId = String(o.id || o.orderId);
+      const targetId = String(orderId);
+      if (matchId === targetId || matchId.includes(targetId) || targetId.includes(matchId)) {
+        return { ...o, status: displayStatus };
+      }
+      return o;
+    });
     setOrders(updated);
 
+    // 2. Update persistent localStorage cache for instant synchronization
     try {
-      localStorage.setItem('giftery_orders', JSON.stringify(updated));
+      const stored = JSON.parse(localStorage.getItem('giftery_orders') || '[]');
+      const updatedStored = stored.map((o) => {
+        const matchId = String(o.id || o.orderId);
+        const targetId = String(orderId);
+        if (matchId === targetId || matchId.includes(targetId) || targetId.includes(matchId)) {
+          return { ...o, status: uppercaseStatus };
+        }
+        return o;
+      });
+      localStorage.setItem('giftery_orders', JSON.stringify(updatedStored));
     } catch (e) {}
 
-    try {
-      await axiosInstance.put(`/orders/${orderId}`, { status: newStatus });
-    } catch (e) {}
+    // 3. Emit real-time live event so all components on all pages re-render immediately
+    window.dispatchEvent(new Event('orders_updated'));
 
-    toast.success(`Order status updated to "${newStatus}"`);
+    // 4. Update Backend PostgreSQL database
+    try {
+      await axiosInstance.patch(`/orders/${orderId}/status`, { status: uppercaseStatus });
+    } catch (err) {
+      try {
+        await axiosInstance.put(`/orders/${orderId}/status`, { status: uppercaseStatus });
+      } catch (putErr) {
+        console.warn('Backend order status update sync:', err.message);
+      }
+    }
+
+    toast.success(`Order status updated to "${displayStatus}"`);
   };
 
   const filteredOrders = orders.filter((o) => {
-    if (orderFilter === 'ALL') return true;
-    return (o.status || '').toUpperCase() === orderFilter.toUpperCase();
+    const matchesFilter =
+      orderFilter === 'ALL' ||
+      (o.status || '').toUpperCase() === orderFilter.toUpperCase();
+
+    const q = searchTerm.toLowerCase().trim();
+    if (!q) return matchesFilter;
+
+    const idStr = String(o.id || o.orderId || '').toLowerCase();
+    const customerStr = String(o.customer || o.customerName || o.user?.name || o.shippingAddress?.fullName || '').toLowerCase();
+    const emailStr = String(o.customerEmail || o.user?.email || o.shippingAddress?.email || '').toLowerCase();
+    const itemsStr = String(o.itemsDetails || (Array.isArray(o.items) ? o.items.map(i => i.name || i.product?.name).join(' ') : '')).toLowerCase();
+    const statusStr = String(o.status || '').toLowerCase();
+    const amountStr = String(o.amount || o.rawAmount || o.totalAmount || '').toLowerCase();
+
+    const matchesSearch =
+      idStr.includes(q) ||
+      customerStr.includes(q) ||
+      emailStr.includes(q) ||
+      itemsStr.includes(q) ||
+      statusStr.includes(q) ||
+      amountStr.includes(q);
+
+    return matchesFilter && matchesSearch;
   });
 
   return (
@@ -59,31 +112,91 @@ const OrdersSection = ({ ordersList = [] }) => {
       <div className={styles.cardHeaderRow}>
         <h3 className={styles.cardTitle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <FiShoppingBag style={{ color: '#d99b26' }} />
-          <span>Orders Management</span>
+          <span>Orders Management ({orders.length})</span>
         </h3>
       </div>
 
-      {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', margin: '1rem 0', flexWrap: 'wrap' }}>
-        {['ALL', 'PENDING', 'PROCESSING', 'DELIVERED', 'CANCELLED'].map((status) => (
-          <button
-            key={status}
-            type="button"
-            onClick={() => setOrderFilter(status)}
+      {/* Search & Filter Toolbar */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem',
+          margin: '1.25rem 0 1rem 0',
+          paddingBottom: '1rem',
+          borderBottom: '1px solid #f1f5f9',
+        }}
+      >
+        {/* Left: Filter Tabs */}
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.3rem', marginRight: '0.25rem' }}>
+            <FiFilter /> Filter:
+          </span>
+          {['ALL', 'PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => (
+            <button
+              key={status}
+              type="button"
+              onClick={() => setOrderFilter(status)}
+              style={{
+                padding: '0.35rem 0.85rem',
+                borderRadius: '20px',
+                border: orderFilter === status ? 'none' : '1px solid #cbd5e1',
+                background: orderFilter === status ? '#d99b26' : '#ffffff',
+                color: orderFilter === status ? '#ffffff' : '#475569',
+                fontWeight: '700',
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+
+        {/* Right: Search Box */}
+        <div style={{ position: 'relative', width: '320px', minWidth: '240px' }}>
+          <FiSearch style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.95rem' }} />
+          <input
+            type="text"
+            placeholder="Search Order ID, Customer, Items..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             style={{
-              padding: '0.4rem 0.85rem',
-              borderRadius: '20px',
-              border: orderFilter === status ? 'none' : '1px solid #cbd5e1',
-              background: orderFilter === status ? '#d99b26' : '#ffffff',
-              color: orderFilter === status ? '#ffffff' : '#475569',
-              fontWeight: '600',
-              fontSize: '0.78rem',
-              cursor: 'pointer',
+              width: '100%',
+              padding: '0.55rem 2.2rem 0.55rem 2.4rem',
+              borderRadius: '10px',
+              border: '1px solid #cbd5e1',
+              outline: 'none',
+              fontSize: '0.85rem',
+              background: '#ffffff',
+              boxSizing: 'border-box',
             }}
-          >
-            {status}
-          </button>
-        ))}
+          />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              style={{
+                position: 'absolute',
+                right: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#94a3b8',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <FiX />
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={{ overflowX: 'auto' }}>
@@ -108,6 +221,15 @@ const OrdersSection = ({ ordersList = [] }) => {
               const productSummary = o.itemsDetails || (Array.isArray(o.items) ? o.items.map(i => `${i.name || i.product?.name || 'Item'} ×${i.quantity || 1}`).join(', ') : '1 Item');
               const amountDisplay = o.amount || `₹${(Number(o.rawAmount || o.totalAmount || 0)).toLocaleString('en-IN')}`;
 
+              const currentStatusUpper = String(o.status || 'PENDING').toUpperCase();
+              const displaySelectValue =
+                currentStatusUpper === 'DELIVERED' ? 'Delivered'
+                : currentStatusUpper === 'PROCESSING' ? 'Processing'
+                : currentStatusUpper === 'CONFIRMED' ? 'Confirmed'
+                : currentStatusUpper === 'SHIPPED' ? 'Shipped'
+                : currentStatusUpper === 'CANCELLED' ? 'Cancelled'
+                : 'Pending';
+
               return (
                 <tr key={o.id || idx}>
                   <td className={styles.orderIdText}>{displayId}</td>
@@ -120,14 +242,14 @@ const OrdersSection = ({ ordersList = [] }) => {
                   <td><strong style={{ color: '#d99b26' }}>{amountDisplay}</strong></td>
                   <td>
                     <select
-                      value={o.status || 'Pending'}
+                      value={displaySelectValue}
                       onChange={(e) => handleStatusChange(o.id || o.orderId, e.target.value)}
                       className={`${styles.pillStatus} ${
-                        o.status === 'Delivered'
+                        currentStatusUpper === 'DELIVERED'
                           ? styles.pillDelivered
-                          : o.status === 'Processing'
+                          : currentStatusUpper === 'PROCESSING' || currentStatusUpper === 'CONFIRMED'
                           ? styles.pillProcessing
-                          : o.status === 'Cancelled'
+                          : currentStatusUpper === 'CANCELLED'
                           ? styles.pillCancelled
                           : styles.pillPending
                       }`}
@@ -150,7 +272,9 @@ const OrdersSection = ({ ordersList = [] }) => {
                       title="Click to change order status"
                     >
                       <option value="Pending" style={{ background: '#ffffff', color: '#1e293b' }}>Pending</option>
+                      <option value="Confirmed" style={{ background: '#ffffff', color: '#1e293b' }}>Confirmed</option>
                       <option value="Processing" style={{ background: '#ffffff', color: '#1e293b' }}>Processing</option>
+                      <option value="Shipped" style={{ background: '#ffffff', color: '#1e293b' }}>Shipped</option>
                       <option value="Delivered" style={{ background: '#ffffff', color: '#1e293b' }}>Delivered</option>
                       <option value="Cancelled" style={{ background: '#ffffff', color: '#1e293b' }}>Cancelled</option>
                     </select>

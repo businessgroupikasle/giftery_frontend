@@ -56,7 +56,7 @@ const handleImageFileUpload = (file, idx, imageList, handleProductFormChange) =>
 };
 
 // Helper function to resolve product's Main Category ID robustly
-const resolveMainCategoryId = (product, categoriesList) => {
+const resolveMainCategoryId = (product, categoriesList = []) => {
   const catId = product.categoryId || (typeof product.category === 'object' ? product.category?.id : product.category);
   const subId = product.subCategoryId || (typeof product.subcategory === 'object' ? product.subcategory?.id : product.subcategory) || (typeof product.subCategory === 'object' ? product.subCategory?.id : product.subCategory);
 
@@ -92,6 +92,54 @@ const resolveMainCategoryId = (product, categoriesList) => {
   }
 
   return 'unassigned';
+};
+
+// Helper function to resolve product's Main Category Name robustly
+const resolveMainCategoryName = (product, categoriesList = []) => {
+  const mainId = resolveMainCategoryId(product, categoriesList);
+  const mainCat = categoriesList.find(c => c.id === mainId);
+  if (mainCat && !mainCat.parentId) return mainCat.name;
+  if (product.category?.name) {
+    if (product.category.parentId) {
+      const parentCat = categoriesList.find(c => c.id === product.category.parentId);
+      if (parentCat) return parentCat.name;
+    }
+    return product.category.name;
+  }
+  return 'Unassigned';
+};
+
+// Helper function to resolve product's Subcategory Name robustly
+const resolveSubCategoryName = (product, categoriesList = []) => {
+  const subId = product.subCategoryId || (typeof product.subcategory === 'object' ? product.subcategory?.id : product.subcategory) || (typeof product.subCategory === 'object' ? product.subCategory?.id : product.subCategory);
+
+  // 1. Direct subCategoryId match
+  if (subId) {
+    const matched = categoriesList.find(c => c.id === subId || c.slug === subId || String(c.name).toLowerCase() === String(subId).toLowerCase());
+    if (matched) return matched.name;
+  }
+
+  // 2. If product.categoryId is actually a subcategory (has parentId)
+  const catId = product.categoryId || (typeof product.category === 'object' ? product.category?.id : product.category);
+  if (catId) {
+    const matchedCat = categoriesList.find(c => c.id === catId || c.slug === catId);
+    if (matchedCat && matchedCat.parentId) {
+      return matchedCat.name;
+    }
+  }
+
+  // 3. Category object with parentId
+  if (product.category?.parentId && product.category?.name) {
+    return product.category.name;
+  }
+
+  // 4. Object/String name fallbacks
+  if (product.subcategory?.name) return product.subcategory.name;
+  if (typeof product.subcategory === 'string' && product.subcategory) return product.subcategory;
+  if (product.subCategory?.name) return product.subCategory.name;
+  if (typeof product.subCategory === 'string' && product.subCategory) return product.subCategory;
+
+  return null;
 };
 
 const ProductsSection = ({
@@ -173,15 +221,24 @@ const ProductsSection = ({
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       const tagsStr = Array.isArray(p.tags) ? p.tags.join(' ') : String(p.tags || '');
+      const subName = resolveSubCategoryName(p, categories) || '';
       return (
         p.name.toLowerCase().includes(q) ||
         (p.sku && p.sku.toLowerCase().includes(q)) ||
         (p.category?.name && p.category.name.toLowerCase().includes(q)) ||
-        (p.subcategory?.name && p.subcategory.name.toLowerCase().includes(q)) ||
+        subName.toLowerCase().includes(q) ||
         tagsStr.toLowerCase().includes(q)
       );
     });
   }, [productsList, categories, activeCategoryFilter, searchQuery]);
+
+  // Subcategories available for currently selected Main Category in form
+  const availableSubcategories = useMemo(() => {
+    if (!productForm.categoryId) return [];
+    const matchedMain = categories.find(c => c.id === productForm.categoryId || c.slug === productForm.categoryId);
+    const mainId = matchedMain ? matchedMain.id : productForm.categoryId;
+    return categories.filter(c => c.parentId === mainId);
+  }, [categories, productForm.categoryId]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -438,16 +495,17 @@ const ProductsSection = ({
                   }}
                 >
                   <option value="">
-                    {!productForm.categoryId ? '— Select Main Category First —' : '— Select Subcategory (Optional) —'}
+                    {!productForm.categoryId
+                      ? '— Select Main Category First —'
+                      : availableSubcategories.length === 0
+                        ? '— No Subcategories Found —'
+                        : '— Select Subcategory (Optional) —'}
                   </option>
-                  {productForm.categoryId &&
-                    categories
-                      .filter(c => c.parentId === productForm.categoryId)
-                      .map(subCat => (
-                        <option key={subCat.id} value={subCat.id}>
-                          {subCat.name}
-                        </option>
-                      ))}
+                  {availableSubcategories.map(subCat => (
+                    <option key={subCat.id} value={subCat.id}>
+                      {subCat.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -721,10 +779,8 @@ const ProductsSection = ({
             </thead>
             <tbody>
               {filteredProducts.map(product => {
-                const mainId = resolveMainCategoryId(product, categories);
-                const mainCat = categories.find(c => c.id === mainId);
-                const mainCatName = mainCat?.name || product.category?.name || 'Unassigned';
-                const subCatName = product.subcategory?.name || product.subCategory?.name;
+                const mainCatName = resolveMainCategoryName(product, categories);
+                const subCatName = resolveSubCategoryName(product, categories);
 
                 return (
                   <tr key={product.id}>
@@ -747,7 +803,7 @@ const ProductsSection = ({
                     </td>
                     <td>
                       {subCatName ? (
-                        <span style={{ background: '#f1f5f9', color: '#475569', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.78rem', fontWeight: '600' }}>
+                        <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.78rem', fontWeight: '600' }}>
                           {subCatName}
                         </span>
                       ) : (

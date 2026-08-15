@@ -24,9 +24,10 @@ const Wishlist = () => {
 
   // Fetch backend API wishlist items if user logged in
   const { data, fetch: refetchWishlist } = useFetch(ENDPOINTS.WISHLIST.GET);
-  const apiWishlist = data?.wishlist?.items
-    ? data.wishlist.items.map((i) => i.product || i)
-    : [];
+  const wishlistObj = data?.data?.wishlist || data?.wishlist || data;
+  const apiWishlist = Array.isArray(wishlistObj?.items)
+    ? wishlistObj.items.map((i) => i.product || i)
+    : (Array.isArray(wishlistObj) ? wishlistObj : []);
 
   // Combine items avoiding duplicates
   const allItems = [...reduxWishlist, ...apiWishlist];
@@ -108,18 +109,16 @@ const Wishlist = () => {
   };
 
   const handleBuyNow = async (item) => {
-    dispatch(addToCart({ id: item.id, name: item.name, price: item.price, image: item.image, slug: item.slug }));
-    dispatch(removeFromWishlist(item.id));
-
-    try {
-      await axiosInstance.delete(ENDPOINTS.WISHLIST.REMOVE(item.id));
-      refetchWishlist();
-    } catch (e) {
-      refetchWishlist();
-    }
-
-    toast.success(`Proceeding to cart with "${item.name}"`);
-    navigate(ROUTES.CART);
+    const buyNowItem = {
+      id: item.id,
+      productId: item.id,
+      name: item.name,
+      price: Number(item.price || 0),
+      image: item.image,
+      slug: item.slug,
+      quantity: 1,
+    };
+    navigate('/checkout', { state: { buyNowItem } });
   };
 
   const handleRemoveFromWishlist = async (id, name) => {

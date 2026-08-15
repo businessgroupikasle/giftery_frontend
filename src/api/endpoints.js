@@ -26,9 +26,21 @@ export const ENDPOINTS = {
     LIST: '/users',
     DETAIL: (id) => `/users/${id}`,
     UPDATE: (id) => `/users/${id}`,
+    STATUS: (id) => `/users/${id}/status`,
     DELETE: (id) => `/users/${id}`,
     UPDATE_PASSWORD: '/users/change-password',
     UPLOAD_AVATAR: '/users/avatar',
+  },
+
+  // ── Addresses ─────────────────────────────────────────────
+  ADDRESSES: {
+    LIST: '/addresses',
+    DETAIL: (id) => `/addresses/${id}`,
+    CREATE: '/addresses',
+    UPDATE: (id) => `/addresses/${id}`,
+    DELETE: (id) => `/addresses/${id}`,
+    SET_DEFAULT: (id) => `/addresses/${id}/default`,
+    USER_ADDRESS: '/users/address',
   },
 
   // ── Products ──────────────────────────────────────────────
@@ -74,9 +86,11 @@ export const ENDPOINTS = {
   // ── Orders ────────────────────────────────────────────────
   ORDERS: {
     LIST: '/orders',
-    MY_ORDERS: '/orders/my-orders',
+    MY: '/orders/my',
+    MY_ORDERS: '/orders/my',
     DETAIL: (id) => `/orders/${id}`,
     CREATE: '/orders',
+    UPDATE_STATUS: (id) => `/orders/${id}/status`,
     CANCEL: (id) => `/orders/${id}/cancel`,
     TRACK: (id) => `/orders/${id}/track`,
   },
