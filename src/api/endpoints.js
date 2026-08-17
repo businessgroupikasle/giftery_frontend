@@ -54,6 +54,11 @@ export const ENDPOINTS = {
     FEATURED: '/products/featured',
     NEW_ARRIVALS: '/products/new-arrivals',
     SEARCH: '/products/search',
+    BULK: {
+      TEMPLATE: '/products/bulk/template',
+      VALIDATE: '/products/bulk/validate',
+      IMPORT: '/products/bulk/import',
+    },
   },
 
   // ── Categories ────────────────────────────────────────────

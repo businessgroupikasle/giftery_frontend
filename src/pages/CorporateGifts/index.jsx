@@ -219,28 +219,73 @@ const CorporateGifts = () => {
   // Live Products State from Database
   // Live Products State from PostgreSQL Database via API
   const [liveProducts, setLiveProducts] = useState([]);
+  const [categoriesList, setCategoriesList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchLiveProducts = async () => {
       setLoading(true);
       try {
-        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200');
+        const [prodRes, catRes] = await Promise.allSettled([
+          axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200'),
+          axiosInstance.get(ENDPOINTS.CATEGORIES.LIST),
+        ]);
+
+        let allCats = [];
+        if (catRes.status === 'fulfilled') {
+          const cData = catRes.value?.data?.categories || catRes.value?.categories || catRes.value?.data || [];
+          if (Array.isArray(cData)) allCats = cData;
+        }
+        setCategoriesList(allCats);
+
+        const catIdMap = new Map(allCats.map(c => [c.id, c]));
+
         let extracted = [];
-        if (Array.isArray(res)) extracted = res;
-        else if (res?.data && Array.isArray(res.data)) extracted = res.data;
-        else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
-        else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
-        else if (res?.products && Array.isArray(res.products)) extracted = res.products;
+        if (prodRes.status === 'fulfilled') {
+          const res = prodRes.value;
+          if (Array.isArray(res)) extracted = res;
+          else if (res?.data && Array.isArray(res.data)) extracted = res.data;
+          else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
+          else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
+          else if (res?.products && Array.isArray(res.products)) extracted = res.products;
+        }
 
         const formatted = extracted
           .map((p) => {
             const imgList = Array.isArray(p.images)
               ? p.images
               : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
-            const catName = (p.category?.name || p.categoryName || '').toLowerCase();
-            const catSlug = (p.category?.slug || p.categorySlug || '').toLowerCase();
-            const subCatName = (p.subCategory?.name || p.subCategoryName || '').toLowerCase();
+
+            // Resolve Main Category
+            const resolvedMain = p.category || (p.categoryId ? catIdMap.get(p.categoryId) : null);
+            const catName = (resolvedMain?.name || p.categoryName || 'Corporate Gifts');
+            const catSlug = (resolvedMain?.slug || p.categorySlug || 'corporate-gifts');
+
+            // Resolve Subcategory
+            const resolvedSub = p.subCategory || (p.subCategoryId ? catIdMap.get(p.subCategoryId) : null);
+            let subCatName = resolvedSub?.name || p.subCategoryName || p.subcategoryName || '';
+            let subCatSlug = resolvedSub?.slug || p.subCategorySlug || p.subcategorySlug || '';
+
+            // Keyword inference fallback for subcategory name if missing
+            if (!subCatName) {
+              const pText = `${p.name || ''} ${p.description || ''}`.toLowerCase();
+              if (pText.includes('onboarding') || pText.includes('welcome')) { subCatName = 'Onboarding Kit'; subCatSlug = 'onboarding-kit'; }
+              else if (pText.includes('work anniversary') || pText.includes('anniversary kit')) { subCatName = 'Work Anniversary Kit'; subCatSlug = 'work-anniversary-kit'; }
+              else if (pText.includes('employee anniversary') || pText.includes('anniversary hamper')) { subCatName = 'Employee Anniversary Kit'; subCatSlug = 'employee-anniversary-kit'; }
+              else if (pText.includes('diar') || pText.includes('notebook') || pText.includes('journal')) { subCatName = 'Diaries & Notebooks'; subCatSlug = 'diaries-notebooks'; }
+              else if (pText.includes('bottle') || pText.includes('tumbler') || pText.includes('drinkware') || pText.includes('flask')) { subCatName = 'Drinkware'; subCatSlug = 'drinkware'; }
+              else if (pText.includes('t-shirt') || pText.includes('polo') || pText.includes('hoodie') || pText.includes('apparel')) { subCatName = 'Apparel'; subCatSlug = 'apparel'; }
+              else if (pText.includes('power bank') || pText.includes('headphone') || pText.includes('speaker') || pText.includes('electronic')) { subCatName = 'Electronics'; subCatSlug = 'electronics'; }
+              else if (pText.includes('backpack') || pText.includes('bag') || pText.includes('duffle')) { subCatName = 'Backpacks'; subCatSlug = 'backpacks'; }
+              else if (pText.includes('troph') || pText.includes('award') || pText.includes('plaque') || pText.includes('gyro')) { subCatName = 'Trophies & Awards'; subCatSlug = 'trophies-awards'; }
+              else if (pText.includes('card holder') || pText.includes('wallet')) { subCatName = 'Card Holders'; subCatSlug = 'card-holders'; }
+              else if (pText.includes('cap') || pText.includes('hat')) { subCatName = 'Caps'; subCatSlug = 'caps'; }
+              else if (pText.includes('umbrella')) { subCatName = 'Umbrellas'; subCatSlug = 'umbrellas'; }
+              else if (pText.includes('cup') || pText.includes('mug')) { subCatName = 'Cups & Mugs'; subCatSlug = 'cups-mugs'; }
+              else if (pText.includes('keychain')) { subCatName = 'Keychains'; subCatSlug = 'keychains'; }
+              else if (pText.includes('accessory') || pText.includes('pen set') || pText.includes('organizer')) { subCatName = 'Accessories'; subCatSlug = 'accessories'; }
+            }
+
             return {
               id: p.id,
               name: p.name,
@@ -253,14 +298,15 @@ const CorporateGifts = () => {
               images: imgList,
               image: imgList[0] || '/placeholder.jpg',
               slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-              categoryId: p.categoryId || null,
-              subCategoryId: p.subCategoryId || null,
-              categoryName: p.category?.name || p.categoryName || 'Corporate Gifts',
-              categorySlug: p.category?.slug || p.categorySlug || 'corporate-gifts',
-              subCategoryName: p.subCategory?.name || p.subCategoryName || '',
-              _catName: catName,
-              _catSlug: catSlug,
-              _subCatName: subCatName,
+              categoryId: p.categoryId || (resolvedMain ? resolvedMain.id : null),
+              subCategoryId: p.subCategoryId || (resolvedSub ? resolvedSub.id : null),
+              categoryName: catName,
+              categorySlug: catSlug,
+              subCategoryName: subCatName,
+              subCategorySlug: subCatSlug,
+              _catName: catName.toLowerCase(),
+              _catSlug: catSlug.toLowerCase(),
+              _subCatName: subCatName.toLowerCase(),
             };
           })
           // ── PAGE RESTRICTION: Only show Corporate Gifts products ──
@@ -295,21 +341,84 @@ const CorporateGifts = () => {
   // Base raw products catalog from PostgreSQL
   const rawProducts = liveProducts;
 
-  // ── Dynamic Categories built from real DB products ──────────────
+  // ── Dynamic Subcategories built from real DB products ──────────────
   const dynamicCategories = (() => {
-    if (liveProducts.length === 0) return CATEGORIES_DATA;
-    const catMap = new Map();
+    // 1. Identify all subcategories for Corporate Gifts from categories API
+    const corpMainCat = categoriesList.find(c =>
+      c.slug === 'corporate-gifts' ||
+      (c.name && c.name.toLowerCase().includes('corporate'))
+    );
+    const dbSubCats = corpMainCat
+      ? categoriesList.filter(c => c.parentId === corpMainCat.id)
+      : categoriesList.filter(c => c.parentId && c.parentId !== null);
+
+    const subMap = new Map();
+
+    // Predefined default subcategories
+    const defaultSubs = dbSubCats.length > 0 ? dbSubCats : [
+      { id: 'onboarding', slug: 'onboarding-kit', name: 'Onboarding Kit' },
+      { id: 'work-anniversary', slug: 'work-anniversary-kit', name: 'Work Anniversary Kit' },
+      { id: 'employee-anniversary', slug: 'employee-anniversary-kit', name: 'Employee Anniversary Kit' },
+      { id: 'diaries', slug: 'diaries-notebooks', name: 'Diaries & Notebooks' },
+      { id: 'drinkware', slug: 'drinkware', name: 'Drinkware' },
+      { id: 'apparel', slug: 'apparel', name: 'Apparel' },
+      { id: 'electronics', slug: 'electronics', name: 'Electronics' },
+      { id: 'backpacks', slug: 'backpacks', name: 'Backpacks' },
+      { id: 'accessories', slug: 'accessories', name: 'Accessories' },
+      { id: 'trophies', slug: 'trophies-awards', name: 'Trophies & Awards' },
+      { id: 'caps', slug: 'caps', name: 'Caps' },
+      { id: 'umbrellas', slug: 'umbrellas', name: 'Umbrellas' },
+      { id: 'card-holders', slug: 'card-holders', name: 'Card Holders' },
+      { id: 'premium-gifts', slug: 'premium-gifts', name: 'Premium Gifts' },
+      { id: 'cups-mugs', slug: 'cups-mugs', name: 'Cups & Mugs' },
+      { id: 'keychains', slug: 'keychains', name: 'Keychains' },
+    ];
+
+    defaultSubs.forEach(s => {
+      subMap.set(s.id, {
+        id: s.id,
+        slug: s.slug || s.id,
+        name: s.name,
+        count: 0,
+      });
+    });
+
+    // Count products per subcategory
     liveProducts.forEach(p => {
-      // Use subCategoryId for granular filtering, or categoryId if no sub
-      const filterId = p.subCategoryId || p.categoryId;
-      const filterName = p.subCategoryName || p.categoryName;
-      if (filterId && filterName) {
-        const existing = catMap.get(filterId);
-        if (existing) existing.count += 1;
-        else catMap.set(filterId, { id: filterId, name: filterName, count: 1 });
+      const pSubId = p.subCategoryId;
+      const pSubSlug = (p.subCategorySlug || '').toLowerCase();
+      const pSubName = (p.subCategoryName || '').toLowerCase();
+
+      let matched = null;
+      if (pSubId && subMap.has(pSubId)) {
+        matched = subMap.get(pSubId);
+      } else {
+        for (const item of subMap.values()) {
+          if (
+            (pSubSlug && (item.slug.toLowerCase() === pSubSlug || item.id === pSubSlug)) ||
+            (pSubName && item.name.toLowerCase() === pSubName)
+          ) {
+            matched = item;
+            break;
+          }
+        }
+      }
+
+      if (matched) {
+        matched.count += 1;
+      } else if (pSubName && pSubName !== 'corporate gifts') {
+        const fallbackKey = pSubId || pSubSlug || pSubName;
+        subMap.set(fallbackKey, {
+          id: pSubId || pSubSlug || fallbackKey,
+          slug: pSubSlug || fallbackKey,
+          name: p.subCategoryName,
+          count: 1,
+        });
       }
     });
-    return [{ id: 'all', name: 'All Products', count: liveProducts.length }, ...Array.from(catMap.values())];
+
+    const subList = Array.from(subMap.values());
+    return [{ id: 'all', name: 'All Products', count: liveProducts.length }, ...subList];
   })();
 
   const categoriesForFilter = dynamicCategories;
@@ -382,17 +491,28 @@ const CorporateGifts = () => {
       // 2. Category / Subcategory Filter — match by real DB IDs first, then name fallback
       const activeCat = selectedCategory !== 'all' ? selectedCategory : activeSubCategory;
       if (activeCat !== 'all') {
-        // Direct ID match (works for live DB products)
-        if (prod.categoryId === activeCat || prod.subCategoryId === activeCat) return true;
-        // Name-based fallback (works for mock/static products)
-        const catObj = categoriesForFilter.find(c => c.id === activeCat);
-        if (catObj) {
-          const catName = catObj.name.toLowerCase();
-          const pName = (prod.name || '').toLowerCase();
-          const pSlug = (prod.slug || '').toLowerCase();
-          const pCat = (prod.categoryName || '').toLowerCase();
-          const words = catName.split(' ').filter(w => w.length > 2 && !['and', 'kit', 'kits', 'all', 'products'].includes(w));
-          return words.some(w => pName.includes(w) || pSlug.includes(w) || pCat.includes(w));
+        const catObj = categoriesForFilter.find(c => c.id === activeCat || c.slug === activeCat);
+        const targetId = catObj?.id || activeCat;
+        const targetSlug = (catObj?.slug || activeCat).toLowerCase();
+        const targetName = (catObj?.name || '').toLowerCase();
+
+        // Direct ID match
+        if (prod.subCategoryId && (prod.subCategoryId === targetId || prod.subCategoryId === targetSlug)) return true;
+        if (prod.categoryId && prod.categoryId === targetId && targetName === 'corporate gifts') return true;
+
+        // Slug match
+        const prodSubSlug = (prod.subCategorySlug || '').toLowerCase();
+        if (prodSubSlug && (prodSubSlug === targetSlug || prodSubSlug === targetId)) return true;
+
+        // Name match
+        const prodSubName = (prod.subCategoryName || '').toLowerCase();
+        if (prodSubName && prodSubName === targetName) return true;
+
+        // Keyword match fallback
+        if (targetName && targetName !== 'all products' && targetName !== 'corporate gifts') {
+          const words = targetName.split(' ').filter(w => w.length > 2 && !['and', 'kit', 'kits', 'all', 'products', '&'].includes(w));
+          const pStr = `${(prod.name || '').toLowerCase()} ${(prod.slug || '').toLowerCase()} ${(prod.description || '').toLowerCase()}`;
+          if (words.length > 0 && words.some(w => pStr.includes(w))) return true;
         }
         return false;
       }

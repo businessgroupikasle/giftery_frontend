@@ -1262,6 +1262,7 @@ const Dashboard = () => {
           {activeTab === 'categories' && (
             <CategoriesSection
               categories={categories}
+              products={productsList}
               showCategoryForm={showCategoryForm}
               editingCategory={editingCategory}
               savingCategory={savingCategory}

@@ -134,28 +134,70 @@ const Toys = () => {
 
   // Live Products State from PostgreSQL Database via API
   const [liveProducts, setLiveProducts] = useState([]);
+  const [categoriesList, setCategoriesList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchLiveProducts = async () => {
       setLoading(true);
       try {
-        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200');
+        const [prodRes, catRes] = await Promise.allSettled([
+          axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200'),
+          axiosInstance.get(ENDPOINTS.CATEGORIES.LIST),
+        ]);
+
+        let allCats = [];
+        if (catRes.status === 'fulfilled') {
+          const cData = catRes.value?.data?.categories || catRes.value?.categories || catRes.value?.data || [];
+          if (Array.isArray(cData)) allCats = cData;
+        }
+        setCategoriesList(allCats);
+
+        const catIdMap = new Map(allCats.map(c => [c.id, c]));
+
         let extracted = [];
-        if (Array.isArray(res)) extracted = res;
-        else if (res?.data && Array.isArray(res.data)) extracted = res.data;
-        else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
-        else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
-        else if (res?.products && Array.isArray(res.products)) extracted = res.products;
+        if (prodRes.status === 'fulfilled') {
+          const res = prodRes.value;
+          if (Array.isArray(res)) extracted = res;
+          else if (res?.data && Array.isArray(res.data)) extracted = res.data;
+          else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
+          else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
+          else if (res?.products && Array.isArray(res.products)) extracted = res.products;
+        }
 
         const formatted = extracted
           .map((p) => {
             const imgList = Array.isArray(p.images)
               ? p.images
               : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
-            const catName = (p.category?.name || p.categoryName || '').toLowerCase();
-            const catSlug = (p.category?.slug || p.categorySlug || '').toLowerCase();
-            const subCatName = (p.subCategory?.name || p.subCategoryName || '').toLowerCase();
+
+            // Resolve Main Category
+            const resolvedMain = p.category || (p.categoryId ? catIdMap.get(p.categoryId) : null);
+            const catName = (resolvedMain?.name || p.categoryName || 'Toys');
+            const catSlug = (resolvedMain?.slug || p.categorySlug || 'toys');
+
+            // Resolve Subcategory
+            const resolvedSub = p.subCategory || (p.subCategoryId ? catIdMap.get(p.subCategoryId) : null);
+            let subCatName = resolvedSub?.name || p.subCategoryName || p.subcategoryName || '';
+            let subCatSlug = resolvedSub?.slug || p.subCategorySlug || p.subcategorySlug || '';
+
+            // Keyword inference fallback for subcategory name if missing
+            if (!subCatName) {
+              const pText = `${p.name || ''} ${p.description || ''}`.toLowerCase();
+              if (pText.includes('remote control') || pText.includes('stunt car') || pText.includes('racing car') || pText.includes('rc car')) { subCatName = 'Remote Control Toys'; subCatSlug = 'remote-control-toys'; }
+              else if (pText.includes('building block') || pText.includes('blocks set') || pText.includes('magnetic') || pText.includes('stem building')) { subCatName = 'Building Blocks'; subCatSlug = 'building-blocks'; }
+              else if (pText.includes('plush') || pText.includes('teddy') || pText.includes('soft toy')) { subCatName = 'Soft Toys'; subCatSlug = 'soft-toys'; }
+              else if (pText.includes('educational') || pText.includes('activity kit') || pText.includes('learning')) { subCatName = 'Educational Toys'; subCatSlug = 'educational-toys'; }
+              else if (pText.includes('doll') || pText.includes('interactive doll')) { subCatName = 'Dolls'; subCatSlug = 'dolls'; }
+              else if (pText.includes('push-along') || pText.includes('car set') || pText.includes('bike')) { subCatName = 'Cars & Bikes'; subCatSlug = 'cars-bikes'; }
+              else if (pText.includes('outdoor')) { subCatName = 'Outdoor Toys'; subCatSlug = 'outdoor-toys'; }
+              else if (pText.includes('0-2') || pText.includes('0 - 2') || pText.includes('infant')) { subCatName = '0 – 2 Years'; subCatSlug = '0-2-years'; }
+              else if (pText.includes('3-5') || pText.includes('3 - 5') || pText.includes('toddler')) { subCatName = '3 – 5 Years'; subCatSlug = '3-5-years'; }
+              else if (pText.includes('6-8') || pText.includes('6 - 8')) { subCatName = '6 – 8 Years'; subCatSlug = '6-8-years'; }
+              else if (pText.includes('9-12') || pText.includes('9 - 12')) { subCatName = '9 – 12 Years'; subCatSlug = '9-12-years'; }
+              else if (pText.includes('teen') || pText.includes('puzzle') || pText.includes('gyro')) { subCatName = 'Teens'; subCatSlug = 'teens'; }
+            }
+
             return {
               id: p.id,
               name: p.name,
@@ -168,14 +210,15 @@ const Toys = () => {
               images: imgList,
               image: imgList[0] || '/placeholder.jpg',
               slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-              categoryId: p.categoryId || null,
-              subCategoryId: p.subCategoryId || null,
-              categoryName: p.category?.name || p.categoryName || 'Toys',
-              categorySlug: p.category?.slug || p.categorySlug || 'toys',
-              subCategoryName: p.subCategory?.name || p.subCategoryName || '',
-              _catName: catName,
-              _catSlug: catSlug,
-              _subCatName: subCatName,
+              categoryId: p.categoryId || (resolvedMain ? resolvedMain.id : null),
+              subCategoryId: p.subCategoryId || (resolvedSub ? resolvedSub.id : null),
+              categoryName: catName,
+              categorySlug: catSlug,
+              subCategoryName: subCatName,
+              subCategorySlug: subCatSlug,
+              _catName: catName.toLowerCase(),
+              _catSlug: catSlug.toLowerCase(),
+              _subCatName: subCatName.toLowerCase(),
             };
           })
           // ── PAGE RESTRICTION: Only show Toys products ──
@@ -209,21 +252,80 @@ const Toys = () => {
   // Base raw products catalog from PostgreSQL
   const products = liveProducts;
 
-  // ── Dynamic Categories built from real DB products ──────────────
+  // ── Dynamic Subcategories built from real DB products ──────────────
   const dynamicCategories = (() => {
-    if (liveProducts.length === 0) return TOYS_CATEGORIES_SIDEBAR;
-    const catMap = new Map();
+    // 1. Identify all subcategories for Toys from categories API
+    const toysMainCat = categoriesList.find(c =>
+      c.slug === 'toys' ||
+      (c.name && c.name.toLowerCase().includes('toy'))
+    );
+    const dbSubCats = toysMainCat
+      ? categoriesList.filter(c => c.parentId === toysMainCat.id)
+      : categoriesList.filter(c => c.parentId && c.parentId !== null);
+
+    const subMap = new Map();
+
+    // Predefined default subcategories
+    const defaultSubs = dbSubCats.length > 0 ? dbSubCats : [
+      { id: '0-2-years', slug: '0-2-years', name: '0 – 2 Years' },
+      { id: '3-5-years', slug: '3-5-years', name: '3 – 5 Years' },
+      { id: '6-8-years', slug: '6-8-years', name: '6 – 8 Years' },
+      { id: '9-12-years', slug: '9-12-years', name: '9 – 12 Years' },
+      { id: 'teens', slug: 'teens', name: 'Teens' },
+      { id: 'educational-toys', slug: 'educational-toys', name: 'Educational Toys' },
+      { id: 'remote-control-toys', slug: 'remote-control-toys', name: 'Remote Control Toys' },
+      { id: 'soft-toys', slug: 'soft-toys', name: 'Soft Toys' },
+      { id: 'building-blocks', slug: 'building-blocks', name: 'Building Blocks' },
+      { id: 'dolls', slug: 'dolls', name: 'Dolls' },
+      { id: 'cars-bikes', slug: 'cars-bikes', name: 'Cars & Bikes' },
+      { id: 'outdoor-toys', slug: 'outdoor-toys', name: 'Outdoor Toys' },
+    ];
+
+    defaultSubs.forEach(s => {
+      subMap.set(s.id, {
+        id: s.id,
+        slug: s.slug || s.id,
+        name: s.name,
+        count: 0,
+      });
+    });
+
+    // Count products per subcategory
     liveProducts.forEach(p => {
-      // Use subCategoryId for granular filtering, or categoryId if no sub
-      const filterId = p.subCategoryId || p.categoryId;
-      const filterName = p.subCategoryName || p.categoryName;
-      if (filterId && filterName) {
-        const existing = catMap.get(filterId);
-        if (existing) existing.count += 1;
-        else catMap.set(filterId, { id: filterId, name: filterName, count: 1 });
+      const pSubId = p.subCategoryId;
+      const pSubSlug = (p.subCategorySlug || '').toLowerCase();
+      const pSubName = (p.subCategoryName || '').toLowerCase();
+
+      let matched = null;
+      if (pSubId && subMap.has(pSubId)) {
+        matched = subMap.get(pSubId);
+      } else {
+        for (const item of subMap.values()) {
+          if (
+            (pSubSlug && (item.slug.toLowerCase() === pSubSlug || item.id === pSubSlug)) ||
+            (pSubName && item.name.toLowerCase() === pSubName)
+          ) {
+            matched = item;
+            break;
+          }
+        }
+      }
+
+      if (matched) {
+        matched.count += 1;
+      } else if (pSubName && pSubName !== 'toys') {
+        const fallbackKey = pSubId || pSubSlug || pSubName;
+        subMap.set(fallbackKey, {
+          id: pSubId || pSubSlug || fallbackKey,
+          slug: pSubSlug || fallbackKey,
+          name: p.subCategoryName,
+          count: 1,
+        });
       }
     });
-    return [{ id: 'all', name: 'All Toys', count: liveProducts.length }, ...Array.from(catMap.values())];
+
+    const subList = Array.from(subMap.values());
+    return [{ id: 'all', name: 'All Toys', count: liveProducts.length }, ...subList];
   })();
 
   const categoriesForFilter = dynamicCategories;
@@ -344,17 +446,28 @@ const Toys = () => {
       // 2. Category / Subcategory Filter
       const activeCat = selectedCategory !== 'all' ? selectedCategory : activeSubCategory;
       if (activeCat !== 'all') {
-        if (prod.categoryId === activeCat || prod.subCategoryId === activeCat) return true;
-        
-        const catObj = categoriesForFilter.find(c => c.id === activeCat);
-        if (catObj) {
-          const catName = catObj.name.toLowerCase();
-          const pName = (prod.name || '').toLowerCase();
-          const pSlug = (prod.slug || '').toLowerCase();
-          const pCat = (prod.categoryName || '').toLowerCase();
-          
-          const words = catName.split(' ').filter(w => w.length > 2 && w !== 'toys' && w !== 'games');
-          return words.some(w => pName.includes(w) || pSlug.includes(w) || pCat.includes(w));
+        const catObj = categoriesForFilter.find(c => c.id === activeCat || c.slug === activeCat);
+        const targetId = catObj?.id || activeCat;
+        const targetSlug = (catObj?.slug || activeCat).toLowerCase();
+        const targetName = (catObj?.name || '').toLowerCase();
+
+        // Direct ID match
+        if (prod.subCategoryId && (prod.subCategoryId === targetId || prod.subCategoryId === targetSlug)) return true;
+        if (prod.categoryId && prod.categoryId === targetId && targetName === 'toys') return true;
+
+        // Slug match
+        const prodSubSlug = (prod.subCategorySlug || '').toLowerCase();
+        if (prodSubSlug && (prodSubSlug === targetSlug || prodSubSlug === targetId)) return true;
+
+        // Name match
+        const prodSubName = (prod.subCategoryName || '').toLowerCase();
+        if (prodSubName && prodSubName === targetName) return true;
+
+        // Keyword match fallback
+        if (targetName && targetName !== 'all toys' && targetName !== 'toys') {
+          const words = targetName.split(' ').filter(w => w.length > 2 && w !== 'toys' && w !== 'games' && w !== '&');
+          const pStr = `${(prod.name || '').toLowerCase()} ${(prod.slug || '').toLowerCase()} ${(prod.description || '').toLowerCase()}`;
+          if (words.length > 0 && words.some(w => pStr.includes(w))) return true;
         }
         return false;
       }

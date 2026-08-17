@@ -122,28 +122,63 @@ const PersonalizedGifts = () => {
 
   // Live Products State from PostgreSQL Database via API
   const [liveProducts, setLiveProducts] = useState([]);
+  const [categoriesList, setCategoriesList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchLiveProducts = async () => {
       setLoading(true);
       try {
-        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200');
+        const [prodRes, catRes] = await Promise.allSettled([
+          axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200'),
+          axiosInstance.get(ENDPOINTS.CATEGORIES.LIST),
+        ]);
+
+        let allCats = [];
+        if (catRes.status === 'fulfilled') {
+          const cData = catRes.value?.data?.categories || catRes.value?.categories || catRes.value?.data || [];
+          if (Array.isArray(cData)) allCats = cData;
+        }
+        setCategoriesList(allCats);
+
+        const catIdMap = new Map(allCats.map(c => [c.id, c]));
+
         let extracted = [];
-        if (Array.isArray(res)) extracted = res;
-        else if (res?.data && Array.isArray(res.data)) extracted = res.data;
-        else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
-        else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
-        else if (res?.products && Array.isArray(res.products)) extracted = res.products;
+        if (prodRes.status === 'fulfilled') {
+          const res = prodRes.value;
+          if (Array.isArray(res)) extracted = res;
+          else if (res?.data && Array.isArray(res.data)) extracted = res.data;
+          else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
+          else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
+          else if (res?.products && Array.isArray(res.products)) extracted = res.products;
+        }
 
         const formatted = extracted
           .map((p) => {
             const imgList = Array.isArray(p.images)
               ? p.images
               : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
-            const catName = (p.category?.name || p.categoryName || '').toLowerCase();
-            const catSlug = (p.category?.slug || p.categorySlug || '').toLowerCase();
-            const subCatName = (p.subCategory?.name || p.subCategoryName || '').toLowerCase();
+
+            // Resolve Main Category
+            const resolvedMain = p.category || (p.categoryId ? catIdMap.get(p.categoryId) : null);
+            const catName = (resolvedMain?.name || p.categoryName || 'Personalized Gifts');
+            const catSlug = (resolvedMain?.slug || p.categorySlug || 'personalized-gifts');
+
+            // Resolve Subcategory
+            const resolvedSub = p.subCategory || (p.subCategoryId ? catIdMap.get(p.subCategoryId) : null);
+            let subCatName = resolvedSub?.name || p.subCategoryName || p.subcategoryName || '';
+            let subCatSlug = resolvedSub?.slug || p.subCategorySlug || p.subcategorySlug || '';
+
+            // Keyword inference fallback for subcategory name if missing
+            if (!subCatName) {
+              const pText = `${p.name || ''} ${p.description || ''}`.toLowerCase();
+              if (pText.includes('acrylic')) { subCatName = 'Acrylic Frames'; subCatSlug = 'acrylic-frames'; }
+              else if (pText.includes('caricature')) { subCatName = 'Caricatures'; subCatSlug = 'caricatures'; }
+              else if (pText.includes('clock')) { subCatName = 'Clocks'; subCatSlug = 'clocks'; }
+              else if (pText.includes('wood') || pText.includes('engrav')) { subCatName = 'Wooden Photo Engraving'; subCatSlug = 'wooden-photo-engraving'; }
+              else if (pText.includes('frame') || pText.includes('photo')) { subCatName = 'Photo Frames'; subCatSlug = 'photo-frames'; }
+            }
+
             return {
               id: p.id,
               name: p.name,
@@ -156,14 +191,15 @@ const PersonalizedGifts = () => {
               images: imgList,
               image: imgList[0] || '/placeholder.jpg',
               slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-              categoryId: p.categoryId || null,
-              subCategoryId: p.subCategoryId || null,
-              categoryName: p.category?.name || p.categoryName || 'Personalized Gifts',
-              categorySlug: p.category?.slug || p.categorySlug || 'personalized-gifts',
-              subCategoryName: p.subCategory?.name || p.subCategoryName || '',
-              _catName: catName,
-              _catSlug: catSlug,
-              _subCatName: subCatName,
+              categoryId: p.categoryId || (resolvedMain ? resolvedMain.id : null),
+              subCategoryId: p.subCategoryId || (resolvedSub ? resolvedSub.id : null),
+              categoryName: catName,
+              categorySlug: catSlug,
+              subCategoryName: subCatName,
+              subCategorySlug: subCatSlug,
+              _catName: catName.toLowerCase(),
+              _catSlug: catSlug.toLowerCase(),
+              _subCatName: subCatName.toLowerCase(),
             };
           })
           // ── PAGE RESTRICTION: Only show Personalized Gifts products ──
@@ -197,21 +233,73 @@ const PersonalizedGifts = () => {
   // Base raw products catalog from PostgreSQL
   const rawProducts = liveProducts;
 
-  // ── Dynamic Categories built from real DB products ──────────────
+  // ── Dynamic Subcategories built from real DB products ──────────────
   const dynamicCategories = (() => {
-    if (liveProducts.length === 0) return CATEGORIES_DATA;
-    const catMap = new Map();
+    // 1. Identify all subcategories for Personalized Gifts from categories API
+    const persMainCat = categoriesList.find(c =>
+      c.slug === 'personalized-gifts' ||
+      (c.name && c.name.toLowerCase().includes('personalized'))
+    );
+    const dbSubCats = persMainCat
+      ? categoriesList.filter(c => c.parentId === persMainCat.id)
+      : categoriesList.filter(c => c.parentId && c.parentId !== null);
+
+    const subMap = new Map();
+
+    // Default predefined subcategories
+    const defaultSubs = dbSubCats.length > 0 ? dbSubCats : [
+      { id: 'photo-frames', slug: 'photo-frames', name: 'Photo Frames' },
+      { id: 'acrylic-frames', slug: 'acrylic-frames', name: 'Acrylic Frames' },
+      { id: 'caricatures', slug: 'caricatures', name: 'Caricatures' },
+      { id: 'clocks', slug: 'clocks', name: 'Clocks' },
+      { id: 'wooden-engraving', slug: 'wooden-photo-engraving', name: 'Wooden Photo Engraving' },
+    ];
+
+    defaultSubs.forEach(s => {
+      subMap.set(s.id, {
+        id: s.id,
+        slug: s.slug || s.id,
+        name: s.name,
+        count: 0,
+      });
+    });
+
+    // Count products per subcategory
     liveProducts.forEach(p => {
-      // Use subCategoryId for granular filtering, or categoryId if no sub
-      const filterId = p.subCategoryId || p.categoryId;
-      const filterName = p.subCategoryName || p.categoryName;
-      if (filterId && filterName) {
-        const existing = catMap.get(filterId);
-        if (existing) existing.count += 1;
-        else catMap.set(filterId, { id: filterId, name: filterName, count: 1 });
+      const pSubId = p.subCategoryId;
+      const pSubSlug = (p.subCategorySlug || '').toLowerCase();
+      const pSubName = (p.subCategoryName || '').toLowerCase();
+
+      let matched = null;
+      if (pSubId && subMap.has(pSubId)) {
+        matched = subMap.get(pSubId);
+      } else {
+        for (const item of subMap.values()) {
+          if (
+            (pSubSlug && (item.slug.toLowerCase() === pSubSlug || item.id === pSubSlug)) ||
+            (pSubName && item.name.toLowerCase() === pSubName)
+          ) {
+            matched = item;
+            break;
+          }
+        }
+      }
+
+      if (matched) {
+        matched.count += 1;
+      } else if (pSubName && pSubName !== 'personalized gifts') {
+        const fallbackKey = pSubId || pSubSlug || pSubName;
+        subMap.set(fallbackKey, {
+          id: pSubId || pSubSlug || fallbackKey,
+          slug: pSubSlug || fallbackKey,
+          name: p.subCategoryName,
+          count: 1,
+        });
       }
     });
-    return [{ id: 'all', name: 'All Products', count: liveProducts.length }, ...Array.from(catMap.values())];
+
+    const subList = Array.from(subMap.values());
+    return [{ id: 'all', name: 'All Products', count: liveProducts.length }, ...subList];
   })();
 
   const categoriesForFilter = dynamicCategories;
@@ -295,17 +383,28 @@ const PersonalizedGifts = () => {
       // 2. Category / Subcategory Filter
       const activeCat = selectedCategory !== 'all' ? selectedCategory : activeSubCategory;
       if (activeCat !== 'all') {
-        if (prod.categoryId === activeCat || prod.subCategoryId === activeCat) return true;
-        
-        const catObj = categoriesForFilter.find(c => c.id === activeCat);
-        if (catObj) {
-          const catName = catObj.name.toLowerCase();
-          const pName = (prod.name || '').toLowerCase();
-          const pSlug = (prod.slug || '').toLowerCase();
-          const pCat = (prod.categoryName || '').toLowerCase();
-          
-          const words = catName.split(' ').filter(w => w.length > 3 && w !== 'gifts' && w !== 'personalized');
-          return words.some(w => pName.includes(w) || pSlug.includes(w) || pCat.includes(w));
+        const catObj = categoriesForFilter.find(c => c.id === activeCat || c.slug === activeCat);
+        const targetId = catObj?.id || activeCat;
+        const targetSlug = (catObj?.slug || activeCat).toLowerCase();
+        const targetName = (catObj?.name || '').toLowerCase();
+
+        // Direct ID match
+        if (prod.subCategoryId && (prod.subCategoryId === targetId || prod.subCategoryId === targetSlug)) return true;
+        if (prod.categoryId && prod.categoryId === targetId && targetName === 'personalized gifts') return true;
+
+        // Slug match
+        const prodSubSlug = (prod.subCategorySlug || '').toLowerCase();
+        if (prodSubSlug && (prodSubSlug === targetSlug || prodSubSlug === targetId)) return true;
+
+        // Name match
+        const prodSubName = (prod.subCategoryName || '').toLowerCase();
+        if (prodSubName && prodSubName === targetName) return true;
+
+        // Keyword match fallback
+        if (targetName && targetName !== 'all products' && targetName !== 'personalized gifts') {
+          const keywords = targetName.split(' ').filter(w => w.length > 2 && w !== 'gifts' && w !== 'personalized' && w !== '&');
+          const pStr = `${(prod.name || '').toLowerCase()} ${(prod.slug || '').toLowerCase()} ${(prod.description || '').toLowerCase()}`;
+          if (keywords.length > 0 && keywords.some(k => pStr.includes(k))) return true;
         }
         return false;
       }

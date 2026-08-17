@@ -1,3 +1,4 @@
+import BulkImportModal from './BulkImportModal';
 import React, { useState, useMemo } from 'react';
 import axiosInstance from '@api/axiosInstance';
 import { toast } from 'react-toastify';
@@ -158,6 +159,7 @@ const ProductsSection = ({
   handleDeleteProduct,
 }) => {
   const [maxSlots, setMaxSlots] = useState(1);
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [activeCategoryFilter, setActiveCategoryFilter] = useState('all'); // 'all' | mainCategoryId | 'unassigned'
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -361,6 +363,32 @@ const ProductsSection = ({
               )}
             </div>
 
+            {/* Bulk Import Button */}
+            <button
+              type="button"
+              onClick={() => setShowBulkImportModal(true)}
+              style={{
+                background: '#ffffff',
+                border: '1.5px solid #d99b26',
+                color: '#92400e',
+                fontWeight: '700',
+                fontSize: '0.85rem',
+                padding: '0.52rem 1.1rem',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                boxShadow: '0 2px 6px rgba(217, 155, 38, 0.15)',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.15s ease',
+              }}
+              title="Bulk import products from Excel (.xlsx) or ZIP package with images"
+            >
+              <span style={{ fontSize: '1rem' }}>📥</span>
+              <span>Bulk Import</span>
+            </button>
+
             {/* Add New Product Button */}
             <button
               type="button"
@@ -386,6 +414,18 @@ const ProductsSection = ({
           </div>
         </div>
       </div>
+
+      {/* Bulk Import Modal Window */}
+      {showBulkImportModal && (
+        <BulkImportModal
+          isOpen={showBulkImportModal}
+          onClose={() => setShowBulkImportModal(false)}
+          categories={categories}
+          onImportSuccess={() => {
+            window.dispatchEvent(new Event('products_updated'));
+          }}
+        />
+      )}
 
       {/* Add / Edit Product Modal Window */}
       {showProductForm && (

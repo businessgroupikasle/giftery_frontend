@@ -1,8 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import axiosInstance from '@api/axiosInstance';
+import { ENDPOINTS } from '@api/endpoints';
 import styles from '../Dashboard.module.css';
 
 const CategoriesSection = ({
   categories = [],
+  products = [],
   showCategoryForm,
   editingCategory,
   savingCategory,
@@ -11,6 +14,7 @@ const CategoriesSection = ({
   handleOpenAddCategory,
   handleEditCategoryClick,
   handleCategoryFormChange,
+  handleCategoryImageFileChange,
   handleCategorySubmit,
   handleDeleteCategory,
 }) => {
@@ -18,6 +22,78 @@ const CategoriesSection = ({
   const [activeParentFilter, setActiveParentFilter] = useState('all'); // 'all' | 'top_level' | parentId
   const [viewMode, setViewMode] = useState('grouped'); // 'grouped' | 'table'
   const [searchQuery, setSearchQuery] = useState('');
+  const [allProducts, setAllProducts] = useState(products || []);
+
+  useEffect(() => {
+    if (products && products.length > 0) {
+      setAllProducts(products);
+    } else {
+      const fetchLiveProds = async () => {
+        try {
+          const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=300&showAll=true');
+          const data = res.data || res;
+          const list = Array.isArray(data) ? data : (data?.products || data?.data || []);
+          if (Array.isArray(list)) setAllProducts(list);
+        } catch (err) {
+          console.warn('CategoriesSection live products fetch note:', err.message);
+        }
+      };
+      fetchLiveProds();
+    }
+  }, [products]);
+
+  // Dynamic Product count helper for any category / subcategory
+  const getProductCount = (cat) => {
+    if (!cat) return 0;
+
+    let count = 0;
+    if (Array.isArray(allProducts) && allProducts.length > 0) {
+      const catId = cat.id;
+      const catSlug = (cat.slug || '').toLowerCase();
+      const catName = (cat.name || '').toLowerCase();
+
+      allProducts.forEach(p => {
+        if (cat.parentId) {
+          // Subcategory matching
+          const pSubId = p.subCategoryId;
+          const pSubSlug = (p.subCategory?.slug || p.subCategorySlug || p.subcategorySlug || '').toLowerCase();
+          const pSubName = (p.subCategory?.name || p.subCategoryName || p.subcategoryName || '').toLowerCase();
+          const pName = (p.name || '').toLowerCase();
+          const pDesc = (p.description || '').toLowerCase();
+
+          if (pSubId && pSubId === catId) {
+            count += 1;
+          } else if (pSubSlug && pSubSlug === catSlug) {
+            count += 1;
+          } else if (pSubName && pSubName === catName) {
+            count += 1;
+          } else if (!pSubId && !pSubName && catName) {
+            // Keyword fallback
+            const words = catName.split(' ').filter(w => w.length > 3 && !['gifts', 'toys', 'kit', 'kits', 'all', 'products'].includes(w));
+            if (words.length > 0 && words.some(w => pName.includes(w) || pDesc.includes(w))) {
+              count += 1;
+            }
+          }
+        } else {
+          // Main category matching
+          const pCatId = p.categoryId;
+          const pCatSlug = (p.category?.slug || p.categorySlug || '').toLowerCase();
+          const pCatName = (p.category?.name || p.categoryName || '').toLowerCase();
+
+          if (pCatId && pCatId === catId) {
+            count += 1;
+          } else if (pCatSlug && pCatSlug === catSlug) {
+            count += 1;
+          } else if (pCatName && pCatName === catName) {
+            count += 1;
+          }
+        }
+      });
+    }
+
+    const dbCount = cat._count?.products || 0;
+    return Math.max(count, dbCount);
+  };
 
   // Extract Top-Level Main Categories and Subcategories
   const { mainCategories, parentCategoryGroups, stats } = useMemo(() => {
@@ -613,7 +689,7 @@ const CategoriesSection = ({
                                 </td>
                                 <td>
                                   <span style={{ fontWeight: '700', color: '#1e293b' }}>
-                                    {sub._count?.products ?? 0} Products
+                                    {getProductCount(sub)} Products
                                   </span>
                                 </td>
                                 <td>
@@ -685,7 +761,7 @@ const CategoriesSection = ({
                         </td>
                         <td>
                           <span style={{ fontWeight: '700', color: '#1e293b' }}>
-                            {cat._count?.products ?? 0} Products
+                            {getProductCount(cat)} Products
                           </span>
                         </td>
                         <td>
