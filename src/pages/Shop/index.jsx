@@ -27,7 +27,7 @@ const Shop = () => {
   const loadAllProducts = async () => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200');
+      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=1000');
       let apiProds = [];
       if (Array.isArray(res)) apiProds = res;
       else if (res?.data && Array.isArray(res.data)) apiProds = res.data;

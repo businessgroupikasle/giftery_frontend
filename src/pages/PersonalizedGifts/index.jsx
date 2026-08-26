@@ -125,12 +125,12 @@ const PersonalizedGifts = () => {
   const [categoriesList, setCategoriesList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+    useEffect(() => {
     const fetchLiveProducts = async () => {
       setLoading(true);
       try {
         const [prodRes, catRes] = await Promise.allSettled([
-          axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200'),
+          axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=1000'),
           axiosInstance.get(ENDPOINTS.CATEGORIES.LIST),
         ]);
 
@@ -143,6 +143,17 @@ const PersonalizedGifts = () => {
 
         const catIdMap = new Map(allCats.map(c => [c.id, c]));
 
+        // 1. Identify Personalized Gifts Main Category and its Subcategories using pure DB relationships
+        const persMainCat = allCats.find(c =>
+          !c.parentId && (
+            c.slug === 'personalized-gifts' ||
+            c.name.toLowerCase().trim() === 'personalized gifts'
+          )
+        );
+        const persMainCatId = persMainCat ? persMainCat.id : null;
+        const persSubCats = allCats.filter(c => persMainCatId && c.parentId === persMainCatId);
+        const persSubCatIds = new Set(persSubCats.map(c => c.id));
+
         let extracted = [];
         if (prodRes.status === 'fulfilled') {
           const res = prodRes.value;
@@ -154,30 +165,36 @@ const PersonalizedGifts = () => {
         }
 
         const formatted = extracted
+          .filter(p => {
+            // DATABASE CATEGORY RELATIONSHIPS (NO keyword matching)
+            const prodCatId = p.categoryId || (typeof p.category === 'object' ? p.category?.id : p.category);
+            const prodSubId = p.subCategoryId || (typeof p.subCategory === 'object' ? p.subCategory?.id : p.subCategory) || (typeof p.subcategory === 'object' ? p.subcategory?.id : p.subcategory);
+            const pCatObj = catIdMap.get(prodCatId) || (typeof p.category === 'object' ? p.category : null);
+
+            // A product belongs to Personalized Gifts if:
+            if (persMainCatId && prodCatId === persMainCatId) return true;
+            if (persMainCatId && pCatObj?.parentId === persMainCatId) return true;
+            if (prodSubId && persSubCatIds.has(prodSubId)) return true;
+            if (prodCatId && persSubCatIds.has(prodCatId)) return true;
+            if (pCatObj?.slug === 'personalized-gifts' || pCatObj?.name?.toLowerCase().trim() === 'personalized gifts') return true;
+
+            return false;
+          })
           .map((p) => {
             const imgList = Array.isArray(p.images)
               ? p.images
               : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
 
-            // Resolve Main Category
-            const resolvedMain = p.category || (p.categoryId ? catIdMap.get(p.categoryId) : null);
-            const catName = (resolvedMain?.name || p.categoryName || 'Personalized Gifts');
-            const catSlug = (resolvedMain?.slug || p.categorySlug || 'personalized-gifts');
+            const prodCatId = p.categoryId || (typeof p.category === 'object' ? p.category?.id : p.category);
+            const prodSubId = p.subCategoryId || (typeof p.subCategory === 'object' ? p.subCategory?.id : p.subCategory) || (typeof p.subcategory === 'object' ? p.subcategory?.id : p.subcategory);
 
-            // Resolve Subcategory
-            const resolvedSub = p.subCategory || (p.subCategoryId ? catIdMap.get(p.subCategoryId) : null);
-            let subCatName = resolvedSub?.name || p.subCategoryName || p.subcategoryName || '';
-            let subCatSlug = resolvedSub?.slug || p.subCategorySlug || p.subcategorySlug || '';
+            const pCatObj = catIdMap.get(prodCatId) || (typeof p.category === 'object' ? p.category : null);
+            const pSubObj = prodSubId ? catIdMap.get(prodSubId) : (pCatObj?.parentId ? pCatObj : null);
 
-            // Keyword inference fallback for subcategory name if missing
-            if (!subCatName) {
-              const pText = `${p.name || ''} ${p.description || ''}`.toLowerCase();
-              if (pText.includes('acrylic')) { subCatName = 'Acrylic Frames'; subCatSlug = 'acrylic-frames'; }
-              else if (pText.includes('caricature')) { subCatName = 'Caricatures'; subCatSlug = 'caricatures'; }
-              else if (pText.includes('clock')) { subCatName = 'Clocks'; subCatSlug = 'clocks'; }
-              else if (pText.includes('wood') || pText.includes('engrav')) { subCatName = 'Wooden Photo Engraving'; subCatSlug = 'wooden-photo-engraving'; }
-              else if (pText.includes('frame') || pText.includes('photo')) { subCatName = 'Photo Frames'; subCatSlug = 'photo-frames'; }
-            }
+            const catName = persMainCat?.name || pCatObj?.name || 'Personalized Gifts';
+            const catSlug = persMainCat?.slug || pCatObj?.slug || 'personalized-gifts';
+            const subCatName = pSubObj?.name || '';
+            const subCatSlug = pSubObj?.slug || '';
 
             return {
               id: p.id,
@@ -191,8 +208,8 @@ const PersonalizedGifts = () => {
               images: imgList,
               image: imgList[0] || '/placeholder.jpg',
               slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-              categoryId: p.categoryId || (resolvedMain ? resolvedMain.id : null),
-              subCategoryId: p.subCategoryId || (resolvedSub ? resolvedSub.id : null),
+              categoryId: prodCatId,
+              subCategoryId: pSubObj?.id || prodSubId || null,
               categoryName: catName,
               categorySlug: catSlug,
               subCategoryName: subCatName,
@@ -201,22 +218,8 @@ const PersonalizedGifts = () => {
               _catSlug: catSlug.toLowerCase(),
               _subCatName: subCatName.toLowerCase(),
             };
-          })
-          // ── PAGE RESTRICTION: Only show Personalized Gifts products ──
-          .filter(p => {
-            const c = `${p._catName} ${p._catSlug} ${p._subCatName}`.trim();
-            if ((c.includes('corporate') || c.includes('toy')) && !c.includes('personal')) {
-              return false;
-            }
-            if (c) {
-              return c.includes('personal') || c.includes('photo') || c.includes('frame') || c.includes('acrylic') ||
-                     c.includes('caricature') || c.includes('clock') || c.includes('engrav') || c.includes('custom') ||
-                     c.includes('monogram') || c.includes('keepsake') || c.includes('leather');
-            }
-            const n = (p.name || '').toLowerCase();
-            if (n.includes('corporate') || n.includes('onboarding') || n.includes('desk gyro')) return false;
-            return true;
           });
+
         setLiveProducts(formatted);
       } catch (err) {
         console.warn('Live Personalized Gifts fetch note:', err.message);
@@ -380,35 +383,21 @@ const PersonalizedGifts = () => {
       const maxP = Number(maxPrice) || Infinity;
       if (price < minP || price > maxP) return false;
 
-      // 2. Category / Subcategory Filter
+      // 2. Category / Subcategory Filter using DB relations
       const activeCat = selectedCategory !== 'all' ? selectedCategory : activeSubCategory;
       if (activeCat !== 'all') {
         const catObj = categoriesForFilter.find(c => c.id === activeCat || c.slug === activeCat);
         const targetId = catObj?.id || activeCat;
         const targetSlug = (catObj?.slug || activeCat).toLowerCase();
-        const targetName = (catObj?.name || '').toLowerCase();
 
-        // Direct ID match
+        // Exact DB Subcategory ID match or slug match
         if (prod.subCategoryId && (prod.subCategoryId === targetId || prod.subCategoryId === targetSlug)) return true;
-        if (prod.categoryId && prod.categoryId === targetId && targetName === 'personalized gifts') return true;
+        if (prod.subCategorySlug && (prod.subCategorySlug.toLowerCase() === targetSlug || prod.subCategorySlug === targetId)) return true;
+        if (prod.categoryId && prod.categoryId === targetId) return true;
 
-        // Slug match
-        const prodSubSlug = (prod.subCategorySlug || '').toLowerCase();
-        if (prodSubSlug && (prodSubSlug === targetSlug || prodSubSlug === targetId)) return true;
-
-        // Name match
-        const prodSubName = (prod.subCategoryName || '').toLowerCase();
-        if (prodSubName && prodSubName === targetName) return true;
-
-        // Keyword match fallback
-        if (targetName && targetName !== 'all products' && targetName !== 'personalized gifts') {
-          const keywords = targetName.split(' ').filter(w => w.length > 2 && w !== 'gifts' && w !== 'personalized' && w !== '&');
-          const pStr = `${(prod.name || '').toLowerCase()} ${(prod.slug || '').toLowerCase()} ${(prod.description || '').toLowerCase()}`;
-          if (keywords.length > 0 && keywords.some(k => pStr.includes(k))) return true;
-        }
         return false;
       }
-      
+
       // 3. Occasion Filter
       if (selectedOccasions.length > 0) {
         const pOccasions = Array.isArray(prod.occasions) ? prod.occasions.map(o => o.toLowerCase()) : [];

@@ -500,7 +500,7 @@ const Dashboard = () => {
   const fetchProducts = async () => {
     setLoadingProducts(true);
     try {
-      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200&showAll=true');
+      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=1000&showAll=true');
       let extracted = [];
       if (Array.isArray(res)) extracted = res;
       else if (res?.data && Array.isArray(res.data)) extracted = res.data;

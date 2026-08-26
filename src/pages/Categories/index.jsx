@@ -102,7 +102,7 @@ const Categories = () => {
   const loadCategoryProducts = async () => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=200');
+      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=1000');
       let apiProds = [];
       if (Array.isArray(res)) apiProds = res;
       else if (res?.data && Array.isArray(res.data)) apiProds = res.data;
@@ -126,7 +126,13 @@ const Categories = () => {
     };
   }, []);
 
-  const products = liveProducts;
+    const products = slug
+    ? liveProducts.filter(p => {
+        const pCatSlug = p.category?.slug || p.categorySlug;
+        const pCatParentSlug = p.category?.parent?.slug;
+        return pCatSlug === slug || pCatParentSlug === slug;
+      })
+    : liveProducts;
 
   return (
     <Layout>

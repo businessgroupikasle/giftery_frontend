@@ -249,7 +249,7 @@ const BulkImportModal = ({ isOpen, onClose, categories = [], onImportSuccess }) 
                 <div className={styles.templateBannerText}>
                   <h5>Download Standard Excel Template</h5>
                   <p>
-                    Use the official template with pre-mapped columns for Name, SKU, Price, Stock, Category, Specs, Tags, Images & Collections.
+                    Use the official template with pre-mapped columns for Name, SKU, Price, Stock, Category, Specs, Tags, Images (Optional) & Collections.
                   </p>
                 </div>
                 <button type="button" onClick={handleDownloadTemplate} className={styles.downloadTemplateBtn}>
@@ -440,9 +440,15 @@ const BulkImportModal = ({ isOpen, onClose, categories = [], onImportSuccess }) 
                             )}
                           </td>
                           <td>
-                            <span style={{ fontSize: '0.74rem', color: '#475569' }}>
-                              {r.data?.images?.length || 0} {r.data?.images?.length === 1 ? 'img' : 'imgs'}
-                            </span>
+                            {r.data?.images?.length > 0 ? (
+                              <span style={{ fontSize: '0.74rem', color: '#166534', background: '#f0fdf4', padding: '0.15rem 0.45rem', borderRadius: '6px', fontWeight: 600 }}>
+                                🖼️ {r.data.images.length} {r.data.images.length === 1 ? 'img' : 'imgs'}
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '0.74rem', color: '#64748b', background: '#f1f5f9', padding: '0.15rem 0.45rem', borderRadius: '6px' }}>
+                                None (Optional)
+                              </span>
+                            )}
                           </td>
                           <td>
                             {isValid ? (

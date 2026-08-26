@@ -161,6 +161,7 @@ const ProductsSection = ({
   const [maxSlots, setMaxSlots] = useState(1);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [activeCategoryFilter, setActiveCategoryFilter] = useState('all'); // 'all' | mainCategoryId | 'unassigned'
+  const [activeSubCategoryFilter, setActiveSubCategoryFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleCloseModal = () => {
@@ -263,7 +264,7 @@ const ProductsSection = ({
             {/* 'All Products' Filter Pill */}
             <button
               type="button"
-              onClick={() => setActiveCategoryFilter('all')}
+              onClick={() => { setActiveCategoryFilter('all'); setActiveSubCategoryFilter('all'); }}
               style={{
                 background: activeCategoryFilter === 'all' ? '#fffcf5' : '#f8fafc',
                 border: activeCategoryFilter === 'all' ? '1.5px solid #d99b26' : '1px solid #e2e8f0',
@@ -296,7 +297,7 @@ const ProductsSection = ({
                 <button
                   key={group.mainCategory.id}
                   type="button"
-                  onClick={() => setActiveCategoryFilter(isSelected ? 'all' : group.mainCategory.id)}
+                  onClick={() => { setActiveCategoryFilter(isSelected ? 'all' : group.mainCategory.id); setActiveSubCategoryFilter('all'); }}
                   style={{
                     background: isSelected ? '#fffcf5' : '#ffffff',
                     border: isSelected ? '1.5px solid #d99b26' : '1px solid #fde68a',
