@@ -115,12 +115,17 @@ const Contact = () => {
 
   const handleAppointmentChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'phone') {
+      const cleaned = value.replace(/\D/g, '').slice(0, 10);
+      setAppointmentData((prev) => ({ ...prev, phone: cleaned }));
+      return;
+    }
     setAppointmentData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleAppointmentSubmit = (e) => {
     e.preventDefault();
-    if (!appointmentData.name || !appointmentData.email || !appointmentData.phone) {
+    if (!appointmentData.name?.trim() || !appointmentData.email?.trim() || !appointmentData.phone?.trim()) {
       toast.error('Please fill in your name, email and phone number');
       return;
     }
@@ -129,7 +134,7 @@ const Contact = () => {
       return;
     }
     if (!isValidMobile(appointmentData.phone)) {
-      toast.error('Please enter a valid 10-digit mobile number');
+      toast.error('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9');
       return;
     }
 
@@ -169,13 +174,18 @@ const Contact = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'phone') {
+      const cleaned = value.replace(/\D/g, '').slice(0, 10);
+      setFormData((prev) => ({ ...prev, phone: cleaned }));
+      return;
+    }
     if (name === 'message') setCharCount(value.length);
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.fullName || !formData.email || !formData.message) {
+    if (!formData.fullName?.trim() || !formData.email?.trim() || !formData.message?.trim()) {
       toast.error('Please fill in required fields (Name, Email, Message)');
       return;
     }
@@ -183,8 +193,12 @@ const Contact = () => {
       toast.error('Please enter a valid email address');
       return;
     }
-    if (formData.phone && !isValidMobile(formData.phone)) {
-      toast.error('Please enter a valid 10-digit mobile number');
+    if (!formData.phone || !formData.phone.trim()) {
+      toast.error('Please enter your 10-digit mobile number');
+      return;
+    }
+    if (!isValidMobile(formData.phone)) {
+      toast.error('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9');
       return;
     }
 
@@ -314,8 +328,11 @@ const Contact = () => {
                       className={styles.formInput}
                       type="tel"
                       name="phone"
-                      placeholder="Phone Number *"
+                      placeholder="10-digit Mobile Number *"
                       required
+                      maxLength={10}
+                      pattern="[6-9][0-9]{9}"
+                      inputMode="numeric"
                       value={formData.phone}
                       onChange={handleChange}
                     />
@@ -601,6 +618,9 @@ const Contact = () => {
                       onChange={handleAppointmentChange}
                       placeholder="10-digit mobile number"
                       required
+                      maxLength={10}
+                      pattern="[6-9][0-9]{9}"
+                      inputMode="numeric"
                       style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
                     />
                   </div>
