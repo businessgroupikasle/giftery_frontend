@@ -22,50 +22,33 @@ import CouponsSection from './components/CouponsSection';
 import UsersRolesSection from './components/UsersRolesSection';
 import SettingsSection from './components/SettingsSection';
 import ReportsSection from './components/ReportsSection';
-
-const INITIAL_ENQUIRIES = [
-  { id: 'ENQ-301', name: 'Tech Solutions Pvt. Ltd.', email: 'contact@techsolutions.com', phone: '+91 98765 43210', category: 'Corporate Gifts', subject: 'Bulk Executive Hampers Inquiry', message: 'Looking for 200 executive leather gift hampers with custom logo engraving.', status: 'New', createdAt: '01 Aug 2026' },
-  { id: 'ENQ-302', name: 'Apex Global Mobility', email: 'procurement@apex.in', phone: '+91 98220 11990', category: 'Corporate Gifts', subject: 'Employee Welcome Back Kits', message: 'Need 300 onboarding backpacks and metallic drinkware sets for new joiners.', status: 'In Progress', createdAt: '31 Jul 2026' },
-  { id: 'ENQ-303', name: 'Rahul Verma', email: 'rahul.v@gmail.com', phone: '+91 91234 56789', category: 'Personalized Gifts', subject: 'Custom Monogram Leather Diaries', message: 'Need gold foil embossing for individual employee names on executive notebooks.', status: 'New', createdAt: '01 Aug 2026' },
-  { id: 'ENQ-304', name: 'Sneha Kapoor', email: 'sneha.k@designstudio.com', phone: '+91 97112 33445', category: 'Personalized Gifts', subject: 'Engraved Wooden Desk Accessories', message: 'Requesting custom laser etched nameplates and pen holder sets for directors.', status: 'Resolved', createdAt: '29 Jul 2026' },
-  { id: 'ENQ-305', name: 'Little Explorers Preschool', email: 'admin@littleexplorers.edu', phone: '+91 99887 11223', category: 'Toys', subject: 'Educational Wooden Puzzle Sets', message: 'Bulk requirement of 80 wooden puzzle sets and building blocks for learning kits.', status: 'New', createdAt: '01 Aug 2026' },
-  { id: 'ENQ-306', name: 'Karan Malhotra', email: 'karan.m@startupspace.in', phone: '+91 98100 44556', category: 'Toys', subject: 'Executive Desk Board Games', message: 'Need 40 magnetic chess sets and miniature desk games for company recreation room.', status: 'In Progress', createdAt: '30 Jul 2026' },
-];
-
-const INITIAL_COUPONS = [
-  { id: 'c-1', code: 'LUXURY20', discount: '20% OFF', category: 'Corporate Gifts', status: 'Active' },
-  { id: 'c-2', code: 'WELCOME10', discount: '₹100 OFF', category: 'First Purchase', status: 'Active' },
-];
-
-const INITIAL_CORPORATE_QUOTES = [
-  { id: 'Q-8492', name: 'Vikram Mehta', company: 'Apex Infotech Ltd.', email: 'v.mehta@apex.com', phone: '+91 98200 11223', quantity: '100 – 500 Units', notes: 'Requesting custom laser logo engraving on leather diaries & metallic pens for annual conference.', date: '01 Aug 2026', status: 'New' },
-  { id: 'Q-3910', name: 'Priya Sundaram', company: 'Global Brands India', email: 'priya.s@globalbrands.in', phone: '+91 97111 88990', quantity: '50 – 100 Units', notes: 'Interested in Eco-friendly bamboo hampers for client appreciation gifts.', date: '31 Jul 2026', status: 'In Progress' },
-];
-
-const INITIAL_CUSTOMERS = [
-  { id: 'usr-1001', name: 'Ananya Sharma', email: 'ananya.s@gmail.com', phone: '+91 98765 43210', role: 'CUSTOMER', ordersCount: 4, totalSpent: 12490, joinedDate: '15 Jul 2026', status: 'Active' },
-  { id: 'usr-1002', name: 'Rajesh Kumar', email: 'rajesh.k@techcorp.in', phone: '+91 91234 56789', role: 'VIP Customer', ordersCount: 8, totalSpent: 45800, joinedDate: '20 May 2026', status: 'Active' },
-  { id: 'usr-1003', name: 'Meera Patel', email: 'meera.patel@outlook.com', phone: '+91 99887 76655', role: 'CUSTOMER', ordersCount: 2, totalSpent: 3499, joinedDate: '28 Jun 2026', status: 'Active' },
-  { id: 'usr-1004', name: 'Siddharth Nair', email: 'sid.nair@innovate.co', phone: '+91 98111 22334', role: 'CUSTOMER', ordersCount: 1, totalSpent: 1899, joinedDate: '01 Aug 2026', status: 'Active' },
-];
-
-const INITIAL_ADMIN_ROLES = [
+const ADMIN_ROLES = [
   { id: 'role-1', name: 'SUPER_ADMIN', title: 'Super Admin', badgeColor: '#d99b26', description: 'Full unrestricted system access & store configuration', userCount: 1, permissions: ['Dashboard', 'Products', 'Categories', 'Orders', 'Quotes', 'Customers', 'Enquiries', 'Coupons', 'Users & Roles', 'Settings'] },
-  { id: 'role-2', name: 'STORE_ADMIN', title: 'Store Manager', badgeColor: '#2563eb', description: 'Full access to products, categories, orders, quotes & customers', userCount: 2, permissions: ['Dashboard', 'Products', 'Categories', 'Orders', 'Quotes', 'Customers', 'Enquiries', 'Coupons'] },
-  { id: 'role-3', name: 'ORDER_MANAGER', title: 'Order & Inventory Manager', badgeColor: '#059669', description: 'Manage store orders, products, catalog & quote responses', userCount: 3, permissions: ['Dashboard', 'Products', 'Categories', 'Orders', 'Quotes'] },
-  { id: 'role-4', name: 'SUPPORT_AGENT', title: 'Customer Support Agent', badgeColor: '#d97706', description: 'Manage customer enquiries, quote followups & support', userCount: 2, permissions: ['Dashboard', 'Quotes', 'Customers', 'Enquiries'] },
-];
-
-const INITIAL_ADMIN_USERS = [
-  { id: 'adm-01', name: 'Ponraj (Super Admin)', email: 'admin@giftery.com', phone: '+91 98765 00001', role: 'SUPER_ADMIN', permissions: ['All Modules'], lastLogin: '01 Aug 2026, 04:30 PM', status: 'Active' },
-  { id: 'adm-02', name: 'Rahul Sharma', email: 'rahul.s@giftery.com', phone: '+91 98765 00002', role: 'STORE_ADMIN', permissions: ['Products', 'Orders', 'Quotes', 'Customers'], lastLogin: '01 Aug 2026, 02:15 PM', status: 'Active' },
-  { id: 'adm-03', name: 'Priya Patel', email: 'priya.p@giftery.com', phone: '+91 98765 00003', role: 'ORDER_MANAGER', permissions: ['Products', 'Orders', 'Quotes'], lastLogin: '31 Jul 2026, 11:40 AM', status: 'Active' },
-  { id: 'adm-04', name: 'Karthik Raja', email: 'karthik.r@giftery.com', phone: '+91 98765 00004', role: 'SUPPORT_AGENT', permissions: ['Quotes', 'Enquiries', 'Customers'], lastLogin: '30 Jul 2026, 05:20 PM', status: 'Active' },
+  { id: 'role-2', name: 'STORE_ADMIN', title: 'Store Manager', badgeColor: '#2563eb', description: 'Full access to products, categories, orders, quotes & customers', userCount: 1, permissions: ['Dashboard', 'Products', 'Categories', 'Orders', 'Quotes', 'Customers', 'Enquiries', 'Coupons'] },
+  { id: 'role-3', name: 'ORDER_MANAGER', title: 'Order & Inventory Manager', badgeColor: '#059669', description: 'Manage store orders, products, catalog & quote responses', userCount: 0, permissions: ['Dashboard', 'Products', 'Categories', 'Orders', 'Quotes'] },
+  { id: 'role-4', name: 'SUPPORT_AGENT', title: 'Customer Support Agent', badgeColor: '#d97706', description: 'Manage customer enquiries, quote followups & support', userCount: 0, permissions: ['Dashboard', 'Quotes', 'Customers', 'Enquiries'] },
 ];
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+
+  // Automatic legacy mock cache purge on initial load
+  useEffect(() => {
+    try {
+      const hasCleaned = localStorage.getItem('giftery_cleaned_mock_v2');
+      if (!hasCleaned) {
+        localStorage.removeItem('giftery_enquiries');
+        localStorage.removeItem('customer_enquiries');
+        localStorage.removeItem('registered_users');
+        localStorage.removeItem('corporate_quotes');
+        localStorage.removeItem('admin_coupons');
+        localStorage.removeItem('admin_users_roles');
+        localStorage.removeItem('giftery_orders');
+        localStorage.setItem('giftery_cleaned_mock_v2', 'true');
+      }
+    } catch (e) {}
+  }, []);
 
   // Sidebar Mobile Toggle State
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -116,7 +99,7 @@ const Dashboard = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Admin Roles & Users State
+  // Admin Roles & Users State (Driven by current DB authenticated profile)
   const [adminUsers, setAdminUsers] = useState(() => {
     try {
       const stored = localStorage.getItem('admin_users_roles');
@@ -125,7 +108,19 @@ const Dashboard = () => {
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch (e) {}
-    return INITIAL_ADMIN_USERS;
+    if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') {
+      return [{
+        id: user.id || 'adm-01',
+        name: user.name || 'Admin',
+        email: user.email || 'admin@giftery.com',
+        phone: user.phone || '+91 98765 00001',
+        role: user.role || 'SUPER_ADMIN',
+        permissions: ['All Modules'],
+        lastLogin: 'Active Now',
+        status: 'Active',
+      }];
+    }
+    return [];
   });
 
   const [showAddRoleModal, setShowAddRoleModal] = useState(false);
@@ -186,9 +181,9 @@ const Dashboard = () => {
     });
   };
 
-  // Enquiries & Customers State
-  const [enquiriesList, setEnquiriesList] = useState(INITIAL_ENQUIRIES);
-  const [customersList, setCustomersList] = useState(INITIAL_CUSTOMERS);
+  // Enquiries & Customers State (Pure Live Database Driven)
+  const [enquiriesList, setEnquiriesList] = useState([]);
+  const [customersList, setCustomersList] = useState([]);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
 
   // Helper to merge & de-duplicate customers from backend + localStorage
@@ -225,17 +220,15 @@ const Dashboard = () => {
       }
     } catch (e) {}
 
-    const merged = [...backendUsers];
-    localUsers.forEach(lu => {
-      if (!merged.find(u => u.email === lu.email)) merged.push(lu);
-    });
+    const map = new Map();
+    localUsers.forEach(lu => map.set(lu.email, lu));
+    backendUsers.forEach(bu => map.set(bu.email, bu));
 
-    const allUsers = merged.length > 0 ? [...merged, ...INITIAL_CUSTOMERS.filter(ic => !merged.find(u => u.email === ic.email))] : INITIAL_CUSTOMERS;
-    setCustomersList(allUsers);
+    setCustomersList(Array.from(map.values()));
     setLoadingCustomers(false);
   };
 
-  // Corporate Quotes State
+  // Corporate Quotes State (Live DB / Submitted Quotes)
   const [corporateQuotes, setCorporateQuotes] = useState(() => {
     try {
       const stored = localStorage.getItem('corporate_quotes');
@@ -244,7 +237,7 @@ const Dashboard = () => {
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch (e) {}
-    return INITIAL_CORPORATE_QUOTES;
+    return [];
   });
 
   const handleDeleteQuote = (id) => {
@@ -362,15 +355,8 @@ const Dashboard = () => {
     }
   };
 
-  // Orders & Backend Dashboard Stats State
-  const [ordersList, setOrdersList] = useState([
-    { id: 'ORD-1256', customer: 'Tech Solutions Pvt. Ltd.', date: 'May 18, 2025', itemsCount: 4, amount: '₹45,600', rawAmount: 45600, status: 'Delivered' },
-    { id: 'ORD-1255', customer: 'Rahul Verma', date: 'May 18, 2025', itemsCount: 1, amount: '₹12,450', rawAmount: 12450, status: 'Processing' },
-    { id: 'ORD-1254', customer: 'ABC Corporation', date: 'May 17, 2025', itemsCount: 15, amount: '₹78,900', rawAmount: 78900, status: 'Pending' },
-    { id: 'ORD-1253', customer: 'Sneha Iyer', date: 'May 17, 2025', itemsCount: 2, amount: '₹5,250', rawAmount: 5250, status: 'Delivered' },
-    { id: 'ORD-1252', customer: 'Global Enterprises', date: 'May 16, 2025', itemsCount: 8, amount: '₹32,750', rawAmount: 32750, status: 'Processing' },
-    { id: 'ORD-1251', customer: 'Ananya Sharma', date: 'May 15, 2025', itemsCount: 3, amount: '₹18,400', rawAmount: 18400, status: 'Cancelled' },
-  ]);
+  // Orders & Backend Dashboard Stats State (Pure Live Database Driven)
+  const [ordersList, setOrdersList] = useState([]);
   const [backendStats, setBackendStats] = useState(null);
 
   // Fetch API Data
@@ -424,55 +410,53 @@ const Dashboard = () => {
 
     const combined = Array.from(map.values());
 
-    if (combined.length > 0) {
-      const formatted = combined.map(o => {
-        const customerName = o.customerName || o.customer || o.user?.name || o.shippingAddress?.fullName || o.shippingAddress?.name || o.customerEmail || o.user?.email || 'Customer';
-        const dateStr = o.createdAt || o.date;
-        let formattedDate = 'Recent';
-        if (dateStr) {
-          try {
-            formattedDate = new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-          } catch (e) {}
-        }
+    const formatted = combined.map(o => {
+      const customerName = o.customerName || o.customer || o.user?.name || o.shippingAddress?.fullName || o.shippingAddress?.name || o.customerEmail || o.user?.email || 'Customer';
+      const dateStr = o.createdAt || o.date;
+      let formattedDate = 'Recent';
+      if (dateStr) {
+        try {
+          formattedDate = new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        } catch (e) {}
+      }
 
-        const itemsArr = Array.isArray(o.items) ? o.items : [];
-        const itemsCount = o.itemsCount || (itemsArr.length > 0 ? itemsArr.length : 1);
-        const itemsDetails = itemsArr.length > 0
-          ? itemsArr.map(i => `${i.name || i.product?.name || 'Gift Item'} ×${i.quantity || 1}`).join(', ')
-          : '1 Item';
+      const itemsArr = Array.isArray(o.items) ? o.items : [];
+      const itemsCount = o.itemsCount || (itemsArr.length > 0 ? itemsArr.length : 1);
+      const itemsDetails = itemsArr.length > 0
+        ? itemsArr.map(i => `${i.name || i.product?.name || 'Gift Item'} ×${i.quantity || 1}`).join(', ')
+        : '1 Item';
 
-        const totalNum = Number(o.totalAmount || o.rawAmount || o.total || 0);
+      const totalNum = Number(o.totalAmount || o.rawAmount || o.total || 0);
 
-        let statusStr = 'Pending';
-        if (o.status) {
-          const s = String(o.status).toUpperCase();
-          if (s === 'DELIVERED') statusStr = 'Delivered';
-          else if (s === 'CONFIRMED') statusStr = 'Confirmed';
-          else if (s === 'PROCESSING') statusStr = 'Processing';
-          else if (s === 'SHIPPED') statusStr = 'Shipped';
-          else if (s === 'CANCELLED') statusStr = 'Cancelled';
-          else if (s === 'REFUNDED') statusStr = 'Refunded';
-          else statusStr = 'Pending';
-        }
+      let statusStr = 'Pending';
+      if (o.status) {
+        const s = String(o.status).toUpperCase();
+        if (s === 'DELIVERED') statusStr = 'Delivered';
+        else if (s === 'CONFIRMED') statusStr = 'Confirmed';
+        else if (s === 'PROCESSING') statusStr = 'Processing';
+        else if (s === 'SHIPPED') statusStr = 'Shipped';
+        else if (s === 'CANCELLED') statusStr = 'Cancelled';
+        else if (s === 'REFUNDED') statusStr = 'Refunded';
+        else statusStr = 'Pending';
+      }
 
-        return {
-          id: o.id || o.orderId || `ORD-${Date.now()}`,
-          orderId: o.orderId || o.id,
-          customer: customerName,
-          customerEmail: o.customerEmail || o.user?.email || '',
-          date: formattedDate,
-          createdAt: dateStr || new Date().toISOString(),
-          itemsCount,
-          itemsDetails,
-          items: itemsArr,
-          amount: `₹${totalNum.toLocaleString('en-IN')}`,
-          rawAmount: totalNum,
-          status: statusStr,
-          shippingAddress: o.shippingAddress || null,
-        };
-      });
-      setOrdersList(formatted);
-    }
+      return {
+        id: o.id || o.orderId || `ORD-${Date.now()}`,
+        orderId: o.orderId || o.id,
+        customer: customerName,
+        customerEmail: o.customerEmail || o.user?.email || '',
+        date: formattedDate,
+        createdAt: dateStr || new Date().toISOString(),
+        itemsCount,
+        itemsDetails,
+        items: itemsArr,
+        amount: `₹${totalNum.toLocaleString('en-IN')}`,
+        rawAmount: totalNum,
+        status: statusStr,
+        shippingAddress: o.shippingAddress || null,
+      };
+    });
+    setOrdersList(formatted);
   };
 
   const fetchEnquiries = async () => {
@@ -489,16 +473,11 @@ const Dashboard = () => {
     }
 
     const localEnquiries = JSON.parse(localStorage.getItem('giftery_enquiries') || '[]');
-    const combined = [...localEnquiries];
-    backendEnquiries.forEach(be => {
-      if (!combined.find(c => c.id === be.id)) {
-        combined.push(be);
-      }
-    });
+    const map = new Map();
+    localEnquiries.forEach(le => map.set(le.id, le));
+    backendEnquiries.forEach(be => map.set(be.id, be));
 
-    if (combined.length > 0) {
-      setEnquiriesList(combined);
-    }
+    setEnquiriesList(Array.from(map.values()));
   };
 
   const fetchSettings = async () => {
@@ -1303,7 +1282,7 @@ const Dashboard = () => {
           )}
 
           {activeTab === 'coupons' && (
-            <CouponsSection initialCoupons={INITIAL_COUPONS} />
+            <CouponsSection initialCoupons={[]} />
           )}
 
           {activeTab === 'reports' && (
@@ -1323,7 +1302,7 @@ const Dashboard = () => {
           {activeTab === 'users-roles' && (
             <UsersRolesSection
               adminUsers={adminUsers}
-              initialAdminRoles={INITIAL_ADMIN_ROLES}
+              initialAdminRoles={ADMIN_ROLES}
               showAddRoleModal={showAddRoleModal}
               setShowAddRoleModal={setShowAddRoleModal}
               roleForm={roleForm}
