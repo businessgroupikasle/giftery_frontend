@@ -7,6 +7,7 @@ import { ROUTES } from '@constants/routes';
 import { ENDPOINTS } from '@api/endpoints';
 import axiosInstance from '@api/axiosInstance';
 import Maintenance from '@pages/Maintenance';
+import { getSocket } from '@api/socket';
 
 // ── Lazy-loaded Pages ─────────────────────────────────────────
 const Home        = lazy(() => import('@pages/Home'));
@@ -93,6 +94,31 @@ const App = () => {
 
     window.addEventListener('store_settings_updated', handleSettingsUpdate);
     return () => window.removeEventListener('store_settings_updated', handleSettingsUpdate);
+  }, []);
+
+  
+  // ── Real-time Socket.IO Maintenance Sync ─────────────────────
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleMaintenanceSocket = (data) => {
+      if (data && typeof data.maintenanceMode === 'boolean') {
+        setIsMaintenanceMode(data.maintenanceMode);
+        try {
+          const stored = localStorage.getItem('store_basic_settings');
+          const parsed = stored ? JSON.parse(stored) : {};
+          parsed.maintenanceMode = data.maintenanceMode;
+          localStorage.setItem('store_basic_settings', JSON.stringify(parsed));
+          window.dispatchEvent(new Event('store_settings_updated'));
+        } catch(e) {}
+      }
+    };
+
+    socket.on('maintenance:updated', handleMaintenanceSocket);
+    return () => {
+      socket.off('maintenance:updated', handleMaintenanceSocket);
+    };
   }, []);
 
   const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'STORE_ADMIN');
