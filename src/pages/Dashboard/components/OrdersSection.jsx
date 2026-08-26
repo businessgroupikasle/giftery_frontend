@@ -5,14 +5,7 @@ import axiosInstance from '@api/axiosInstance';
 import { formatOrderId } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
 
-const INITIAL_ORDERS = [
-  { id: 'ORD-125601', customer: 'Tech Solutions Pvt. Ltd.', date: 'May 18, 2026', itemsCount: 4, itemsDetails: 'Custom Leather Keychains ×4', amount: '₹45,600', rawAmount: 45600, status: 'Delivered' },
-  { id: 'ORD-125502', customer: 'Rahul Verma', date: 'May 18, 2026', itemsCount: 1, itemsDetails: 'Personalized LED Lamp ×1', amount: '₹12,450', rawAmount: 12450, status: 'Processing' },
-  { id: 'ORD-125403', customer: 'ABC Corporation', date: 'May 17, 2026', itemsCount: 15, itemsDetails: 'Executive Gift Hampers ×15', amount: '₹78,900', rawAmount: 78900, status: 'Pending' },
-  { id: 'ORD-125304', customer: 'Sneha Iyer', date: 'May 17, 2026', itemsCount: 2, itemsDetails: 'Photo Frame Set ×2', amount: '₹5,250', rawAmount: 5250, status: 'Delivered' },
-  { id: 'ORD-125205', customer: 'Global Enterprises', date: 'May 16, 2026', itemsCount: 8, itemsDetails: '3D Caricature Standee ×8', amount: '₹32,750', rawAmount: 32750, status: 'Processing' },
-  { id: 'ORD-125106', customer: 'Ananya Sharma', date: 'May 15, 2026', itemsCount: 3, itemsDetails: 'Engraved Metal Pens ×3', amount: '₹18,400', rawAmount: 18400, status: 'Cancelled' },
-];
+const INITIAL_ORDERS = [];
 
 const OrdersSection = ({ ordersList = [] }) => {
   const [orderFilter, setOrderFilter] = useState('ALL');
@@ -26,11 +19,11 @@ const OrdersSection = ({ ordersList = [] }) => {
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch (e) {}
-    return ordersList.length > 0 ? ordersList : INITIAL_ORDERS;
+    return ordersList || [];
   });
 
   useEffect(() => {
-    if (Array.isArray(ordersList) && ordersList.length > 0) {
+    if (Array.isArray(ordersList)) {
       setOrders(ordersList);
     }
   }, [ordersList]);

@@ -15,20 +15,9 @@ import {
 import { formatOrderId } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
 
-const DEFAULT_RECENT_ORDERS = [
-  { id: 'ORD-1256', customer: 'Tech Solutions Pvt. Ltd.', date: 'May 18, 2025', amount: '₹45,600', rawAmount: 45600, status: 'Delivered' },
-  { id: 'ORD-1255', customer: 'Rahul Verma', date: 'May 18, 2025', amount: '₹12,450', rawAmount: 12450, status: 'Processing' },
-  { id: 'ORD-1254', customer: 'ABC Corporation', date: 'May 17, 2025', amount: '₹78,900', rawAmount: 78900, status: 'Pending' },
-  { id: 'ORD-1253', customer: 'Sneha Iyer', date: 'May 17, 2025', amount: '₹5,250', rawAmount: 5250, status: 'Delivered' },
-  { id: 'ORD-1252', customer: 'Global Enterprises', date: 'May 16, 2025', amount: '₹32,750', rawAmount: 32750, status: 'Processing' },
-];
+const DEFAULT_RECENT_ORDERS = [];
 
-const DEFAULT_TOP_PRODUCTS = [
-  { name: 'Premium Gift Hamper', sold: 256, revenue: '₹2,56,000', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=100&auto=format&fit=crop&q=80' },
-  { name: 'Custom Monogram Flask', sold: 198, revenue: '₹1,58,400', image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=100&auto=format&fit=crop&q=80' },
-  { name: 'Laser Engraved Desk Clock', sold: 142, revenue: '₹1,70,400', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=100&auto=format&fit=crop&q=80' },
-  { name: 'Executive Leather Journal', sold: 115, revenue: '₹92,000', image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=100&auto=format&fit=crop&q=80' },
-];
+const DEFAULT_TOP_PRODUCTS = [];
 
 const DashboardOverview = ({
   handleTabChange,
@@ -45,7 +34,7 @@ const DashboardOverview = ({
   const [orderStatusTimeframe, setOrderStatusTimeframe] = useState('This Week');
 
   // Effective Orders list
-  const activeOrders = ordersList.length > 0 ? ordersList : DEFAULT_RECENT_ORDERS;
+  const activeOrders = ordersList;
 
   // 1. Dynamic Metric Calculations
   const metrics = useMemo(() => {
@@ -142,15 +131,7 @@ const DashboardOverview = ({
 
   // 4. Dynamic Top Categories Breakdown
   const categoryBreakdown = useMemo(() => {
-    if (!productsList || productsList.length === 0) {
-      return [
-        { name: 'Corporate Gifts', amount: '₹5,60,650', pct: 45, dotClass: styles.catDotBlue },
-        { name: 'Personalized Gifts', amount: '₹3,11,472', pct: 25, dotClass: styles.catDotPink },
-        { name: 'Toys', amount: '₹1,86,884', pct: 15, dotClass: styles.catDotYellow },
-        { name: 'Tech Gifts', amount: '₹1,24,589', pct: 10, dotClass: styles.catDotTeal },
-        { name: 'Others', amount: '₹62,295', pct: 5, dotClass: styles.catDotPurple },
-      ];
-    }
+    if (!productsList || productsList.length === 0) { return []; }
 
     const counts = {};
     productsList.forEach(p => {
@@ -192,15 +173,11 @@ const DashboardOverview = ({
         };
       });
     }
-    return DEFAULT_TOP_PRODUCTS;
+    return [];
   }, [productsList]);
 
   // 6. Latest Enquiry
-  const latestEnquiry = enquiriesList[0] || {
-    subject: 'Bulk Executive Hampers Inquiry',
-    name: 'Tech Solutions Pvt. Ltd.',
-    status: 'New',
-  };
+  const latestEnquiry = enquiriesList[0] || null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

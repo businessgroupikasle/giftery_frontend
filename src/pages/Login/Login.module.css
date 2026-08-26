@@ -654,3 +654,72 @@
     font-size: 0.65rem;
   }
 }
+
+/* OTP Password Recovery Modal Extensions */
+.forgotStepBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(217, 155, 38, 0.15);
+  border: 1px solid rgba(217, 155, 38, 0.4);
+  color: #f7d58b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.otpInputBox {
+  font-family: monospace;
+  font-size: 1.6rem !important;
+  font-weight: 800;
+  letter-spacing: 12px;
+  text-align: center;
+  color: #f7d58b !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.resendRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.resendBtn {
+  background: none;
+  border: none;
+  color: #d99b26;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.resendBtn:hover:not(:disabled) {
+  color: #f7d58b;
+}
+
+.resendBtn:disabled {
+  color: #64748b;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.modalSuccessState {
+  text-align: center;
+  padding: 1.5rem 0.5rem 0.5rem 0.5rem;
+}
+
+.successIconAnim {
+  font-size: 3rem;
+  color: #10b981;
+  margin-bottom: 0.75rem;
+}

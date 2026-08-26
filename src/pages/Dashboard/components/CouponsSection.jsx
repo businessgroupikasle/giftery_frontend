@@ -2,12 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import styles from '../Dashboard.module.css';
 
-const DEFAULT_COUPONS = [
-  { id: 'c-1', code: 'LUXURY20', discount: '20% OFF', category: 'Corporate Gifts', status: 'Active' },
-  { id: 'c-2', code: 'WELCOME10', discount: '₹100 OFF', category: 'First Purchase', status: 'Active' },
-  { id: 'c-3', code: 'GIFTERY10', discount: '10% OFF', category: 'All Products', status: 'Active' },
-  { id: 'c-4', code: 'SAVE10', discount: '₹50 OFF', category: 'Special Offer', status: 'Active' },
-];
+const DEFAULT_COUPONS = [];
 
 const CouponsSection = ({ initialCoupons }) => {
   const [coupons, setCoupons] = useState(() => {
@@ -15,7 +10,7 @@ const CouponsSection = ({ initialCoupons }) => {
       const stored = localStorage.getItem('admin_coupons');
       if (stored) return JSON.parse(stored);
     } catch (e) {}
-    return initialCoupons && initialCoupons.length > 0 ? initialCoupons : DEFAULT_COUPONS;
+    return initialCoupons || [];
   });
 
   const [showModal, setShowModal] = useState(false);
@@ -167,85 +162,58 @@ const CouponsSection = ({ initialCoupons }) => {
           </tr>
         </thead>
         <tbody>
-          {coupons.map((c) => (
-            <tr key={c.id}>
-              <td>
-                <strong
-                  style={{
-                    background: '#f1f5f9',
-                    padding: '0.3rem 0.75rem',
-                    borderRadius: '6px',
-                    color: '#d99b26',
-                    letterSpacing: '0.5px',
-                    fontFamily: 'monospace',
-                    fontSize: '0.95rem',
-                    border: '1px dashed #d99b26',
-                  }}
-                >
-                  {c.code}
-                </strong>
-              </td>
-              <td>
-                <strong style={{ color: '#0f172a' }}>{c.discount}</strong>
-              </td>
-              <td>{c.category}</td>
-              <td>
-                <button
-                  type="button"
-                  onClick={() => handleToggleStatus(c.id)}
-                  className={`${styles.pillStatus} ${c.status === 'Active' ? styles.pillDelivered : styles.pillCancelled}`}
-                  style={{ cursor: 'pointer', border: 'none' }}
-                  title="Click to toggle status"
-                >
-                  {c.status}
-                </button>
-              </td>
-              <td>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEditModal(c)}
-                    style={{
-                      background: '#f1f5f9',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '6px',
-                      padding: '0.3rem 0.6rem',
-                      fontSize: '0.8rem',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      color: '#334155',
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteCoupon(c.id, c.code)}
-                    style={{
-                      background: '#fef2f2',
-                      border: '1px solid #fecaca',
-                      borderRadius: '6px',
-                      padding: '0.3rem 0.6rem',
-                      fontSize: '0.8rem',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      color: '#dc2626',
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-          {coupons.length === 0 && (
-            <tr>
-              <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
-                No active coupon codes found. Click "+ Add New Coupon" to create one.
-              </td>
-            </tr>
-          )}
-        </tbody>
+            {coupons.length === 0 ? (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94a3b8' }}>
+                  <p style={{ margin: 0, fontSize: '1rem', fontWeight: '600', color: '#64748b' }}>No promotional coupons created yet</p>
+                  <span style={{ fontSize: '0.85rem' }}>Click "+ Create Coupon" above to add your first discount code.</span>
+                </td>
+              </tr>
+            ) : (
+              coupons.map((c) => (
+                <tr key={c.id}>
+                  <td>
+                    <span className={styles.couponCodeBadge}>{c.code}</span>
+                  </td>
+                  <td>
+                    <strong>{c.discount}</strong>
+                  </td>
+                  <td>{c.category}</td>
+                  <td>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStatus(c.id)}
+                      className={`${styles.badgePill} ${c.status === 'Active' ? styles.badgeActive : styles.badgeInactive}`}
+                      style={{ cursor: 'pointer', border: 'none' }}
+                      title="Click to toggle status"
+                    >
+                      {c.status}
+                    </button>
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditModal(c)}
+                        className={styles.viewAllBtn}
+                        style={{ border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCoupon(c.id, c.code)}
+                        className={styles.viewAllBtn}
+                        style={{ border: '1px solid #fecaca', background: '#fff5f5', color: '#ef4444' }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
       </table>
 
       {/* Add / Edit Coupon Modal */}

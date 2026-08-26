@@ -20,6 +20,8 @@ const Cart        = lazy(() => import('@pages/Cart'));
 const Checkout    = lazy(() => import('@pages/Checkout'));
 const Wishlist    = lazy(() => import('@pages/Wishlist'));
 const Login       = lazy(() => import('@pages/Login'));
+const ForgotPassword = lazy(() => import('@pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@pages/ResetPassword'));
 const Register    = lazy(() => import('@pages/Register'));
 const Orders      = lazy(() => import('@pages/Orders'));
 const Profile     = lazy(() => import('@pages/Profile'));
@@ -94,7 +96,7 @@ const App = () => {
   }, []);
 
   const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'STORE_ADMIN');
-  const isAuthRoute = location.pathname.includes('/login') || location.pathname.includes('/register');
+  const isAuthRoute = location.pathname.toLowerCase().includes('login') || location.pathname.toLowerCase().includes('register') || location.pathname.toLowerCase().includes('forgot') || location.pathname.toLowerCase().includes('reset');
 
   if (isMaintenanceMode && !isAdmin && !isAuthRoute) {
     return (
@@ -129,6 +131,14 @@ const App = () => {
         <Route path={ROUTES.WISHLIST}   element={<Wishlist />} />
         <Route path={ROUTES.CHECKOUT}   element={<Checkout />} />
         <Route path={ROUTES.LOGIN}      element={<Login />} />
+        <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/forgotpassword"  element={<Navigate to={ROUTES.FORGOT_PASSWORD} replace />} />
+        <Route path="/forgot_password" element={<Navigate to={ROUTES.FORGOT_PASSWORD} replace />} />
+        <Route path="/forgot%20password" element={<Navigate to={ROUTES.FORGOT_PASSWORD} replace />} />
+        <Route path="/forgot password" element={<Navigate to={ROUTES.FORGOT_PASSWORD} replace />} />
+        <Route path="/forgot"          element={<Navigate to={ROUTES.FORGOT_PASSWORD} replace />} />
+        <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
         <Route path={ROUTES.ADMIN_LOGIN} element={<Navigate to={ROUTES.LOGIN} replace />} />
         <Route path={ROUTES.SUPER_ADMIN_LOGIN} element={<Navigate to={ROUTES.LOGIN} replace />} />
         <Route path={ROUTES.REGISTER}   element={<Register />} />

@@ -72,16 +72,33 @@ const authService = {
   getMe: () => axiosInstance.get(ENDPOINTS.AUTH.ME),
 
   /**
-   * Send forgot-password email
+   * Send forgot-password OTP email
    */
   forgotPassword: (email) =>
     axiosInstance.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, { email }),
 
   /**
-   * Reset password with token
+   * Verify 6-digit OTP for password reset
    */
-  resetPassword: (token, password) =>
-    axiosInstance.post(ENDPOINTS.AUTH.RESET_PASSWORD, { token, password }),
+  verifyResetOTP: (email, otp) =>
+    axiosInstance.post(ENDPOINTS.AUTH.VERIFY_RESET_OTP, { email, otp }),
+
+  /**
+   * Resend 6-digit OTP for password reset
+   */
+  resendResetOTP: (email) =>
+    axiosInstance.post(ENDPOINTS.AUTH.RESEND_RESET_OTP, { email }),
+
+  /**
+   * Reset password with authorization token
+   */
+  resetPassword: (resetToken, password) =>
+    axiosInstance.post(ENDPOINTS.AUTH.RESET_PASSWORD, { resetToken, password }),
 };
+
+export const forgotPassword = authService.forgotPassword;
+export const verifyResetOTP = authService.verifyResetOTP;
+export const resendResetOTP = authService.resendResetOTP;
+export const resetPassword = authService.resetPassword;
 
 export default authService;

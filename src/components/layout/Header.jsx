@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
 import { ROUTES } from '@constants/routes';
 import { useCartContext } from '@context/CartContext';
 import { logout } from '@store/slices/authSlice';
 import useAuth from '@hooks/useAuth';
+import SignOutModal from '@components/common/SignOutModal';
 import styles from './Header.module.css';
 
 const GiftLogo = () => (
@@ -39,7 +41,7 @@ const DEFAULT_LOGO_URL = '/images/store-logo.png';
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { logout: handleLogoutClick } = useAuth();
+  const { logout: logoutUser } = useAuth();
   const { isAuthenticated, user } = useSelector((s) => s.auth);
   const cartCount = useSelector((s) => s.cart.items.length);
   const wishlistCount = useSelector((s) => s.wishlist.items.length);
@@ -47,6 +49,28 @@ const Header = () => {
 
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const handleOpenSignOutModal = () => {
+    setShowSignOutModal(true);
+  };
+
+  const handleConfirmSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await logoutUser();
+      toast.success('Signed out successfully');
+      setShowSignOutModal(false);
+      navigate(ROUTES.HOME);
+    } catch (err) {
+      toast.info('Signed out');
+      setShowSignOutModal(false);
+      navigate(ROUTES.HOME);
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   const [customLogo, setCustomLogo] = useState(() => {
     try {
@@ -303,7 +327,7 @@ const Header = () => {
 
                 <div className={styles.dropdownDivider} />
 
-                <button onClick={handleLogoutClick} className={`${styles.dropdownOption} ${styles.signOutOption}`}>
+                <button onClick={handleOpenSignOutModal} className={`${styles.dropdownOption} ${styles.signOutOption}`}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                     <polyline points="16 17 21 12 16 7"></polyline>
@@ -398,8 +422,8 @@ const Header = () => {
               )}
               <button
                 onClick={() => {
-                  handleLogoutClick();
                   setMobileMenuOpen(false);
+                  handleOpenSignOutModal();
                 }}
                 className={`${styles.mobileNavLink} ${styles.logoutBtn}`}
               >
@@ -417,6 +441,15 @@ const Header = () => {
           )}
         </nav>
       )}
+
+      {/* Confirmation Modal for Sign Out */}
+      <SignOutModal
+        isOpen={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        onConfirm={handleConfirmSignOut}
+        user={user}
+        isLoading={isSigningOut}
+      />
     </header>
   );
 };

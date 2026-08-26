@@ -17,6 +17,8 @@ export const ENDPOINTS = {
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh-token',
     FORGOT_PASSWORD: '/auth/forgot-password',
+    VERIFY_RESET_OTP: '/auth/verify-reset-otp',
+    RESEND_RESET_OTP: '/auth/resend-reset-otp',
     RESET_PASSWORD: '/auth/reset-password',
     ME: '/auth/me',
   },

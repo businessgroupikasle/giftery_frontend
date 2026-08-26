@@ -2,7 +2,7 @@ import { FiGlobe, FiLock, FiDatabase, FiServer, FiSave, FiTruck, FiUpload } from
 import { toast } from 'react-toastify';
 import styles from '../Dashboard.module.css';
 
-const SettingsSection = ({
+const SettingsSection = ({ onClearCache,
   settingsForm,
   handleSettingsChange,
   handleSaveSettings,
@@ -315,27 +315,27 @@ const SettingsSection = ({
 
       {/* Save Settings Button */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-        <button
-          type="submit"
-          disabled={savingSettings}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.8rem 2rem',
-            background: '#d99b26',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '8px',
-            fontWeight: '700',
-            fontSize: '0.95rem',
-            cursor: 'pointer',
-            boxShadow: '0 4px 16px rgba(217, 155, 38, 0.35)',
-          }}
-        >
-          <FiSave />
-          <span>{savingSettings ? 'Saving Settings...' : 'Save Store Basic Settings'}</span>
-        </button>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="submit"
+              disabled={savingSettings}
+              className={styles.modalSaveBtn}
+              style={{ padding: '0.75rem 2rem', fontSize: '0.95rem' }}
+            >
+              {savingSettings ? 'Saving Settings...' : '💾 Save Settings'}
+            </button>
+            {onClearCache && (
+              <button
+                type="button"
+                onClick={onClearCache}
+                className={styles.viewAllBtn}
+                style={{ padding: '0.75rem 1.5rem', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontWeight: '700', borderRadius: '8px', cursor: 'pointer' }}
+                title="Wipe stale local browser cache and re-sync all live data from Database"
+              >
+                🧹 Sync Live Database & Clear Cache
+              </button>
+            )}
+          </div>
       </div>
     </form>
   );

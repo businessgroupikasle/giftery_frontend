@@ -3,43 +3,10 @@ import { FiSearch, FiBell, FiX, FiPackage, FiShoppingBag, FiUsers, FiFolder, FiM
 import { getProductThumbnail } from '@utils/imageUrl';
 import styles from '../Dashboard.module.css';
 
-const INITIAL_NOTIFICATIONS = [
-  {
-    id: 'notif-1',
-    type: 'quote',
-    icon: '🎁',
-    bg: '#fffbeb',
-    title: 'New Bulk Quote Request',
-    message: 'TechCorp India requested quote for 250 Onboarding Kits (₹1,45,000)',
-    time: '5 mins ago',
-    read: false,
-    targetTab: 'corporate-quotes',
-  },
-  {
-    id: 'notif-2',
-    type: 'order',
-    icon: '📦',
-    bg: '#eff6ff',
-    title: 'New Order Received',
-    message: 'Order #ORD-1256 placed by Tech Solutions Pvt. Ltd. (₹45,600)',
-    time: '18 mins ago',
-    read: false,
-    targetTab: 'orders',
-  },
-  {
-    id: 'notif-3',
-    type: 'enquiry',
-    icon: '💬',
-    bg: '#f5f3ff',
-    title: 'Customer Enquiry Received',
-    message: 'Rahul Verma sent enquiry: "Need gold foil embossing on leather diaries"',
-    time: '1 hour ago',
-    read: false,
-    targetTab: 'enquiries',
-  },
-];
-
 const DashboardNavbar = ({
+  onClearCache,
+  notifications = [],
+  setNotifications = () => {},
   searchQuery,
   setSearchQuery,
   user,
@@ -156,97 +123,7 @@ const DashboardNavbar = ({
     }
   };
 
-  // Dynamically generate live store notifications based on real activities
-  const liveNotifications = useMemo(() => {
-    const list = [];
-
-    // 1. Live Orders
-    (ordersList || []).forEach((o, idx) => {
-      const isDelivered = String(o.status || '').toUpperCase() === 'DELIVERED';
-      list.push({
-        id: `live-ord-${o.id || idx}`,
-        type: 'order',
-        icon: '📦',
-        bg: '#eff6ff',
-        title: isDelivered ? 'Order Delivered' : 'New Order Received',
-        message: `Order #${o.id} by ${o.customer || 'Customer'} (${o.amount || '₹0'}) — Status: ${o.status || 'Pending'}`,
-        time: o.date || 'Recent',
-        read: isDelivered,
-        targetTab: 'orders',
-      });
-    });
-
-    // 2. Live Enquiries
-    (enquiriesList || []).forEach((e, idx) => {
-      const isResolved = String(e.status || '').toUpperCase() === 'RESOLVED';
-      list.push({
-        id: `live-enq-${e.id || idx}`,
-        type: 'enquiry',
-        icon: '💬',
-        bg: '#f5f3ff',
-        title: 'Customer Enquiry',
-        message: `${e.name || 'Customer'} sent enquiry: "${e.subject || e.category || e.message?.slice(0, 40) || 'General Inquiry'}"`,
-        time: e.createdAt || e.date || 'Recent',
-        read: isResolved,
-        targetTab: 'enquiries',
-      });
-    });
-
-    // 3. New Customer Registrations
-    (customersList || []).forEach((c, idx) => {
-      list.push({
-        id: `live-cust-${c.id || idx}`,
-        type: 'customer',
-        icon: '👤',
-        bg: '#ecfdf5',
-        title: 'New Customer Registered',
-        message: `${c.name || 'Customer'} (${c.email}) joined store`,
-        time: c.joinedDate || 'Recent',
-        read: false,
-        targetTab: 'customers',
-      });
-    });
-
-    // 4. Live Corporate Quote Requests
-    (corporateQuotes || []).forEach((q, idx) => {
-      const isResolved = String(q.status || '').toUpperCase() === 'RESOLVED';
-      list.push({
-        id: `live-quote-${q.id || idx}`,
-        type: 'quote',
-        icon: '🎁',
-        bg: '#fffbeb',
-        title: 'Bulk Quote Request',
-        message: `${q.name || q.company || 'Client'} requested quote for ${q.quantity || 100} units (${q.company || 'Corporate'})`,
-        time: q.date || 'Recent',
-        read: isResolved,
-        targetTab: 'corporate-quotes',
-      });
-    });
-
-    // 5. Low Inventory Alerts
-    (productsList || []).filter((p) => p.stock < 5).forEach((p, idx) => {
-      list.push({
-        id: `live-prod-${p.id || idx}`,
-        type: 'alert',
-        icon: '⚠️',
-        bg: '#fef2f2',
-        title: 'Low Inventory Alert',
-        message: `Product "${p.name}" is low on stock (${p.stock || 0} left)`,
-        time: 'Action Required',
-        read: false,
-        targetTab: 'products',
-      });
-    });
-
-    return list;
-  }, [enquiriesList, corporateQuotes, ordersList, customersList, productsList]);
-
-  const [notifications, setNotifications] = useState(liveNotifications);
-
-  useEffect(() => {
-    setNotifications(liveNotifications);
-  }, [liveNotifications]);
-
+  // Unread count calculated from live props
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [notifFilter, setNotifFilter] = useState('all');
 
@@ -584,7 +461,7 @@ const DashboardNavbar = ({
               <div className={styles.notifList}>
                 {displayNotifications.length === 0 ? (
                   <div className={styles.notifEmptyState}>
-                    <p>No notifications found.</p>
+                    <p style={{ margin: 0, fontWeight: "600", color: "#64748b" }}>No new notifications</p>
                   </div>
                 ) : (
                   displayNotifications.map((notif) => (
