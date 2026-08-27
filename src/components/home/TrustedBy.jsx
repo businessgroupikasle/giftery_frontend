@@ -1,4 +1,3 @@
-import { getImageUrl } from '@utils/imageUrl';
 import styles from './TrustedBy.module.css';
 
 const TRUSTED_LOGOS = [
@@ -77,7 +76,7 @@ const TrustedBy = () => {
             {LOGO_TICKER.map((item, idx) => (
               <div key={`${item.id}-${idx}`} className={styles.logoItem} title={item.name}>
                 <img
-                  src={getImageUrl(item.src)}
+                  src={item.src}
                   alt={item.name}
                   className={styles.logoImg}
                   loading="lazy"
