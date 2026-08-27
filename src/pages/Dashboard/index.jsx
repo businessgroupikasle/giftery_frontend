@@ -514,7 +514,7 @@ const Dashboard = () => {
     } finally {
       setLoadingProducts(false);
     }
-  };
+  }; //
 
   const fetchCategories = async () => {
     let apiCats = [];
