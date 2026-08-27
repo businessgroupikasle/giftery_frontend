@@ -29,34 +29,6 @@ const parseImages = (imgs) => {
   return [];
 };
 
-const handleImageFileUpload = (file, idx, imageList, handleProductFormChange) => {
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async (evt) => {
-    const dataUrl = evt.target?.result;
-    if (!dataUrl) return;
-
-    try {
-      const res = await axiosInstance.post('/uploads', { image: dataUrl });
-      const uploadedUrl = res.data?.url || res.url || res.data?.data?.url;
-      if (uploadedUrl) {
-        const updated = [...imageList];
-        updated[idx] = uploadedUrl;
-        handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
-        toast.success('Image saved directly to backend storage!');
-        return;
-      }
-    } catch (err) {
-      console.warn('Backend image upload fallback:', err.message);
-    }
-
-    const updated = [...imageList];
-    updated[idx] = dataUrl;
-    handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
-  };
-  reader.readAsDataURL(file);
-};
-
 // Helper function to resolve product's Main Category ID robustly
 const resolveMainCategoryId = (product, categoriesList = []) => {
   const catId = product.categoryId || (typeof product.category === 'object' ? product.category?.id : product.category);
@@ -116,7 +88,7 @@ const resolveSubCategoryName = (product, categoriesList = []) => {
 };
 
 const ProductsSection = ({
-  categories = [],
+  categories: initialCategories = [],
   showProductForm,
   editingProduct,
   savingProduct,
@@ -129,7 +101,35 @@ const ProductsSection = ({
   handleDeleteProduct,
   onRefresh,
 }) => {
+  const [categories, setCategories] = useState(initialCategories);
   const [maxSlots, setMaxSlots] = useState(1);
+
+  // Fetch live categories with accurate DB product counts
+  const refreshCategories = useCallback(async () => {
+    try {
+      const res = await axiosInstance.get(ENDPOINTS.CATEGORIES.LIST);
+      let apiCats = [];
+      if (Array.isArray(res)) apiCats = res;
+      else if (Array.isArray(res?.categories)) apiCats = res.categories;
+      else if (Array.isArray(res?.data?.categories)) apiCats = res.data.categories;
+      else if (Array.isArray(res?.data)) apiCats = res.data;
+      if (apiCats.length > 0) {
+        setCategories(apiCats);
+      }
+    } catch (e) {
+      console.warn('Failed to refresh category counts:', e.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (initialCategories && initialCategories.length > 0) {
+      setCategories(initialCategories);
+    }
+  }, [initialCategories]);
+
+  useEffect(() => {
+    refreshCategories();
+  }, [refreshCategories]);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [activeCategoryFilter, setActiveCategoryFilter] = useState('all');
   const [activeSubCategoryFilter, setActiveSubCategoryFilter] = useState('all');
@@ -228,7 +228,7 @@ const ProductsSection = ({
 
   const handleCloseModal = () => {
     setMaxSlots(1);
-    resetProductForm();
+    if (resetProductForm) resetProductForm();
   };
 
   // Main Categories and subcategories
@@ -236,11 +236,11 @@ const ProductsSection = ({
 
   // Calculate live category counts from category relationships
   const categoryStats = useMemo(() => {
-    let totalCount = meta.total || 0;
     const mainCountMap = {};
+    let grandTotal = 0;
 
     categories.forEach(c => {
-      const pCount = c._count?.products || 0;
+      const pCount = c._count?.products || (c.products ? c.products.length : 0);
       if (c.parentId) {
         mainCountMap[c.parentId] = (mainCountMap[c.parentId] || 0) + pCount;
       } else {
@@ -248,7 +248,11 @@ const ProductsSection = ({
       }
     });
 
-    return { total: totalCount, mainCountMap };
+    categories.filter(c => !c.parentId).forEach(mc => {
+      grandTotal += (mainCountMap[mc.id] || 0);
+    });
+
+    return { total: grandTotal || meta.total || 0, mainCountMap };
   }, [categories, meta.total]);
 
   // Subcategories available for active Category filter
@@ -259,22 +263,57 @@ const ProductsSection = ({
 
   // Subcategories available for form
   const availableSubcategories = useMemo(() => {
-    if (!productForm.categoryId) return [];
+    if (!productForm?.categoryId) return [];
     const matchedMain = categories.find(c => c.id === productForm.categoryId || c.slug === productForm.categoryId);
     const mainId = matchedMain ? matchedMain.id : productForm.categoryId;
     return categories.filter(c => c.parentId === mainId);
-  }, [categories, productForm.categoryId]);
+  }, [categories, productForm?.categoryId]);
+
+  // Handle direct file upload for an image slot
+  const handleSlotFileUpload = (file, idx) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const dataUrl = evt.target?.result;
+      if (!dataUrl) return;
+
+      const parsed = parseImages(productForm?.images);
+      const updated = [...parsed];
+      while (updated.length <= idx) updated.push('');
+
+      try {
+        const res = await axiosInstance.post('/uploads', { image: dataUrl });
+        const uploadedUrl = res.data?.url || res.url || res.data?.data?.url;
+        if (uploadedUrl) {
+          updated[idx] = uploadedUrl;
+          if (handleProductFormChange) {
+            handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
+          }
+          toast.success('Image uploaded successfully!');
+          return;
+        }
+      } catch (err) {
+        console.warn('Backend image upload note:', err.message);
+      }
+
+      updated[idx] = dataUrl;
+      if (handleProductFormChange) {
+        handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const totalPages = meta.totalPages || 1;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       
-      {/* Header Banner: Title, Category Filter Pills, Searchbar & Add Button */}
+      {/* Header Banner: Title, Category Filter Pills, Searchbar, Bulk Import & Add Button */}
       <div className={styles.cardContainer} style={{ background: '#ffffff', padding: '1.25rem' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
           <div>
-            <h3 className={styles.cardTitle} style={{ fontSize: '1.2rem', color: '#0f172a' }}>
+            <h3 className={styles.cardTitle} style={{ fontSize: '1.2rem', color: '#0f172a', margin: 0 }}>
               Products Management ({meta.total || pageProducts.length} {(meta.total === 1 || pageProducts.length === 1) ? 'Product' : 'Products'})
             </h3>
             <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: '#64748b' }}>
@@ -313,7 +352,7 @@ const ProductsSection = ({
                 fontSize: '0.72rem',
                 fontWeight: '700'
               }}>
-                {activeCategoryFilter === 'all' && !debouncedSearch ? meta.total : (meta.total || 0)}
+                {categoryStats.total}
               </span>
             </button>
 
@@ -354,104 +393,69 @@ const ProductsSection = ({
                     fontSize: '0.72rem',
                     fontWeight: '700'
                   }}>
-                    {isActive ? (meta.total || 0) : catCount}
+                    {catCount}
                   </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons: Bulk Import & Add Single Product */}
           <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
             <button
               type="button"
               onClick={() => setShowBulkImportModal(true)}
               style={{
+                background: '#ffffff',
+                border: '1.5px solid #d99b26',
+                color: '#92400e',
+                fontWeight: '700',
+                fontSize: '0.85rem',
+                padding: '0.52rem 1.1rem',
+                borderRadius: '8px',
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.4rem',
-                background: '#f8fafc',
-                border: '1.5px solid #cbd5e1',
-                padding: '0.5rem 0.9rem',
-                borderRadius: '8px',
-                fontWeight: '600',
-                color: '#334155',
-                fontSize: '0.82rem',
-                cursor: 'pointer',
+                gap: '0.45rem',
+                boxShadow: '0 2px 6px rgba(217, 155, 38, 0.15)',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.15s ease',
               }}
+              title="Bulk import products from Excel (.xlsx) or ZIP package with images"
             >
-              📥 <span>Bulk Import (Excel)</span>
+              <span style={{ fontSize: '1rem' }}>📥</span>
+              <span>Bulk Import</span>
             </button>
 
             <button
               type="button"
-              onClick={handleOpenAddProduct}
+              onClick={() => {
+                setMaxSlots(1);
+                if (handleOpenAddProduct) handleOpenAddProduct();
+              }}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
                 background: 'linear-gradient(135deg, #d99b26, #b45309)',
                 color: '#ffffff',
                 border: 'none',
-                padding: '0.5rem 1rem',
+                fontWeight: '700',
+                fontSize: '0.85rem',
+                padding: '0.55rem 1.25rem',
                 borderRadius: '8px',
-                fontWeight: '600',
-                fontSize: '0.82rem',
                 cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
                 boxShadow: '0 2px 6px rgba(217, 155, 38, 0.3)',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.15s ease',
               }}
             >
-              ➕ <span>Add Single Product</span>
+              <span>+ Add Product</span>
             </button>
           </div>
         </div>
 
-        {/* Subcategories Filter Chips */}
-        {filterSubcategories.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', marginRight: '0.25rem' }}>Subcategory:</span>
-            
-            <button
-              type="button"
-              onClick={() => setActiveSubCategoryFilter('all')}
-              style={{
-                background: activeSubCategoryFilter === 'all' ? '#e0f2fe' : '#f8fafc',
-                border: activeSubCategoryFilter === 'all' ? '1px solid #0284c7' : '1px solid #e2e8f0',
-                color: activeSubCategoryFilter === 'all' ? '#0369a1' : '#64748b',
-                padding: '0.2rem 0.6rem',
-                borderRadius: '12px',
-                fontSize: '0.75rem',
-                fontWeight: activeSubCategoryFilter === 'all' ? 700 : 500,
-                cursor: 'pointer',
-              }}
-            >
-              All Subcategories
-            </button>
 
-            {filterSubcategories.map(sub => {
-              const isSubActive = activeSubCategoryFilter === sub.id;
-              return (
-                <button
-                  key={sub.id}
-                  type="button"
-                  onClick={() => setActiveSubCategoryFilter(sub.id)}
-                  style={{
-                    background: isSubActive ? '#e0f2fe' : '#f8fafc',
-                    border: isSubActive ? '1px solid #0284c7' : '1px solid #e2e8f0',
-                    color: isSubActive ? '#0369a1' : '#64748b',
-                    padding: '0.2rem 0.6rem',
-                    borderRadius: '12px',
-                    fontSize: '0.75rem',
-                    fontWeight: isSubActive ? 700 : 500,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {sub.name}
-                </button>
-              );
-            })}
-          </div>
-        )}
 
         {/* Search Bar */}
         <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
@@ -496,9 +500,11 @@ const ProductsSection = ({
         </div>
       </div>
 
-      {/* Bulk Import Modal */}
+      {/* Bulk Import Modal Window */}
       {showBulkImportModal && (
         <BulkImportModal
+          isOpen={showBulkImportModal}
+          categories={categories}
           onClose={() => setShowBulkImportModal(false)}
           onImportSuccess={() => {
             fetchPageProducts();
@@ -507,60 +513,167 @@ const ProductsSection = ({
         />
       )}
 
-      {/* Add / Edit Product Modal */}
-      {showProductForm && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent} style={{ maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div className={styles.modalHeader}>
-              <h3>{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
-              <button className={styles.modalClose} onClick={handleCloseModal}>&times;</button>
-            </div>
+      {/* ── EXACT POPUP MODAL WINDOW (Matching User Image Specification) ── */}
+      {showProductForm && productForm && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          backgroundColor: 'rgba(15, 23, 42, 0.65)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1.25rem',
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            maxWidth: '680px',
+            width: '100%',
+            maxHeight: '92vh',
+            overflowY: 'auto',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            padding: '1.75rem',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.2rem',
+          }}>
             
+            {/* Modal Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>
+                {editingProduct ? 'Edit Product' : 'Add New Product'}
+              </h3>
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: '#f1f5f9',
+                  border: 'none',
+                  fontSize: '1rem',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: '700',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Form */}
             <form onSubmit={async (e) => {
-              await handleProductSubmit(e);
+              if (handleProductSubmit) await handleProductSubmit(e);
               fetchPageProducts();
-            }} className={styles.productForm}>
-              <div className={styles.formGrid}>
-                {/* Product Name */}
-                <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                  <label>Product Name *</label>
+            }} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              
+              {/* Row 1: Product Name & SKU */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#334155', marginBottom: '0.35rem' }}>
+                    Product Name *
+                  </label>
                   <input
                     type="text"
                     name="name"
-                    value={productForm.name}
+                    value={productForm.name || ''}
                     onChange={handleProductFormChange}
-                    placeholder="Enter product title..."
+                    placeholder="e.g. Premium Gift Hamper"
                     required
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.85rem', color: '#0f172a', background: '#ffffff', boxSizing: 'border-box' }}
                   />
                 </div>
 
-                {/* SKU */}
-                <div className={styles.formGroup}>
-                  <label>SKU (Stock Keeping Unit)</label>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#334155', marginBottom: '0.35rem' }}>
+                    SKU
+                  </label>
                   <input
                     type="text"
                     name="sku"
                     value={productForm.sku || ''}
                     onChange={handleProductFormChange}
-                    placeholder="e.g. SKU-12345"
+                    placeholder="e.g. GH-2024-001"
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.85rem', color: '#0f172a', background: '#ffffff', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Price, Compare Price, Stock Qty */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#334155', marginBottom: '0.35rem' }}>
+                    Price (₹) *
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={productForm.price || ''}
+                    onChange={handleProductFormChange}
+                    min="0"
+                    step="0.01"
+                    required
+                    placeholder="999"
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.85rem', color: '#0f172a', background: '#ffffff', boxSizing: 'border-box' }}
                   />
                 </div>
 
-                {/* Main Category */}
-                <div className={styles.formGroup}>
-                  <label>Main Category *</label>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#334155', marginBottom: '0.35rem' }}>
+                    Compare Price (₹)
+                  </label>
+                  <input
+                    type="number"
+                    name="comparePrice"
+                    value={productForm.comparePrice || ''}
+                    onChange={handleProductFormChange}
+                    min="0"
+                    step="0.01"
+                    placeholder="1299"
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.85rem', color: '#0f172a', background: '#ffffff', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#334155', marginBottom: '0.35rem' }}>
+                    Stock Qty *
+                  </label>
+                  <input
+                    type="number"
+                    name="stock"
+                    value={productForm.stock !== undefined ? productForm.stock : '0'}
+                    onChange={handleProductFormChange}
+                    min="0"
+                    placeholder="0"
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.85rem', color: '#0f172a', background: '#ffffff', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Main Category & Subcategory */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#334155', marginBottom: '0.35rem' }}>
+                    Main Category *
+                  </label>
                   <select
                     name="categoryId"
-                    value={productForm.categoryId}
+                    value={productForm.categoryId || ''}
                     onChange={(e) => {
-                      handleProductFormChange({
-                        target: { name: 'categoryId', value: e.target.value }
-                      });
-                      handleProductFormChange({
-                        target: { name: 'subCategoryId', value: '' }
-                      });
+                      if (handleProductFormChange) {
+                        handleProductFormChange({ target: { name: 'categoryId', value: e.target.value } });
+                        handleProductFormChange({ target: { name: 'subCategoryId', value: '' } });
+                      }
                     }}
                     required
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.85rem', color: '#0f172a', background: '#ffffff', boxSizing: 'border-box', cursor: 'pointer' }}
                   >
                     <option value="">Select Main Category</option>
                     {mainCategories.map((c) => (
@@ -569,153 +682,304 @@ const ProductsSection = ({
                   </select>
                 </div>
 
-                {/* Subcategory */}
-                <div className={styles.formGroup}>
-                  <label>Subcategory (Optional)</label>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#334155', marginBottom: '0.35rem' }}>
+                    Subcategory (Optional)
+                  </label>
                   <select
                     name="subCategoryId"
                     value={productForm.subCategoryId || ''}
                     onChange={handleProductFormChange}
                     disabled={!productForm.categoryId || availableSubcategories.length === 0}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.85rem', color: '#0f172a', background: '#ffffff', boxSizing: 'border-box', cursor: 'pointer' }}
                   >
-                    <option value="">None / Direct Category</option>
+                    <option value="">— Select Subcategory (Optional) —</option>
                     {availableSubcategories.map((sc) => (
                       <option key={sc.id} value={sc.id}>{sc.name}</option>
                     ))}
                   </select>
                 </div>
+              </div>
 
-                {/* Price & Compare Price */}
-                <div className={styles.formGroup}>
-                  <label>Selling Price (₹) *</label>
-                  <input
-                    type="number"
-                    name="price"
-                    value={productForm.price}
-                    onChange={handleProductFormChange}
-                    min="0"
-                    step="0.01"
-                    required
-                  />
+              {/* Row 4: Description */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#334155', marginBottom: '0.35rem' }}>
+                  Description *
+                </label>
+                <textarea
+                  name="description"
+                  rows="3"
+                  value={productForm.description || ''}
+                  onChange={handleProductFormChange}
+                  required
+                  placeholder="Describe the product in detail..."
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.85rem', color: '#0f172a', background: '#ffffff', boxSizing: 'border-box', resize: 'vertical' }}
+                />
+              </div>
+
+              {/* Row 5: Specifications */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#334155', marginBottom: '0.35rem' }}>
+                  Specifications <span style={{ fontWeight: 400, color: '#64748b' }}>(Key: Value pairs)</span>
+                </label>
+                <textarea
+                  name="specifications"
+                  rows="3"
+                  value={productForm.specifications || ''}
+                  onChange={handleProductFormChange}
+                  placeholder={"Material: Genuine Leather\nDimensions: 15cm x 10cm\nColor: Matte Black"}
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.85rem', color: '#0f172a', background: '#ffffff', boxSizing: 'border-box', resize: 'vertical' }}
+                />
+              </div>
+
+              {/* Row 6: Product Tags & Search Keywords */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#334155', marginBottom: '0.35rem' }}>
+                  Product Tags & Search Keywords <span style={{ fontWeight: 400, color: '#64748b' }}>(Comma separated, e.g. luxury, leather, onboarding, office)</span>
+                </label>
+                <input
+                  type="text"
+                  name="tags"
+                  value={Array.isArray(productForm.tags) ? productForm.tags.join(', ') : (productForm.tags || '')}
+                  onChange={handleProductFormChange}
+                  placeholder="e.g. luxury, leather, onboarding, corporate gift, bottle"
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.85rem', color: '#0f172a', background: '#ffffff', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              {/* Row 7: Product Images & "+ Add More Image Slot" */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <label style={{ fontSize: '0.82rem', fontWeight: '700', color: '#334155' }}>
+                    Product Images
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setMaxSlots(prev => prev + 1)}
+                    style={{ background: 'none', border: 'none', color: '#d97706', fontWeight: '700', fontSize: '0.82rem', cursor: 'pointer' }}
+                  >
+                    + Add More Image Slot
+                  </button>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label>Original / Compare Price (₹)</label>
-                  <input
-                    type="number"
-                    name="comparePrice"
-                    value={productForm.comparePrice || ''}
-                    onChange={handleProductFormChange}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
+                {(() => {
+                  const parsedImgs = parseImages(productForm.images);
+                  const slotCount = Math.max(maxSlots, parsedImgs.length || 1);
+                  const slots = Array.from({ length: slotCount }).map((_, idx) => parsedImgs[idx] || '');
 
-                {/* Stock */}
-                <div className={styles.formGroup}>
-                  <label>Stock Quantity</label>
-                  <input
-                    type="number"
-                    name="stock"
-                    value={productForm.stock}
-                    onChange={handleProductFormChange}
-                    min="0"
-                  />
-                </div>
-
-                {/* Product Tags */}
-                <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                  <label>Product Tags (comma separated)</label>
-                  <input
-                    type="text"
-                    name="tags"
-                    value={productForm.tags || ''}
-                    onChange={handleProductFormChange}
-                    placeholder="e.g. leather, premium, anniversary"
-                  />
-                </div>
-
-                {/* Specifications */}
-                <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                  <label>Specifications / Key Features</label>
-                  <textarea
-                    name="specifications"
-                    rows="3"
-                    value={productForm.specifications || ''}
-                    onChange={handleProductFormChange}
-                    placeholder="Enter specifications..."
-                  />
-                </div>
-
-                {/* Description */}
-                <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                  <label>Description *</label>
-                  <textarea
-                    name="description"
-                    rows="4"
-                    value={productForm.description}
-                    onChange={handleProductFormChange}
-                    required
-                  />
-                </div>
-
-                {/* Image Upload Slots */}
-                <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                  <label>Product Images (URL or Upload)</label>
-                  {(() => {
-                    const parsedImgs = parseImages(productForm.images);
-                    const slotCount = Math.max(maxSlots, parsedImgs.length);
-                    const slots = Array.from({ length: slotCount }).map((_, idx) => parsedImgs[idx] || '');
-
-                    return (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
-                        {slots.map((url, idx) => (
-                          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', width: '60px' }}>Slot {idx + 1}:</span>
-                            <input
-                              type="text"
-                              value={url}
-                              onChange={(e) => {
-                                const updated = [...slots];
-                                updated[idx] = e.target.value;
-                                handleProductFormChange({
-                                  target: { name: 'images', value: updated.filter(Boolean).join('|||') }
-                                });
-                              }}
-                              placeholder="Image URL..."
-                              style={{ flex: 1, padding: '0.4rem 0.6rem', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.8rem' }}
-                            />
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                if (e.target.files?.[0]) {
-                                  handleImageFileUpload(e.target.files[0], idx, slots, handleProductFormChange);
-                                }
-                              }}
-                              style={{ fontSize: '0.75rem', maxWidth: '180px' }}
-                            />
-                          </div>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => setMaxSlots(prev => prev + 1)}
-                          style={{ alignSelf: 'flex-start', padding: '0.35rem 0.75rem', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600 }}
+                  return (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.85rem' }}>
+                      {slots.map((url, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            width: '110px',
+                            height: '110px',
+                            background: '#f8fafc',
+                            border: '1.5px dashed #cbd5e1',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            position: 'relative',
+                            overflow: 'hidden',
+                          }}
                         >
-                          + Add Another Image Slot
-                        </button>
-                      </div>
-                    );
-                  })()}
+                          {url ? (
+                            <>
+                              <img
+                                src={url}
+                                alt={`Slot ${idx + 1}`}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                onError={(e) => { e.currentTarget.src = '/placeholder.jpg'; }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = [...slots];
+                                  updated.splice(idx, 1);
+                                  if (handleProductFormChange) {
+                                    handleProductFormChange({ target: { name: 'images', value: updated.filter(Boolean).join('|||') } });
+                                  }
+                                }}
+                                style={{
+                                  position: 'absolute',
+                                  top: '4px',
+                                  right: '4px',
+                                  background: 'rgba(220, 38, 38, 0.85)',
+                                  color: '#fff',
+                                  border: 'none',
+                                  borderRadius: '50%',
+                                  width: '20px',
+                                  height: '20px',
+                                  fontSize: '0.7rem',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </>
+                          ) : (
+                            <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', cursor: 'pointer', padding: '0.5rem', textAlign: 'center' }}>
+                              <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569' }}>+ Upload Image</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  if (e.target.files?.[0]) {
+                                    handleSlotFileUpload(e.target.files[0], idx);
+                                  }
+                                }}
+                                style={{ display: 'none' }}
+                              />
+                            </label>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Row 8: Collections & Visibility Checkboxes Card */}
+              <div style={{
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
+                padding: '1.1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.85rem',
+              }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: '700', color: '#0f172a' }}>
+                  Show Product on Homepage Tabs & Store Collections:
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                  {/* Col 1 */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                    <input
+                      type="checkbox"
+                      name="isFeatured"
+                      checked={!!productForm.isFeatured || !!productForm.featured}
+                      onChange={handleProductFormChange}
+                      style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
+                    />
+                    Featured Products
+                  </label>
+
+                  {/* Col 2 */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                    <input
+                      type="checkbox"
+                      name="isBestseller"
+                      checked={!!productForm.isBestseller}
+                      onChange={handleProductFormChange}
+                      style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
+                    />
+                    Best Sellers
+                  </label>
+
+                  {/* Col 3 */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                    <input
+                      type="checkbox"
+                      name="isPopular"
+                      checked={!!productForm.isPopular}
+                      onChange={handleProductFormChange}
+                      style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
+                    />
+                    Popular Products
+                  </label>
+
+                  {/* Col 1 Row 2 */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                    <input
+                      type="checkbox"
+                      name="isNewArrival"
+                      checked={!!productForm.isNewArrival}
+                      onChange={handleProductFormChange}
+                      style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
+                    />
+                    New Arrivals
+                  </label>
+
+                  {/* Col 2 Row 2 */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                    <input
+                      type="checkbox"
+                      name="isMostLoved"
+                      checked={!!productForm.isMostLoved}
+                      onChange={handleProductFormChange}
+                      style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
+                    />
+                    Most Loved
+                  </label>
+
+                  {/* Col 3 Row 2 */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                    <input
+                      type="checkbox"
+                      name="isGiftSet"
+                      checked={!!productForm.isGiftSet}
+                      onChange={handleProductFormChange}
+                      style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
+                    />
+                    Gift Sets
+                  </label>
+
+                  {/* Active Store Visible */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700, color: '#059669', gridColumn: '1 / -1' }}>
+                    <input
+                      type="checkbox"
+                      name="isActive"
+                      checked={productForm.isActive !== false}
+                      onChange={handleProductFormChange}
+                      style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#059669' }}
+                    />
+                    Active (Store Visible)
+                  </label>
                 </div>
               </div>
 
-              <div className={styles.modalActions} style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-                <button type="button" className={styles.btnSecondary} onClick={handleCloseModal}>
+              {/* Row 9: Footer Actions */}
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  style={{
+                    padding: '0.65rem 1.5rem',
+                    background: '#f8fafc',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    color: '#475569',
+                    fontSize: '0.85rem',
+                  }}
+                >
                   Cancel
                 </button>
-                <button type="submit" className={styles.btnPrimary} disabled={savingProduct}>
-                  {savingProduct ? 'Saving...' : (editingProduct ? 'Update Product' : 'Create Product')}
+                <button
+                  type="submit"
+                  disabled={savingProduct}
+                  style={{
+                    padding: '0.65rem 1.75rem',
+                    background: '#059669',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    boxShadow: '0 4px 12px rgba(5,150,105,0.25)',
+                  }}
+                >
+                  {savingProduct ? 'Saving...' : (editingProduct ? 'Update Product' : 'Add Product')}
                 </button>
               </div>
             </form>
@@ -723,92 +987,100 @@ const ProductsSection = ({
         </div>
       )}
 
-      {/* Loading Indicator */}
+      {/* Loading State */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-          <span>Loading products from server...</span>
+        <div className={styles.cardContainer} style={{ padding: '2.5rem', textAlign: 'center', color: '#64748b' }}>
+          Loading products from database...
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty State (Matching User Image 2) */}
       {!loading && pageProducts.length === 0 && (
-        <div className={styles.cardContainer} style={{ textAlign: 'center', padding: '3rem 1rem', background: '#ffffff' }}>
-          <p style={{ fontSize: '1rem', color: '#64748b' }}>No products found matching your search or filter.</p>
+        <div className={styles.cardContainer} style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+          <p style={{ fontSize: '1rem', margin: 0 }}>No products found matching your search/category filter.</p>
+          <button
+            type="button"
+            onClick={() => {
+              setMaxSlots(1);
+              if (handleOpenAddProduct) handleOpenAddProduct();
+            }}
+            style={{ marginTop: '0.75rem', padding: '0.5rem 1.2rem', background: '#d99b26', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+          >
+            + Add Product
+          </button>
         </div>
       )}
 
-      {/* Products Data Table */}
+      {/* Products Table (ordersTable styling from original dashboard) */}
       {!loading && pageProducts.length > 0 && (
-        <div className={styles.tableCard} style={{ background: '#ffffff', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-          <table className={styles.table}>
+        <div className={styles.cardContainer} style={{ overflowX: 'auto', padding: 0, borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <table className={styles.ordersTable}>
             <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#475569' }}>Product</th>
-                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#475569' }}>SKU</th>
-                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#475569' }}>Category</th>
-                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#475569' }}>Subcategory</th>
-                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#475569' }}>Price</th>
-                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#475569' }}>Stock</th>
-                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#475569' }}>Status</th>
-                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#475569' }}>Actions</th>
+              <tr>
+                <th>Image</th>
+                <th>Product Name</th>
+                <th>Main Category</th>
+                <th>Subcategory</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {pageProducts.map((product) => {
-                const mainName = resolveMainCategoryName(product, categories);
-                const subName = resolveSubCategoryName(product, categories);
-                const thumb = getProductThumbnail(product);
+                const mainCatName = resolveMainCategoryName(product, categories);
+                const subCatName = resolveSubCategoryName(product, categories);
 
                 return (
-                  <tr key={product.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <img
-                          src={thumb}
-                          alt={product.name}
-                          style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0' }}
-                          onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                        />
-                        <div>
-                          <div style={{ fontWeight: '600', color: '#0f172a', fontSize: '0.85rem' }}>{product.name}</div>
-                          {product.slug && <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>/{product.slug}</div>}
-                        </div>
-                      </div>
+                  <tr key={product.id}>
+                    <td>
+                      <img
+                        src={getProductThumbnail(product)}
+                        alt={product.name}
+                        style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0' }}
+                        onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                      />
                     </td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.82rem', color: '#64748b' }}>
-                      {product.sku || '—'}
+                    <td>
+                      <strong style={{ display: 'block', color: '#0f172a', fontSize: '0.9rem' }}>{product.name}</strong>
+                      {product.sku && <span style={{ fontSize: '0.72rem', color: '#64748b' }}>SKU: {product.sku}</span>}
                     </td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.82rem', color: '#334155', fontWeight: '500' }}>
-                      {mainName}
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.82rem', color: '#64748b' }}>
-                      {subName || '—'}
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem', fontWeight: '600', color: '#0f172a' }}>
-                      ₹{product.price}
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.82rem' }}>
-                      <span style={{
-                        padding: '0.2rem 0.5rem',
-                        borderRadius: '4px',
-                        fontSize: '0.75rem',
-                        fontWeight: '600',
-                        background: (product.stock || 0) > 5 ? '#dcfce7' : ((product.stock || 0) > 0 ? '#fef9c3' : '#fee2e2'),
-                        color: (product.stock || 0) > 5 ? '#15803d' : ((product.stock || 0) > 0 ? '#a16207' : '#b91c1c'),
-                      }}>
-                        {product.stock || 0} in stock
+                    <td>
+                      <span style={{ background: '#fffcf5', color: '#92400e', border: '1px solid #fde68a', padding: '0.2rem 0.65rem', borderRadius: '12px', fontSize: '0.78rem', fontWeight: '700' }}>
+                        {mainCatName}
                       </span>
                     </td>
-                    <td style={{ padding: '0.75rem 1rem' }}>
+                    <td>
+                      {subCatName ? (
+                        <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.78rem', fontWeight: '600' }}>
+                          {subCatName}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>None</span>
+                      )}
+                    </td>
+                    <td>
+                      <strong style={{ color: '#d99b26', fontSize: '0.9rem' }}>₹{product.price?.toLocaleString('en-IN')}</strong>
+                      {product.comparePrice && <div style={{ fontSize: '0.72rem', color: '#94a3b8', textDecoration: 'line-through' }}>₹{product.comparePrice?.toLocaleString('en-IN')}</div>}
+                    </td>
+                    <td>
+                      <span style={{ fontWeight: '700', color: product.stock > 10 ? '#16a34a' : product.stock > 0 ? '#ea580c' : '#dc2626' }}>
+                        {product.stock}
+                      </span>
+                    </td>
+                    <td>
                       <span className={`${styles.pillStatus} ${product.isActive ? styles.pillDelivered : styles.pillCancelled}`}>
                         {product.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td style={{ padding: '0.75rem 1rem' }}>
+                    <td>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button
                           type="button"
-                          onClick={() => handleEditProductClick(product)}
+                          onClick={() => {
+                            if (handleEditProductClick) handleEditProductClick(product);
+                          }}
                           style={{ padding: '0.35rem 0.75rem', background: '#dbeafe', color: '#1d4ed8', border: 'none', borderRadius: '6px', fontSize: '0.78rem', fontWeight: '600', cursor: 'pointer' }}
                         >
                           Edit
@@ -816,7 +1088,7 @@ const ProductsSection = ({
                         <button
                           type="button"
                           onClick={async () => {
-                            await handleDeleteProduct(product.id, product.name);
+                            if (handleDeleteProduct) await handleDeleteProduct(product.id, product.name);
                             fetchPageProducts();
                           }}
                           style={{ padding: '0.35rem 0.75rem', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', fontSize: '0.78rem', fontWeight: '600', cursor: 'pointer' }}

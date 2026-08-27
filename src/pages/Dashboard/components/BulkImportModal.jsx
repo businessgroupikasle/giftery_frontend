@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { FiDownload, FiUploadCloud, FiFile, FiCheckCircle, FiAlertCircle, FiX, FiRefreshCw } from 'react-icons/fi';
 import styles from './BulkImportModal.module.css';
 
-const BulkImportModal = ({ isOpen, onClose, categories = [], onImportSuccess }) => {
+const BulkImportModal = ({ isOpen = true, onClose, categories = [], onImportSuccess }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [validating, setValidating] = useState(false);
@@ -17,7 +17,7 @@ const BulkImportModal = ({ isOpen, onClose, categories = [], onImportSuccess }) 
   const [importProgress, setImportProgress] = useState(null);
   const fileInputRef = useRef(null);
 
-  if (!isOpen) return null;
+  if (isOpen === false) return null;
 
   // 1. Download official Excel Template from backend
   const handleDownloadTemplate = async () => {
