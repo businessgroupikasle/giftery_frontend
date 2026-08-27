@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '@components/layout/Layout';
 import ProductGrid from '@components/product/ProductGrid';
+import Pagination from '@components/common/Pagination';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import styles from './Shop.module.css';
@@ -16,64 +17,81 @@ const SORT_OPTIONS = [
 
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [search, setSearch] = useState(searchParams.get('search') || '');
-  const [liveProducts, setLiveProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
+  const search = searchParams.get('search') || '';
   const sort = searchParams.get('sort') || 'newest';
   const minPrice = searchParams.get('minPrice') || '';
   const maxPrice = searchParams.get('maxPrice') || '';
+  const pageParam = parseInt(searchParams.get('page') || '1', 10);
+  const currentPage = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
 
-  const loadAllProducts = async () => {
+  const [liveProducts, setLiveProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [meta, setMeta] = useState({ total: 0, totalPages: 1, page: 1, limit: 24 });
+
+  const loadProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=1000');
-      let apiProds = [];
-      if (Array.isArray(res)) apiProds = res;
-      else if (res?.data && Array.isArray(res.data)) apiProds = res.data;
-      else if (res?.data?.data && Array.isArray(res.data.data)) apiProds = res.data.data;
-      else if (res?.data?.products && Array.isArray(res.data.products)) apiProds = res.data.products;
-      else if (res?.products && Array.isArray(res.products)) apiProds = res.products;
+      const params = {
+        page: currentPage,
+        limit: 24,
+        sort,
+      };
 
-      setLiveProducts(apiProds.filter(p => p.isActive !== false));
+      if (search.trim()) params.search = search.trim();
+      if (minPrice) params.minPrice = minPrice;
+      if (maxPrice) params.maxPrice = maxPrice;
+
+      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST, { params });
+      const body = res.data || res;
+      const productList = Array.isArray(body.data)
+        ? body.data
+        : (Array.isArray(body.products) ? body.products : (Array.isArray(body) ? body : []));
+
+      setLiveProducts(productList.filter(p => p.isActive !== false));
+
+      if (body.meta) {
+        setMeta(body.meta);
+      } else {
+        setMeta({
+          total: productList.length,
+          page: currentPage,
+          limit: 24,
+          totalPages: Math.ceil(productList.length / 24) || 1,
+        });
+      }
     } catch (e) {
       console.warn('Shop products fetch error:', e.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, search, sort, minPrice, maxPrice]);
 
   useEffect(() => {
-    loadAllProducts();
-    window.addEventListener('products_updated', loadAllProducts);
+    loadProducts();
+    window.addEventListener('products_updated', loadProducts);
     return () => {
-      window.removeEventListener('products_updated', loadAllProducts);
+      window.removeEventListener('products_updated', loadProducts);
     };
-  }, []);
-
-  // Filter & Sort Logic
-  const filteredProducts = liveProducts.filter((p) => {
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      const nameMatch = p.name?.toLowerCase().includes(q);
-      const catMatch = p.categoryName?.toLowerCase().includes(q) || p.category?.name?.toLowerCase().includes(q);
-      if (!nameMatch && !catMatch) return false;
-    }
-    if (minPrice && Number(p.price) < Number(minPrice)) return false;
-    if (maxPrice && Number(p.price) > Number(maxPrice)) return false;
-    return true;
-  });
-
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    if (sort === 'price_asc') return Number(a.price) - Number(b.price);
-    if (sort === 'price_desc') return Number(b.price) - Number(a.price);
-    if (sort === 'rating') return Number(b.rating || 0) - Number(a.rating || 0);
-    if (sort === 'featured') return (b.featured || b.isFeatured ? 1 : 0) - (a.featured || a.isFeatured ? 1 : 0);
-    return 0; // newest
-  });
+  }, [loadProducts]);
 
   const setParam = (key, val) => {
-    setSearchParams((prev) => { prev.set(key, val); return prev; });
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (val === '' || val === null || val === undefined) {
+        next.delete(key);
+      } else {
+        next.set(key, val);
+      }
+      if (key !== 'page') {
+        next.set('page', '1');
+      }
+      return next;
+    });
+  };
+
+  const handlePageChange = (newPage) => {
+    setParam('page', String(newPage));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -81,7 +99,9 @@ const Shop = () => {
       <div className="container section">
         <div className={styles.header}>
           <h1 className={styles.title}>All Products</h1>
-          <p className={styles.count}>{sortedProducts.length} products</p>
+          <p className={styles.count}>
+            Showing {Math.min((currentPage - 1) * 24 + 1, meta.total || 0)}–{Math.min(currentPage * 24, meta.total || 0)} of {meta.total || liveProducts.length} products
+          </p>
         </div>
 
         {/* Toolbar */}
@@ -90,7 +110,7 @@ const Shop = () => {
             type="search"
             placeholder="Search products…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => setParam('search', e.target.value)}
             className={styles.searchInput}
             aria-label="Search products"
           />
@@ -121,7 +141,18 @@ const Shop = () => {
           </div>
         </div>
 
-        <ProductGrid products={sortedProducts} loading={loading} />
+        <ProductGrid products={liveProducts} loading={loading} />
+
+        {/* Scalable Server Pagination Component */}
+        {!loading && meta.totalPages > 1 && (
+          <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'center' }}>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={meta.totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
       </div>
     </Layout>
   );
