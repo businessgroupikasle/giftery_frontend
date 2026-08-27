@@ -14,6 +14,7 @@ const BulkImportModal = ({ isOpen, onClose, categories = [], onImportSuccess }) 
   const [filterMode, setFilterMode] = useState('all'); // 'all' | 'create' | 'update' | 'error'
   const [searchQuery, setSearchQuery] = useState('');
   const [importSummary, setImportSummary] = useState(null);
+  const [importProgress, setImportProgress] = useState(null);
   const fileInputRef = useRef(null);
 
   if (!isOpen) return null;
@@ -50,6 +51,7 @@ const BulkImportModal = ({ isOpen, onClose, categories = [], onImportSuccess }) 
     setSelectedFile(file);
     setValidationData(null);
     setImportSummary(null);
+    setImportProgress(null);
   };
 
   const handleDragOver = (e) => {
@@ -100,7 +102,7 @@ const BulkImportModal = ({ isOpen, onClose, categories = [], onImportSuccess }) 
     }
   };
 
-  // 4. Confirm and Execute Bulk Import
+  // 4. Confirm and Execute Bulk Import in Safe Chunks (50 items/batch)
   const handleConfirmImport = async () => {
     if (!validationData || !validationData.rows) return;
     const validProducts = validationData.rows.filter(r => r.isValid).map(r => ({
@@ -113,18 +115,84 @@ const BulkImportModal = ({ isOpen, onClose, categories = [], onImportSuccess }) 
       return;
     }
 
+    const CHUNK_SIZE = 50;
+    const totalCount = validProducts.length;
+    const totalBatches = Math.ceil(totalCount / CHUNK_SIZE);
+
     setImporting(true);
+    setImportProgress({
+      currentBatch: 1,
+      totalBatches,
+      processedCount: 0,
+      totalCount,
+      percentage: 0,
+    });
+
+    const aggregated = {
+      success: true,
+      totalRequested: totalCount,
+      importedCount: 0,
+      updatedCount: 0,
+      failedCount: 0,
+      imported: [],
+      updated: [],
+      failed: [],
+    };
+
     try {
-      const res = await axiosInstance.post(ENDPOINTS.PRODUCTS.BULK.IMPORT, {
-        products: validProducts,
+      for (let b = 0; b < totalBatches; b++) {
+        const chunk = validProducts.slice(b * CHUNK_SIZE, (b + 1) * CHUNK_SIZE);
+        setImportProgress({
+          currentBatch: b + 1,
+          totalBatches,
+          processedCount: b * CHUNK_SIZE,
+          totalCount,
+          percentage: Math.round((b / totalBatches) * 100),
+        });
+
+        try {
+          const res = await axiosInstance.post(
+            ENDPOINTS.PRODUCTS.BULK.IMPORT,
+            { products: chunk },
+            { timeout: 120000 } // Extended 2-minute timeout for bulk batch execution
+          );
+          const result = res.data?.data || res.data || res;
+          aggregated.importedCount += (result.importedCount || 0);
+          aggregated.updatedCount += (result.updatedCount || 0);
+          aggregated.failedCount += (result.failedCount || 0);
+          if (Array.isArray(result.imported)) aggregated.imported.push(...result.imported);
+          if (Array.isArray(result.updated)) aggregated.updated.push(...result.updated);
+          if (Array.isArray(result.failed)) aggregated.failed.push(...result.failed);
+        } catch (chunkErr) {
+          console.error(`Error importing batch ${b + 1}:`, chunkErr);
+          const reason = chunkErr.response?.data?.message || chunkErr.message || 'Batch request failed';
+          chunk.forEach(p => {
+            aggregated.failedCount += 1;
+            aggregated.failed.push({
+              name: p.name,
+              sku: p.sku,
+              reason,
+            });
+          });
+        }
+      }
+
+      setImportProgress({
+        currentBatch: totalBatches,
+        totalBatches,
+        processedCount: totalCount,
+        totalCount,
+        percentage: 100,
       });
-      const result = res.data?.data || res.data || res;
-      setImportSummary(result);
-      toast.success(`Import completed: ${result.importedCount || 0} created, ${result.updatedCount || 0} updated!`);
+
+      setImportSummary(aggregated);
+      toast.success(
+        `Import completed: ${aggregated.importedCount} created, ${aggregated.updatedCount} updated${aggregated.failedCount > 0 ? `, ${aggregated.failedCount} failed` : ''}!`
+      );
       if (onImportSuccess) onImportSuccess();
     } catch (err) {
       console.error('Bulk import error:', err);
-      const errMsg = err.response?.data?.message || err.message || 'Bulk import failed';
+      const errMsg = err.response?.data?.message || err.message || 'Bulk import encountered an error';
       toast.error(`Import failed: ${errMsg}`);
     } finally {
       setImporting(false);
@@ -475,6 +543,19 @@ const BulkImportModal = ({ isOpen, onClose, categories = [], onImportSuccess }) 
 
         </div>
 
+        {/* Live Import Progress Bar */}
+        {importing && importProgress && (
+          <div style={{ padding: '0.75rem 1.5rem', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+              <span>Importing Batch {importProgress.currentBatch} of {importProgress.totalBatches} ({importProgress.processedCount} of {importProgress.totalCount} products)</span>
+              <span style={{ color: '#d99b26' }}>{importProgress.percentage}%</span>
+            </div>
+            <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ width: `${importProgress.percentage}%`, height: '100%', background: 'linear-gradient(90deg, #d99b26, #16a34a)', transition: 'width 0.3s ease' }} />
+            </div>
+          </div>
+        )}
+
         {/* Footer Actions */}
         {!importSummary && (
           <div className={styles.modalFooter}>
@@ -525,7 +606,11 @@ const BulkImportModal = ({ isOpen, onClose, categories = [], onImportSuccess }) 
                   {importing ? (
                     <>
                       <FiRefreshCw className="spinIcon" />
-                      <span>Importing & Processing Images...</span>
+                      <span>
+                        {importProgress
+                          ? `Importing Batch ${importProgress.currentBatch}/${importProgress.totalBatches} (${importProgress.percentage}%)... key`
+                          : 'Importing & Processing Images...'}
+                      </span>
                     </>
                   ) : (
                     <span>
