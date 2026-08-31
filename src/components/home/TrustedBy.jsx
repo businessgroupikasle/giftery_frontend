@@ -1,3 +1,4 @@
+import { getImageUrl } from '@utils/imageUrl';
 import styles from './TrustedBy.module.css';
 
 const TRUSTED_LOGOS = [
@@ -76,10 +77,17 @@ const TrustedBy = () => {
             {LOGO_TICKER.map((item, idx) => (
               <div key={`${item.id}-${idx}`} className={styles.logoItem} title={item.name}>
                 <img
-                  src={item.src}
+                  src={getImageUrl(item.src)}
                   alt={item.name}
                   className={styles.logoImg}
                   loading="lazy"
+                  onError={(e) => {
+                    // Fallback to local static asset if backend URL is not reachable
+                    if (!e.currentTarget.dataset.fallbackTried) {
+                      e.currentTarget.dataset.fallbackTried = 'true';
+                      e.currentTarget.src = item.src;
+                    }
+                  }}
                 />
               </div>
             ))}

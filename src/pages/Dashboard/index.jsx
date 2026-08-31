@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FiCalendar, FiRefreshCw, FiDownload, FiFilter, FiChevronDown } from 'react-icons/fi';
+import { FiRefreshCw, FiDownload, FiFilter, FiChevronDown } from 'react-icons/fi';
 import useAuth from '@hooks/useAuth';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
@@ -1175,13 +1175,6 @@ const Dashboard = () => {
                     ))}
                   </div>
                 )}
-              </div>
-
-              {/* Date Picker Pill */}
-              <div className={styles.datePickerPill}>
-                <FiCalendar style={{ color: '#64748b' }} />
-                <span>{selectedFilter === 'Today' ? new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : selectedFilter === 'Custom Range' ? 'May 12 - May 18, 2025' : selectedFilter}</span>
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>▼</span>
               </div>
 
               {/* Refresh Button */}
