@@ -22,20 +22,11 @@ import { isValidEmail, isValidMobile } from '../../utils/validation';
 import styles from './Login.module.css';
 
 const GiftLogoSvg = () => (
-  <svg className={styles.headerLogoSvg} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M20 12V36" stroke="url(#loginGoldGrad)" strokeWidth="2.5" strokeLinecap="round" />
-    <rect x="6" y="17" width="28" height="19" rx="2" stroke="url(#loginGoldGrad)" strokeWidth="2.2" fill="url(#loginGoldGrad)" fillOpacity="0.12" />
-    <rect x="4" y="12" width="32" height="5" rx="1.5" fill="url(#loginGoldGrad)" stroke="url(#loginGoldGrad)" strokeWidth="1.5" />
-    <path d="M20 12C20 12 16 4 11 4C7.5 4 6 6.5 7 9.5C8 12 20 12 20 12Z" stroke="url(#loginGoldGrad)" strokeWidth="2" strokeLinejoin="round" fill="url(#loginGoldGrad)" fillOpacity="0.2" />
-    <path d="M20 12C20 12 24 4 29 4C32.5 4 34 6.5 33 9.5C32 12 20 12 20 12Z" stroke="url(#loginGoldGrad)" strokeWidth="2" strokeLinejoin="round" fill="url(#loginGoldGrad)" fillOpacity="0.2" />
-    <defs>
-      <linearGradient id="loginGoldGrad" x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#F7D58B" />
-        <stop offset="0.5" stopColor="#DFA843" />
-        <stop offset="1" stopColor="#B8832A" />
-      </linearGradient>
-    </defs>
-  </svg>
+  <img
+    src="/favicon.svg"
+    className={styles.headerLogoSvg}
+    alt="Giftery"
+  />
 );
 
 const Login = () => {
@@ -60,6 +51,7 @@ const Login = () => {
   const [sendingOTP, setSendingOTP] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
   const [verifyingOTP, setVerifyingOTP] = useState(false);
+  const [otpSecondsLeft, setOtpSecondsLeft] = useState(0);
 
   // Form Fields
   const [form, setForm] = useState({
@@ -102,6 +94,21 @@ const Login = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!otpSent || otpVerified || otpSecondsLeft <= 0) return undefined;
+    const timerId = window.setInterval(() => {
+      setOtpSecondsLeft((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+    return () => window.clearInterval(timerId);
+  }, [otpSent, otpVerified, otpSecondsLeft]);
+
+  useEffect(() => {
+    if (otpSent && !otpVerified && otpSecondsLeft === 0) {
+      setOtpSent(false);
+      setForm((prev) => ({ ...prev, otp: '' }));
+    }
+  }, [otpSecondsLeft, otpSent, otpVerified]);
+
   const handleTabSwitch = (tab) => {
     setAuthError('');
     setActiveTab(tab);
@@ -114,6 +121,11 @@ const Login = () => {
 
   const handleChange = (e) => {
     setAuthError('');
+    if (e.target.name === 'email' && e.target.value !== form.email && otpSent) {
+      setOtpSent(false);
+      setOtpVerified(false);
+      setOtpSecondsLeft(0);
+    }
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -127,6 +139,8 @@ const Login = () => {
     try {
       await authService.requestOTP({ email: form.email, name: form.name });
       setOtpSent(true);
+      setOtpVerified(false);
+      setOtpSecondsLeft(10 * 60);
       setForm((prev) => ({ ...prev, otp: '' }));
       toast.success('Verification code sent');
     } catch (err) {
@@ -137,6 +151,10 @@ const Login = () => {
   };
 
   const handleVerifyOTP = async () => {
+    if (!otpSent || otpSecondsLeft <= 0) {
+      toast.error('OTP expired. Please request a new code.');
+      return;
+    }
     if (!form.otp || form.otp.trim().length !== 6) {
       toast.error('Please enter a valid 6-digit OTP code');
       return;
@@ -153,6 +171,8 @@ const Login = () => {
       setVerifyingOTP(false);
     }
   };
+
+  const formattedOtpTime = `${String(Math.floor(otpSecondsLeft / 60)).padStart(2, '0')}:${String(otpSecondsLeft % 60).padStart(2, '0')}`;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -297,7 +317,7 @@ const Login = () => {
         <span>Back to Home</span>
       </Link>
 
-      <div className={styles.authCard}>
+      <div className={`${styles.authCard} ${activeTab === 'register' ? styles.registerCard : ''}`}>
         {/* Header Logo */}
         <div className={styles.authCardHeader}>
           <Link to={ROUTES.HOME} className={styles.headerLogoLink}>
@@ -436,8 +456,9 @@ const Login = () => {
                     ✓ Verified
                   </span>
                 ) : otpSent ? (
-                  <span style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: '600' }}>
+                  <span className={styles.otpTimer}>
                     ✓ Code Sent to Email
+                    <strong> · {formattedOtpTime}</strong>
                   </span>
                 ) : null}
               </div>

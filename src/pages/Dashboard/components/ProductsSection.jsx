@@ -16,7 +16,7 @@ const parseImages = (imgs) => {
       try {
         const parsed = JSON.parse(trimmed);
         if (Array.isArray(parsed)) return parsed.map((s) => String(s).trim()).filter(Boolean);
-      } catch (e) {}
+      } catch (e) { }
     }
     if (trimmed.includes('|||')) {
       return trimmed.split('|||').map((s) => s.trim()).filter(Boolean);
@@ -137,7 +137,7 @@ const ProductsSection = ({
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  
+
   // Server-side loaded page data and pagination metadata
   const [pageProducts, setPageProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -308,7 +308,7 @@ const ProductsSection = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      
+
       {/* Header Banner: Title, Category Filter Pills, Searchbar, Bulk Import & Add Button */}
       <div className={styles.cardContainer} style={{ background: '#ffffff', padding: '1.25rem' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
@@ -317,13 +317,13 @@ const ProductsSection = ({
               Products Management ({meta.total || pageProducts.length} {(meta.total === 1 || pageProducts.length === 1) ? 'Product' : 'Products'})
             </h3>
             <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: '#64748b' }}>
-              Server-side filtered & paginated product catalog
+              Server-side filtered & paginated product Catalogue
             </p>
           </div>
 
           {/* Interactive Main Category Filter Pills */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-            
+
             <button
               type="button"
               onClick={() => { setActiveCategoryFilter('all'); setActiveSubCategoryFilter('all'); }}
@@ -540,7 +540,7 @@ const ProductsSection = ({
             flexDirection: 'column',
             gap: '1.2rem',
           }}>
-            
+
             {/* Modal Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>
@@ -573,7 +573,7 @@ const ProductsSection = ({
               if (handleProductSubmit) await handleProductSubmit(e);
               fetchPageProducts();
             }} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-              
+
               {/* Row 1: Product Name & SKU */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>

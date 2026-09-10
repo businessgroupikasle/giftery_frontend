@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { 
-  FiBriefcase, 
-  FiLock, 
-  FiMail, 
-  FiEye, 
-  FiEyeOff, 
-  FiArrowRight, 
+import {
+  FiBriefcase,
+  FiLock,
+  FiMail,
+  FiEye,
+  FiEyeOff,
+  FiArrowRight,
   FiArrowLeft
 } from 'react-icons/fi';
 import useAuth from '@hooks/useAuth';
@@ -76,7 +76,7 @@ const AdminLogin = () => {
         <div className={styles.titleGroup}>
           <h1 className={styles.mainTitle}>Admin Authentication</h1>
           <p className={styles.subTitle}>
-            Access catalog management, customer orders, and store operations
+            Access Catalogue management, customer orders, and store operations
           </p>
         </div>
 

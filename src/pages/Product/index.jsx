@@ -5,7 +5,9 @@ import Layout from '@components/layout/Layout';
 import StarRating from '@components/product/StarRating';
 import Spinner from '@components/ui/Spinner';
 import { addToCart } from '@store/slices/cartSlice';
+import useRequireAuth from '@hooks/useRequireAuth';
 import useWishlist from '@hooks/useWishlist';
+import useAuth from '@hooks/useAuth';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { ROUTES } from '@constants/routes';
@@ -13,7 +15,7 @@ import { toast } from 'react-toastify';
 import { getImageUrl } from '@utils/imageUrl';
 import styles from './Product.module.css';
 
-/* ── Fallback Master Products Dataset (for rich catalog fallback by slug) ── */
+/* ── Fallback Master Products Dataset (for rich Catalogue fallback by slug) ── */
 const MASTER_PRODUCTS = [
   {
     id: 'cg-101',
@@ -119,6 +121,8 @@ const Product = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { addToWishlist } = useWishlist();
+  const requireAuth = useRequireAuth();
+  const { user } = useAuth();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -129,6 +133,9 @@ const Product = () => {
   const [uploadedLogo, setUploadedLogo] = useState(null);
   const [activeTab, setActiveTab] = useState('description');
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [showQuoteForm, setShowQuoteForm] = useState(false);
+  const [submittingQuote, setSubmittingQuote] = useState(false);
+  const [quoteForm, setQuoteForm] = useState({ name: '', email: '', phone: '', company: '', message: '' });
 
   useEffect(() => {
     setQuantityInput(String(quantity));
@@ -164,7 +171,7 @@ const Product = () => {
       }
     };
 
-    // Related Products from Live Catalog
+    // Related Products from Live Catalogue
     const fetchLiveRelated = async () => {
       try {
         const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=20');
@@ -353,7 +360,7 @@ const Product = () => {
               rows = Object.entries(parsed).map(([k, v]) => ({ key: formatKey(k), value: String(v) }));
             }
           }
-        } catch (e) {}
+        } catch (e) { }
       }
 
       if (rows.length === 0) {
@@ -473,6 +480,7 @@ const Product = () => {
   };
 
   const handleAddToCart = () => {
+    if (!requireAuth()) return;
     if (maxStock <= 0) {
       toast.error('Sorry, this product is currently out of stock!');
       return;
@@ -506,6 +514,7 @@ const Product = () => {
   };
 
   const handleBuyNow = () => {
+    if (!requireAuth()) return;
     if (maxStock <= 0) {
       toast.error('Sorry, this product is currently out of stock!');
       return;
@@ -529,7 +538,50 @@ const Product = () => {
   };
 
   const handleRequestQuote = () => {
-    toast.success(`Quote request for ${name} submitted! Our team will contact you.`);
+    setQuoteForm({
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone && user.phone !== 'Not provided' ? user.phone.replace(/\D/g, '').slice(-10) : '',
+      company: user?.company || '',
+      message: '',
+    });
+    setShowQuoteForm(true);
+  };
+
+  const handleQuoteField = (field) => (event) => {
+    const value = field === 'phone' ? event.target.value.replace(/\D/g, '').slice(0, 10) : event.target.value;
+    setQuoteForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleQuoteSubmit = async (event) => {
+    event.preventDefault();
+    const email = quoteForm.email.trim();
+    const phone = quoteForm.phone.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      toast.error('Please enter a valid 10-digit Indian mobile number.');
+      return;
+    }
+    setSubmittingQuote(true);
+    try {
+      await axiosInstance.post(ENDPOINTS.ENQUIRIES.SUBMIT, {
+        name: quoteForm.name.trim(),
+        email,
+        phone,
+        subject: `Product Quote: ${name}`,
+        message: `Product: ${name}\nProduct ID: ${id || slug}\nQuantity: ${quantity}\nCompany: ${quoteForm.company.trim() || 'Not provided'}\nRequirements: ${quoteForm.message.trim() || 'Please contact me with a quotation.'}`,
+      });
+      setShowQuoteForm(false);
+      window.dispatchEvent(new Event('enquiries_updated'));
+      toast.success(`Quote request for ${name} submitted! Our team will contact you.`);
+    } catch (err) {
+      toast.error(err.message || 'Unable to submit quote request. Please try again.');
+    } finally {
+      setSubmittingQuote(false);
+    }
   };
 
   return (
@@ -653,7 +705,6 @@ const Product = () => {
                   disabled={maxStock <= 0}
                   style={{ opacity: maxStock <= 0 ? 0.6 : 1, cursor: maxStock <= 0 ? 'not-allowed' : 'pointer' }}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                   <span>{maxStock <= 0 ? 'OUT OF STOCK' : 'ADD TO CART'}</span>
                 </button>
                 <button
@@ -668,7 +719,7 @@ const Product = () => {
                     cursor: maxStock <= 0 ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  <span>⚡ BUY NOW</span>
+                  <span>BUY NOW</span>
                 </button>
                 <button type="button" className={styles.requestQuoteOutlineBtn} onClick={handleRequestQuote}>
                   REQUEST QUOTE
@@ -786,7 +837,7 @@ const Product = () => {
                       <h4 className={styles.relName}>{rel.name}</h4>
                       <div className={styles.relPriceRow}>
                         <span className={styles.relPrice}>₹{rel.price?.toLocaleString('en-IN')}.00</span>
-                        <button type="button" className={styles.miniCartBtn} onClick={(e) => { e.stopPropagation(); dispatch(addToCart({ id: rel.id, name: rel.name, price: rel.price, image: rel.image, slug: rel.slug })); toast.success(`Added ${rel.name}`); }}>
+                        <button type="button" className={styles.miniCartBtn} onClick={(e) => { e.stopPropagation(); if (!requireAuth()) return; dispatch(addToCart({ id: rel.id, name: rel.name, price: rel.price, image: rel.image, slug: rel.slug })); toast.success(`Added ${rel.name}`); }}>
                           🛒
                         </button>
                       </div>
@@ -829,6 +880,25 @@ const Product = () => {
               </div>
             </div>
           </div>
+
+          {showQuoteForm && (
+            <div className={styles.quoteOverlay} onClick={() => !submittingQuote && setShowQuoteForm(false)}>
+              <div className={styles.quoteModal} onClick={(event) => event.stopPropagation()}>
+                <button type="button" className={styles.quoteClose} onClick={() => setShowQuoteForm(false)} aria-label="Close">×</button>
+                <span className={styles.quoteBadge}>REQUEST QUOTE</span>
+                <h2>{name}</h2>
+                <p>{user ? 'Your account details are filled in. Confirm and submit your requirements.' : 'Enter your details and our gifting team will contact you.'}</p>
+                <form className={styles.quoteForm} onSubmit={handleQuoteSubmit}>
+                  <label>Full Name<input required value={quoteForm.name} onChange={handleQuoteField('name')} placeholder="Enter your name" /></label>
+                  <label>Email Address<input required type="email" value={quoteForm.email} onChange={handleQuoteField('email')} placeholder="name@company.com" /></label>
+                  <label>Phone Number<input required type="tel" inputMode="numeric" minLength={10} maxLength={10} pattern="[6-9][0-9]{9}" value={quoteForm.phone} onChange={handleQuoteField('phone')} placeholder="e.g. 9876543210" /></label>
+                  <label>Company Name <span>(Optional)</span><input value={quoteForm.company} onChange={handleQuoteField('company')} placeholder="Enter company name" /></label>
+                  <label>Requirements <span>(Optional)</span><textarea rows="3" value={quoteForm.message} onChange={handleQuoteField('message')} placeholder="Customization, delivery date, etc." /></label>
+                  <button type="submit" disabled={submittingQuote}>{submittingQuote ? 'Submitting...' : 'Submit Quote Request'}</button>
+                </form>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

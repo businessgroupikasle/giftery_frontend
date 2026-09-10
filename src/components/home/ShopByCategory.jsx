@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
-  FiShoppingCart, 
   FiShield, 
   FiTag, 
   FiPackage, 
@@ -24,6 +23,7 @@ import { addItem } from '@store/slices/cartSlice';
 import { addToWishlistAlias, removeFromWishlistAlias, selectWishlistItems } from '@store/slices/wishlistSlice';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
+import useRequireAuth from '@hooks/useRequireAuth';
 import styles from './ShopByCategory.module.css';
 
 const filterCategories = [
@@ -101,6 +101,7 @@ const sampleProducts = [
 const ShopByCategory = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const requireAuth = useRequireAuth();
   const [activeFilter, setActiveFilter] = useState('featured');
   const [productsList, setProductsList] = useState([]);
   const filterPillsRef = useRef(null);
@@ -190,6 +191,7 @@ const ShopByCategory = () => {
   const handleAddToCart = (e, product) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!requireAuth()) return;
     const targetId = String(product.id || product.slug || `prod-${Date.now()}`);
     const imgUrl = Array.isArray(product.images) && product.images.length > 0
       ? product.images[0]
@@ -342,7 +344,7 @@ const ShopByCategory = () => {
                     onClick={(e) => handleAddToCart(e, product)}
                     className={styles.addToCartBtn}
                   >
-                    <FiShoppingCart style={{ marginRight: '6px' }} /> Add to Cart
+                    Add to Cart
                   </button>
                 </div>
               </div>

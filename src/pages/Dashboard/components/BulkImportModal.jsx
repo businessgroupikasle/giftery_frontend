@@ -238,7 +238,7 @@ const BulkImportModal = ({ isOpen = true, onClose, categories = [], onImportSucc
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        
+
         {/* Header */}
         <div className={styles.modalHeader}>
           <div>
@@ -256,7 +256,7 @@ const BulkImportModal = ({ isOpen = true, onClose, categories = [], onImportSucc
 
         {/* Body */}
         <div className={styles.modalBody}>
-          
+
           {/* Post-Import Success Summary Screen */}
           {importSummary ? (
             <div style={{ padding: '2rem 1rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
@@ -268,7 +268,7 @@ const BulkImportModal = ({ isOpen = true, onClose, categories = [], onImportSucc
                   Bulk Import Completed
                 </h3>
                 <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.9rem', color: '#64748b' }}>
-                  Your product catalog has been updated in PostgreSQL database.
+                  Your product Catalogue has been updated in PostgreSQL database.
                 </p>
               </div>
 

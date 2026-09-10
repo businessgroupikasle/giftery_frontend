@@ -95,13 +95,14 @@ export const removeFromWishlistAsync = createAsyncThunk(
 export const clearWishlistAsync = createAsyncThunk(
   'wishlist/clearWishlistAsync',
   async (_, { dispatch, rejectWithValue }) => {
-    dispatch(wishlistSlice.actions.clearWishlist());
-    if (getToken()) {
-      try {
+    try {
+      if (getToken()) {
         await axiosInstance.delete(ENDPOINTS.WISHLIST.CLEAR);
-      } catch (err) {
-        console.warn('Backend wishlist sync error on clear:', err.message);
       }
+      dispatch(wishlistSlice.actions.clearWishlist());
+      return true;
+    } catch (err) {
+      return rejectWithValue(err.message || 'Failed to clear wishlist');
     }
   }
 );

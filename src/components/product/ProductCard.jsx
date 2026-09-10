@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '@store/slices/cartSlice';
 import { selectIsWishlisted } from '@store/slices/wishlistSlice';
 import useWishlist from '@hooks/useWishlist';
+import useRequireAuth from '@hooks/useRequireAuth';
 import StarRating from './StarRating';
 import { formatCurrency } from '@utils/formatters';
 import { getProductThumbnail } from '@utils/imageUrl';
@@ -17,6 +18,7 @@ const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { addToWishlist, removeFromWishlist } = useWishlist();
+  const requireAuth = useRequireAuth();
 
   const {
     id, name, slug, price, comparePrice, rating = 4.8, _count,
@@ -32,6 +34,7 @@ const ProductCard = ({ product }) => {
   const handleBuyNow = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!requireAuth()) return;
     const buyNowItem = {
       id: id || `prod-${Date.now()}`,
       productId: id,
@@ -100,6 +103,7 @@ const ProductCard = ({ product }) => {
           <button
             className={styles.addToCartBtn}
             onClick={() => {
+              if (!requireAuth()) return;
               dispatch(addToCart({ id, name, price, image, slug }));
               toast.success(`Added "${name}" to cart!`);
             }}

@@ -10,12 +10,17 @@
   padding: 2rem 0 5rem;
   font-family: 'Inter', 'Segoe UI', sans-serif;
   color: #0f172a;
+  width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .container {
   max-width: 1240px;
   margin: 0 auto;
   padding: 0 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── 1. HEADER & FREE SHIPPING BANNER ─────────────────── */
@@ -700,18 +705,47 @@
 }
 
 @media (max-width: 640px) {
+  .container {
+    padding: 0 0.85rem;
+  }
+  .shippingBannerContent {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .progressBarWrapper {
+    flex: 1 1 100%;
+    order: 3;
+  }
+  .shippingMsgText {
+    white-space: normal;
+    font-size: 0.68rem;
+  }
   .tableHeaderRow {
     display: none;
   }
   .cartItemRow {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
+    grid-template-columns: 1fr auto;
+    gap: 0.65rem;
   }
-  .colPrice, .colQty, .colTotal, .colDelete {
+  .colProduct {
+    grid-column: 1 / -1;
+  }
+  .colPrice,
+  .colTotal {
+    display: none;
+  }
+  .colQty {
     text-align: left;
   }
+  .colDelete {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
   .featureHighlightsBanner {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+    padding: 1rem;
   }
   .suggestedGrid {
     grid-template-columns: repeat(2, 1fr);
@@ -720,39 +754,112 @@
 
 @media (max-width: 480px) {
   .cartPageWrapper {
-    padding: 1.5rem 0 4rem;
+    padding: 1rem 0 3.5rem;
+  }
+  .container {
+    padding: 0 0.65rem;
   }
   .pageTitle {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
+    flex-wrap: wrap;
+  }
+  .itemCountBadge {
+    font-size: 0.95rem;
+  }
+  .shippingBannerCard {
+    padding: 0.7rem;
+    margin-bottom: 1rem;
   }
   .cartItemRow {
-    padding: 0.85rem;
+    padding: 0.7rem;
     gap: 0.5rem;
   }
-  .itemImage {
-    width: 64px;
-    height: 64px;
+  .productFlex {
+    gap: 0.65rem;
+    min-width: 0;
+  }
+  .itemImgBox {
+    width: 62px;
+    height: 62px;
     border-radius: 8px;
   }
+  .itemDetails {
+    min-width: 0;
+  }
   .itemName {
-    font-size: 0.88rem;
+    font-size: 0.78rem;
+    overflow-wrap: anywhere;
   }
-  .qtyControl {
-    gap: 0.4rem;
-  }
-  .qtyBtn {
+  .qtyStepper button {
     width: 28px;
     height: 28px;
-    font-size: 0.9rem;
   }
-  .orderSummaryCard {
-    padding: 1.25rem 1rem;
+  .qtyStepper span {
+    width: 30px;
+    font-size: 0.78rem;
   }
-  .checkoutBtn {
-    padding: 0.9rem 1rem;
-    font-size: 0.9rem;
+  .bottomActionsRow,
+  .couponForm {
+    width: 100%;
+    max-width: none;
+  }
+  .clearCartBtn {
+    width: 100%;
+  }
+  .summaryCard {
+    padding: 1rem;
+  }
+  .summaryTitle {
+    font-size: 1.1rem;
+  }
+  .proceedCheckoutBtn,
+  .continueShoppingOutlineBtn {
+    padding: 0.72rem;
+    font-size: 0.72rem;
+  }
+  .featureCard {
+    min-width: 0;
+    gap: 0.45rem;
+  }
+  .featureIcon {
+    font-size: 1.05rem;
+  }
+  .featureCard strong {
+    font-size: 0.66rem;
+  }
+  .featureCard p {
+    font-size: 0.54rem;
+  }
+  .relatedHeaderRow {
+    gap: 0.5rem;
+  }
+  .relatedSectionTitle {
+    font-size: 1.05rem;
+  }
+  .viewAllLink {
+    flex-shrink: 0;
+    font-size: 0.65rem;
   }
   .suggestedGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+  .suggestedCard {
+    min-width: 0;
+    border-radius: 9px;
+  }
+  .suggestedInfo {
+    padding: 0.55rem;
+  }
+  .suggestedName {
+    font-size: 0.66rem;
+  }
+  .suggestedPrice {
+    font-size: 0.72rem;
+  }
+  .miniCartBtn {
+    width: 24px;
+    height: 24px;
+    font-size: 0.68rem;
   }
 }

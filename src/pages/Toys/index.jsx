@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import Layout from '@components/layout/Layout';
 import Pagination from '../../components/common/Pagination';
@@ -42,59 +42,59 @@ const SubCategoryIcon = ({ type }) => {
     case 'teens':
       return (
         <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
-          <circle cx="27" cy="27" r="18" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF"/>
-          <circle cx="27" cy="27" r="8" fill={bg} stroke={gold} strokeWidth="2"/>
-          <path d="M27 9V15M27 39V45M9 27H15M39 27H45" stroke={gold} strokeWidth="2.5" strokeLinecap="round"/>
+          <circle cx="27" cy="27" r="18" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF" />
+          <circle cx="27" cy="27" r="8" fill={bg} stroke={gold} strokeWidth="2" />
+          <path d="M27 9V15M27 39V45M9 27H15M39 27H45" stroke={gold} strokeWidth="2.5" strokeLinecap="round" />
         </svg>
       );
     case 'educational-toys':
       return (
         <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
-          <rect x="10" y="14" width="34" height="26" rx="4" fill="#FEF3C7" stroke={stroke} strokeWidth="2.5"/>
-          <path d="M18 20L27 34L36 20" stroke={gold} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <rect x="10" y="14" width="34" height="26" rx="4" fill="#FEF3C7" stroke={stroke} strokeWidth="2.5" />
+          <path d="M18 20L27 34L36 20" stroke={gold} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
     case 'rc-toys':
     case 'cars-bikes':
       return (
         <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
-          <path d="M14 38L22 14H32L40 38H14Z" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF"/>
-          <circle cx="27" cy="24" r="4" fill={gold}/>
-          <circle cx="22" cy="33" r="2.5" fill={stroke}/>
-          <circle cx="32" cy="33" r="2.5" fill={stroke}/>
+          <path d="M14 38L22 14H32L40 38H14Z" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF" />
+          <circle cx="27" cy="24" r="4" fill={gold} />
+          <circle cx="22" cy="33" r="2.5" fill={stroke} />
+          <circle cx="32" cy="33" r="2.5" fill={stroke} />
         </svg>
       );
     case 'building-blocks':
       return (
         <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
-          <rect x="12" y="12" width="14" height="14" rx="3" fill={bg} stroke={stroke} strokeWidth="2.5"/>
-          <rect x="28" y="12" width="14" height="14" rx="3" fill="#FFFFFF" stroke={gold} strokeWidth="2.5"/>
-          <rect x="12" y="28" width="14" height="14" rx="3" fill="#FFFFFF" stroke={gold} strokeWidth="2.5"/>
-          <rect x="28" y="28" width="14" height="14" rx="3" fill={bg} stroke={stroke} strokeWidth="2.5"/>
+          <rect x="12" y="12" width="14" height="14" rx="3" fill={bg} stroke={stroke} strokeWidth="2.5" />
+          <rect x="28" y="12" width="14" height="14" rx="3" fill="#FFFFFF" stroke={gold} strokeWidth="2.5" />
+          <rect x="12" y="28" width="14" height="14" rx="3" fill="#FFFFFF" stroke={gold} strokeWidth="2.5" />
+          <rect x="28" y="28" width="14" height="14" rx="3" fill={bg} stroke={stroke} strokeWidth="2.5" />
         </svg>
       );
     case 'soft-toys':
     case 'dolls':
       return (
         <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
-          <circle cx="27" cy="22" r="10" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF"/>
-          <circle cx="20" cy="12" r="4" fill={gold}/>
-          <circle cx="34" cy="12" r="4" fill={gold}/>
-          <path d="M17 32C17 38 22 42 27 42C32 42 37 38 37 32" fill={bg} stroke={stroke} strokeWidth="2.5"/>
+          <circle cx="27" cy="22" r="10" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF" />
+          <circle cx="20" cy="12" r="4" fill={gold} />
+          <circle cx="34" cy="12" r="4" fill={gold} />
+          <path d="M17 32C17 38 22 42 27 42C32 42 37 38 37 32" fill={bg} stroke={stroke} strokeWidth="2.5" />
         </svg>
       );
     case 'outdoor-toys':
       return (
         <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
-          <circle cx="27" cy="27" r="14" stroke={stroke} strokeWidth="2.5" fill={bg}/>
-          <path d="M27 10V14M27 40V44M10 27H14M40 27H44M15 15L18 18M36 36L39 39M15 39L18 36M36 18L39 15" stroke={gold} strokeWidth="2.5" strokeLinecap="round"/>
-          <circle cx="27" cy="27" r="5" fill={gold}/>
+          <circle cx="27" cy="27" r="14" stroke={stroke} strokeWidth="2.5" fill={bg} />
+          <path d="M27 10V14M27 40V44M10 27H14M40 27H44M15 15L18 18M36 36L39 39M15 39L18 36M36 18L39 15" stroke={gold} strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx="27" cy="27" r="5" fill={gold} />
         </svg>
       );
     default:
       return (
         <svg width="50" height="50" viewBox="0 0 54 54" fill="none">
-          <path d="M27 10L33 22H45L35 30L39 42L27 34L15 42L19 30L9 22H21L27 10Z" fill={bg} stroke={gold} strokeWidth="2.5" strokeLinejoin="round"/>
+          <path d="M27 10L33 22H45L35 30L39 42L27 34L15 42L19 30L9 22H21L27 10Z" fill={bg} stroke={gold} strokeWidth="2.5" strokeLinejoin="round" />
         </svg>
       );
   }
@@ -129,6 +129,8 @@ const TOYS_MOCK_PRODUCTS = [
 ];
 
 const Toys = () => {
+  const [searchParams] = useSearchParams();
+  const routeQuery = searchParams.get('q') || '';
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -137,7 +139,7 @@ const Toys = () => {
   const [categoriesList, setCategoriesList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
+  useEffect(() => {
     const fetchLiveProducts = async () => {
       setLoading(true);
       try {
@@ -252,7 +254,7 @@ const Toys = () => {
     return () => window.removeEventListener('products_updated', fetchLiveProducts);
   }, []);
 
-  // Base raw products catalog from PostgreSQL
+  // Base raw products Catalogue from PostgreSQL
   const products = liveProducts;
 
   // ── Dynamic Subcategories built from real DB products ──────────────
@@ -301,15 +303,21 @@ const Toys = () => {
   const categoriesForFilter = dynamicCategories;
 
   // Filter States
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(routeQuery);
   const [activeSubCategory, setActiveSubCategory] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [minPrice, setMinPrice] = useState('100');
+  const [minPrice, setMinPrice] = useState('0');
   const [maxPrice, setMaxPrice] = useState('5000');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [selectedAudience, setSelectedAudience] = useState([]);
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setSearchQuery(routeQuery);
+    setCurrentPage(1);
+  }, [routeQuery]);
 
   // Quote Modal State
   const [showQuoteModal, setShowQuoteModal] = useState(false);
@@ -371,6 +379,7 @@ const Toys = () => {
   };
 
   const handleApplyFilters = () => {
+    setMobileFiltersOpen(false);
     toast.success('Filters applied successfully!');
   };
 
@@ -378,7 +387,7 @@ const Toys = () => {
     setSearchQuery('');
     setSelectedCategory('all');
     setActiveSubCategory('all');
-    setMinPrice('100');
+    setMinPrice('0');
     setMaxPrice('5000');
     setSelectedAudience([]);
     toast.info('Filters cleared');
@@ -433,7 +442,7 @@ const Toys = () => {
         const pAudience = Array.isArray(prod.audience) ? prod.audience.map(a => a.toLowerCase()) : [];
         const pTags = Array.isArray(prod.tags) ? prod.tags.map(t => t.toLowerCase()) : [];
         const pStr = `${(prod.name || '').toLowerCase()} ${(prod.description || '').toLowerCase()}`;
-        
+
         // Match things like "Toddlers (2-4 Yrs)" to "toddler" or "2-4"
         const hasMatch = selectedAudience.some(aud => {
           const audLower = aud.toLowerCase();
@@ -486,8 +495,16 @@ const Toys = () => {
 
         {/* Main Workspace (Replicated Sidebar + Product Listing Grid) */}
         <div className={styles.workspace}>
+          <button
+            type="button"
+            className={`${styles.mobileFilterBtn} ${styles.mobileFilterTopBtn}`}
+            onClick={() => setMobileFiltersOpen((open) => !open)}
+            aria-expanded={mobileFiltersOpen}
+          >
+            Filter <span>{mobileFiltersOpen ? '−' : '+'}</span>
+          </button>
           {/* Left Filter Sidebar */}
-          <aside className={styles.filterSidebar}>
+          <aside className={`${styles.filterSidebar} ${mobileFiltersOpen ? styles.filterSidebarOpen : ''}`}>
             <div className={styles.filterHeader}>
               <h3>Filters</h3>
               <button onClick={handleClearAll} className={styles.clearAllBtn}>
@@ -626,7 +643,10 @@ const Toys = () => {
             {/* Top Toolbar */}
             <div className={styles.contentHeader}>
               <div className={styles.titleGroup}>
-                <h2>Toys & Games Catalog</h2>
+                <div className={styles.mobileTitleRow}>
+                  <h2>Toys & Games Catalogue</h2>
+                  <button type="button" className={styles.mobileFilterBtn} onClick={() => setMobileFiltersOpen((open) => !open)} aria-expanded={mobileFiltersOpen}>Filter <span>{mobileFiltersOpen ? '−' : '+'}</span></button>
+                </div>
                 <p>Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, displayProducts.length)} of {displayProducts.length} products</p>
               </div>
 
@@ -652,6 +672,8 @@ const Toys = () => {
                     </button>
                   )}
                 </div>
+
+                <button type="button" className={`${styles.mobileFilterBtn} ${styles.searchFilterBtn}`} onClick={() => setMobileFiltersOpen((open) => !open)} aria-expanded={mobileFiltersOpen}>Filter <span>{mobileFiltersOpen ? '−' : '+'}</span></button>
 
                 <div className={styles.sortSelectWrapper}>
                   <span>Sort by:</span>

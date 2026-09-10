@@ -252,3 +252,102 @@
     transform: rotate(360deg);
   }
 }
+
+@media (max-width: 480px) {
+  .overlay {
+    padding: 0.75rem;
+  }
+
+  .modalCard {
+    max-width: 320px;
+    border-radius: 15px;
+  }
+
+  .closeButton {
+    top: 0.65rem;
+    right: 0.65rem;
+    width: 26px;
+    height: 26px;
+  }
+
+  .content {
+    padding: 1.25rem 1rem 1rem;
+  }
+
+  .iconWrapper {
+    margin-bottom: 0.7rem;
+  }
+
+  .iconBadge {
+    width: 48px;
+    height: 48px;
+    border-width: 3px;
+  }
+
+  .iconBadge svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .pulseRing {
+    inset: -4px;
+  }
+
+  .title {
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .description {
+    font-size: 0.72rem;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+  }
+
+  .userCard {
+    gap: 0.6rem;
+    padding: 0.55rem 0.7rem;
+    margin-bottom: 0.85rem;
+    border-radius: 9px;
+  }
+
+  .userAvatar {
+    width: 30px;
+    height: 30px;
+    font-size: 0.75rem;
+  }
+
+  .userName {
+    font-size: 0.75rem;
+  }
+
+  .userEmail {
+    font-size: 0.64rem;
+  }
+
+  .actions {
+    gap: 0.5rem;
+  }
+
+  .cancelBtn,
+  .confirmBtn {
+    min-height: 36px;
+    padding: 0.55rem 0.65rem;
+    border-radius: 8px;
+    font-size: 0.72rem;
+  }
+
+  .confirmBtn {
+    gap: 0.35rem;
+  }
+
+  .confirmBtn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+  }
+}

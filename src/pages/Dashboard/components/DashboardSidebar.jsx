@@ -39,6 +39,7 @@ const sidebarItems = [
   {id: 'orders', label: 'Orders', icon: FiShoppingBag, hasCaret: true },
   { id: 'customers', label: 'Customers', icon: FiUsers, hasCaret: false },
   { id: 'enquiries', label: 'Enquiries', icon: FiHelpCircle, hasCaret: false },
+  { id: 'catalogue-requests', label: 'Catalogue Requests', icon: FiFileText, hasCaret: false },
   { id: 'coupons', label: 'Coupons & Offers', icon: FiPercent, hasCaret: false },
   { id: 'reports', label: 'Reports & Analytics', icon: FiBarChart2, hasCaret: false },
   { id: 'users-roles', label: 'Users & Roles', icon: FiShield, hasCaret: false },

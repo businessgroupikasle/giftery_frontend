@@ -40,31 +40,18 @@ const GiftLogoSvg = () => (
 );
 
 const DEFAULT_LOGO_URL = '/images/store-logo.png';
+const filteredPath = (basePath, query) => `${basePath}?q=${encodeURIComponent(query)}`;
 
 const corporateLinks = [
   { name: 'All Corporate Gifts', path: ROUTES.CORPORATE_GIFTS },
-  { name: 'Work Anniversary Gifts', path: ROUTES.CORPORATE_GIFTS },
-  { name: 'Diaries & Notebooks', path: ROUTES.CORPORATE_GIFTS },
-  { name: 'Apparel', path: ROUTES.CORPORATE_GIFTS },
-  { name: 'Drinkware', path: ROUTES.CORPORATE_GIFTS },
-  { name: 'Lifestyle', path: ROUTES.CORPORATE_GIFTS },
-  { name: 'Tech Accessories', path: ROUTES.CORPORATE_GIFTS },
-  { name: 'Bags & Travel', path: ROUTES.CORPORATE_GIFTS },
-  { name: 'Office Essentials', path: ROUTES.CORPORATE_GIFTS },
-  { name: 'Awards & Trophies', path: ROUTES.CORPORATE_GIFTS },
-  { name: 'Eco Friendly Gifts', path: ROUTES.CORPORATE_GIFTS },
+  ...['Work Anniversary Gifts', 'Diaries & Notebooks', 'Apparel', 'Drinkware', 'Lifestyle', 'Tech Accessories', 'Bags & Travel', 'Office Essentials', 'Awards & Trophies', 'Eco Friendly Gifts']
+    .map((name) => ({ name, path: filteredPath(ROUTES.CORPORATE_GIFTS, name) })),
 ];
 
 const toysLinks = [
   { name: 'All Toys', path: ROUTES.TOYS },
-  { name: 'Educational Toys', path: ROUTES.TOYS },
-  { name: 'Soft Toys', path: ROUTES.TOYS },
-  { name: 'Remote Control Toys', path: ROUTES.TOYS },
-  { name: 'Building Blocks', path: ROUTES.TOYS },
-  { name: 'Dolls & Doll Houses', path: ROUTES.TOYS },
-  { name: 'Ride On Toys', path: ROUTES.TOYS },
-  { name: 'Outdoor Toys', path: ROUTES.TOYS },
-  { name: 'Board Games', path: ROUTES.TOYS },
+  ...['Educational Toys', 'Soft Toys', 'Remote Control Toys', 'Building Blocks', 'Dolls & Doll Houses', 'Ride On Toys', 'Outdoor Toys', 'Board Games']
+    .map((name) => ({ name, path: filteredPath(ROUTES.TOYS, name) })),
 ];
 
 const Footer = () => {
@@ -102,7 +89,14 @@ const Footer = () => {
   const visibleToys = showMoreToys ? toysLinks : toysLinks.slice(0, 7);
 
   return (
-    <footer className={styles.footer}>
+    <footer
+      className={styles.footer}
+      onClickCapture={(event) => {
+        if (event.target.closest('a')?.getAttribute('href')?.startsWith('/')) {
+          window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        }
+      }}
+    >
       <div className={styles.container}>
         <div className={styles.grid}>
           {/* Column 1: Brand Header & Social */}
@@ -179,11 +173,9 @@ const Footer = () => {
             <h3 className={styles.colTitle}>PERSONALIZED GIFTS</h3>
             <ul className={styles.linkList}>
               <li><Link to={ROUTES.PERSONALIZED_GIFTS}><FaChevronRight className={styles.chevron} /> All Personalized Gifts</Link></li>
-              <li><Link to={ROUTES.PERSONALIZED_GIFTS}><FaChevronRight className={styles.chevron} /> Photo Frames</Link></li>
-              <li><Link to={ROUTES.PERSONALIZED_GIFTS}><FaChevronRight className={styles.chevron} /> Acrylic Frames</Link></li>
-              <li><Link to={ROUTES.PERSONALIZED_GIFTS}><FaChevronRight className={styles.chevron} /> Caricatures</Link></li>
-              <li><Link to={ROUTES.PERSONALIZED_GIFTS}><FaChevronRight className={styles.chevron} /> Clocks</Link></li>
-              <li><Link to={ROUTES.PERSONALIZED_GIFTS}><FaChevronRight className={styles.chevron} /> Wooden Photo Engraving</Link></li>
+              {['Photo Frames', 'Acrylic Frames', 'Caricatures', 'Clocks', 'Wooden Photo Engraving'].map((name) => (
+                <li key={name}><Link to={filteredPath(ROUTES.PERSONALIZED_GIFTS, name)}><FaChevronRight className={styles.chevron} /> {name}</Link></li>
+              ))}
             </ul>
           </div>
 
