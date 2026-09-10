@@ -771,6 +771,37 @@
 }
 
 @media (max-width: 480px) {
+  .topBanner {
+    min-height: 215px;
+  }
+  .topBannerInner {
+    min-height: 215px;
+    padding: 0.65rem;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+  .heroBgImage {
+    object-position: 62% center;
+  }
+  .heroOverlay {
+    background: linear-gradient(to right, rgba(30, 18, 8, 0.97) 0%, rgba(30, 18, 8, 0.86) 58%, rgba(30, 18, 8, 0.48) 100%);
+  }
+  .bannerMain {
+    max-width: 88%;
+  }
+  .breadcrumb {
+    gap: 0.3rem;
+    font-size: 0.55rem;
+    margin-bottom: 0.4rem;
+  }
+  .bannerTitle {
+    font-size: clamp(1rem, 5vw, 1.25rem);
+    margin-bottom: 0.4rem;
+  }
+  .bannerSubtitle {
+    font-size: 0.62rem;
+    line-height: 1.35;
+  }
   .productGrid {
     grid-template-columns: 1fr;
   }

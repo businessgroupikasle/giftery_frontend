@@ -143,21 +143,54 @@
 
 @media (max-width: 600px) {
   .processSection {
-    padding: 2.5rem 0;
+    padding: 1.25rem 0 1.4rem;
+  }
+  .processContainer {
+    padding: 0 0.5rem;
+  }
+  .processSubheading {
+    font-size: 0.5rem;
+    letter-spacing: 1.3px;
+    margin-bottom: 0.25rem;
   }
   .processTitle {
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
+    font-size: clamp(1rem, 5vw, 1.25rem);
+    white-space: nowrap;
   }
   .stepsRow {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.2rem;
   }
   .iconCircle {
-    width: 64px;
-    height: 64px;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 0.45rem;
+  }
+  .iconCircle svg {
+    width: 17px;
+    height: 17px;
+  }
+  .connectorLine {
+    display: flex;
+    top: 18px;
+    border-top-width: 1px;
+  }
+  .connectorDot {
+    width: 5px;
+    height: 5px;
+  }
+  .stepNumber {
+    margin-bottom: 0.1rem;
+    font-size: 0.58rem;
+  }
+  .stepTitle {
+    margin-bottom: 0;
+    font-size: 0.55rem;
+    line-height: 1.2;
   }
   .stepDesc {
-    max-width: 100%;
+    display: none;
   }
 }
 

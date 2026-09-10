@@ -114,3 +114,40 @@
     width: 60px;
   }
 }
+
+@media (max-width: 480px) {
+  .trustedSection {
+    padding: 1.15rem 0;
+  }
+
+  .trustedContainer {
+    padding: 0 0.65rem;
+  }
+
+  .trustedTitle {
+    max-width: 240px;
+    margin: 0 auto 0.75rem;
+    font-size: 0.68rem;
+    line-height: 1.3;
+  }
+
+  .tickerTrack {
+    gap: 1.5rem;
+    padding: 0.15rem 0;
+    animation-duration: 42s;
+  }
+
+  .logoItem {
+    padding: 0.2rem;
+  }
+
+  .logoImg {
+    height: 34px;
+    max-width: 100px;
+  }
+
+  .tickerFadeLeft,
+  .tickerFadeRight {
+    width: 28px;
+  }
+}

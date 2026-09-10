@@ -643,36 +643,99 @@
 }
 
 @media (max-width: 480px) {
+  .heroBanner {
+    min-height: 215px;
+  }
+
+  .heroBgImage {
+    object-position: 62% center;
+  }
+
+  .heroOverlay {
+    background: linear-gradient(
+      to right,
+      rgba(4, 5, 10, 0.96) 0%,
+      rgba(4, 5, 10, 0.86) 58%,
+      rgba(4, 5, 10, 0.48) 100%
+    );
+  }
+
   .heroContent {
-    padding: 2.5rem 1rem 2.5rem 1rem;
+    padding: 0.6rem 0.65rem 0.55rem;
+    min-height: 215px;
+    justify-content: center;
   }
 
   .heroTitle {
-    font-size: clamp(1.35rem, 7vw, 1.75rem);
+    font-size: clamp(0.98rem, 5vw, 1.2rem);
+    line-height: 1.08;
+    margin-bottom: 0.4rem;
   }
 
   .topSubheading {
-    font-size: 0.7rem;
-    padding: 0.35rem 0.75rem;
-    letter-spacing: 1.5px;
+    font-size: 0.5rem;
+    padding: 0.22rem 0.5rem;
+    letter-spacing: 1px;
+    margin-bottom: 0.4rem;
+  }
+
+  .topSubheading svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .heroDescription {
+    max-width: 88%;
+    font-size: 0.6rem;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
   }
 
   .heroCtaGroup {
-    gap: 0.65rem;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .primaryCta,
+  .secondaryCta {
+    width: auto;
+    flex: 1 1 0;
+    padding: 0.38rem 0.25rem;
+    font-size: 0.48rem;
+    letter-spacing: 0.65px;
   }
 
   .statsGrid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.25rem;
+    padding-top: 0.45rem;
   }
 
   .statItem {
-    gap: 0.5rem;
+    min-width: 0;
+    gap: 0.25rem;
   }
 
   .statIcon {
-    width: 34px;
-    height: 34px;
+    width: 21px;
+    height: 21px;
+  }
+
+  .statIcon svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .statVal {
+    font-size: 0.57rem;
+    white-space: nowrap;
+  }
+
+  .statLbl {
+    font-size: 0.48rem;
+    white-space: nowrap;
   }
 }
 
