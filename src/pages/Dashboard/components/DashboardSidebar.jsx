@@ -99,17 +99,6 @@ const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout, side
 
       {/* Bottom Profile Box with Logout */}
       <div className={styles.sidebarProfile}>
-        <div className={styles.profileInfo}>
-          <img
-            src={user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"}
-            alt="Admin Avatar"
-            className={styles.profileAvatar}
-          />
-          <div>
-            <h4 className={styles.profileName}>{user?.name || 'Admin'}</h4>
-            <p className={styles.profileRole}>{user?.role || 'Super Admin'}</p>
-          </div>
-        </div>
         <button
           type="button"
           className={styles.profileDots}
@@ -117,6 +106,7 @@ const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout, side
           title="Logout Super Admin"
         >
           <FiLogOut />
+          <span className={styles.logoutLabel}>Logout</span>
         </button>
       </div>
     </aside>
