@@ -8,7 +8,11 @@ import { ENDPOINTS } from '@api/endpoints';
 import axiosInstance from '@api/axiosInstance';
 import Maintenance from '@pages/Maintenance';
 import { getSocket } from '@api/socket';
+<<<<<<< HEAD
 import ScrollToTop from '@components/common/ScrollToTop';
+=======
+import { AppPageLoader } from '@components/ui/Spinner';
+>>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
 
 // ── Lazy-loaded Pages ─────────────────────────────────────────
 const Home        = lazy(() => import('@pages/Home'));
@@ -36,11 +40,7 @@ const NotFound    = lazy(() => import('@pages/NotFound'));
 const Dashboard   = lazy(() => import('@pages/Dashboard'));
 
 // ── Fallback ──────────────────────────────────────────────────
-const PageLoader = () => (
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-    <div className="spinner" />
-  </div>
-);
+const PageLoader = AppPageLoader;
 
 const App = () => {
   const { user } = useAuth();

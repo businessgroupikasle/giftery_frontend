@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
-  FiShoppingCart, 
   FiShield, 
   FiTag, 
   FiPackage, 
@@ -13,7 +12,9 @@ import {
   FiTrendingUp, 
   FiAward, 
   FiZap, 
-  FiGift 
+  FiGift,
+  FiChevronLeft,
+  FiChevronRight
 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { ROUTES } from '@constants/routes';
@@ -22,6 +23,7 @@ import { addItem } from '@store/slices/cartSlice';
 import { addToWishlistAlias, removeFromWishlistAlias, selectWishlistItems } from '@store/slices/wishlistSlice';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
+import useRequireAuth from '@hooks/useRequireAuth';
 import styles from './ShopByCategory.module.css';
 
 const filterCategories = [
@@ -99,8 +101,10 @@ const sampleProducts = [
 const ShopByCategory = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const requireAuth = useRequireAuth();
   const [activeFilter, setActiveFilter] = useState('featured');
   const [productsList, setProductsList] = useState([]);
+  const filterPillsRef = useRef(null);
   const wishlistItems = useSelector(selectWishlistItems);
   const { openCart } = useCartContext();
 
@@ -177,9 +181,17 @@ const ShopByCategory = () => {
 
   const displayProducts = getFilteredProducts();
 
+  const scrollFilters = (direction) => {
+    filterPillsRef.current?.scrollBy({
+      left: direction * 160,
+      behavior: 'smooth',
+    });
+  };
+
   const handleAddToCart = (e, product) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!requireAuth()) return;
     const targetId = String(product.id || product.slug || `prod-${Date.now()}`);
     const imgUrl = Array.isArray(product.images) && product.images.length > 0
       ? product.images[0]
@@ -244,17 +256,35 @@ const ShopByCategory = () => {
         </div>
 
         {/* Filter Pills Navigation */}
-        <div className={styles.filterPillsRow}>
-          {filterCategories.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => setActiveFilter(cat.id)}
-              className={`${styles.filterPill} ${activeFilter === cat.id ? styles.filterPillActive : ''}`}
-            >
-              <span>{cat.label}</span>
-            </button>
-          ))}
+        <div className={styles.filterNavigation}>
+          <button
+            type="button"
+            className={styles.filterNavButton}
+            onClick={() => scrollFilters(-1)}
+            aria-label="Show previous product filters"
+          >
+            <FiChevronLeft />
+          </button>
+          <div className={styles.filterPillsRow} ref={filterPillsRef}>
+            {filterCategories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveFilter(cat.id)}
+                className={`${styles.filterPill} ${activeFilter === cat.id ? styles.filterPillActive : ''}`}
+              >
+                <span>{cat.label}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className={styles.filterNavButton}
+            onClick={() => scrollFilters(1)}
+            aria-label="Show next product filters"
+          >
+            <FiChevronRight />
+          </button>
         </div>
 
         {/* Products Grid (6 Columns) */}
@@ -314,7 +344,7 @@ const ShopByCategory = () => {
                     onClick={(e) => handleAddToCart(e, product)}
                     className={styles.addToCartBtn}
                   >
-                    <FiShoppingCart style={{ marginRight: '6px' }} /> Add to Cart
+                    Add to Cart
                   </button>
                 </div>
               </div>

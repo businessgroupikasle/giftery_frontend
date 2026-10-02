@@ -32,62 +32,62 @@ const SubCategoryIcon = ({ type }) => {
     case 'photo-frames':
       return (
         <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
-          <path d="M12 42L16 12H42L38 42H12Z" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF"/>
-          <rect x="18" y="16" width="18" height="22" rx="2" stroke={stroke} strokeWidth="2" fill={goldLight}/>
-          <circle cx="27" cy="22" r="3" fill={gold}/>
-          <path d="M21 34L25 28L30 34" stroke={stroke} strokeWidth="2"/>
-          <line x1="12" y1="42" x2="8" y2="44" stroke={stroke} strokeWidth="2.5"/>
+          <path d="M12 42L16 12H42L38 42H12Z" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF" />
+          <rect x="18" y="16" width="18" height="22" rx="2" stroke={stroke} strokeWidth="2" fill={goldLight} />
+          <circle cx="27" cy="22" r="3" fill={gold} />
+          <path d="M21 34L25 28L30 34" stroke={stroke} strokeWidth="2" />
+          <line x1="12" y1="42" x2="8" y2="44" stroke={stroke} strokeWidth="2.5" />
         </svg>
       );
     case 'acrylic-frames':
     case 'acrylic-frame':
       return (
         <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
-          <rect x="10" y="10" width="34" height="34" rx="4" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF"/>
-          <circle cx="15" cy="15" r="2" fill={gold}/>
-          <circle cx="39" cy="15" r="2" fill={gold}/>
-          <circle cx="15" cy="39" r="2" fill={gold}/>
-          <circle cx="39" cy="39" r="2" fill={gold}/>
-          <rect x="18" y="18" width="18" height="18" rx="2" fill={goldLight} stroke={gold} strokeWidth="1.8"/>
-          <path d="M21 31L25 25L30 31" stroke={stroke} strokeWidth="2"/>
-          <circle cx="24" cy="22" r="2" fill={gold}/>
+          <rect x="10" y="10" width="34" height="34" rx="4" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF" />
+          <circle cx="15" cy="15" r="2" fill={gold} />
+          <circle cx="39" cy="15" r="2" fill={gold} />
+          <circle cx="15" cy="39" r="2" fill={gold} />
+          <circle cx="39" cy="39" r="2" fill={gold} />
+          <rect x="18" y="18" width="18" height="18" rx="2" fill={goldLight} stroke={gold} strokeWidth="1.8" />
+          <path d="M21 31L25 25L30 31" stroke={stroke} strokeWidth="2" />
+          <circle cx="24" cy="22" r="2" fill={gold} />
         </svg>
       );
     case 'caricatures':
     case 'caricature':
       return (
         <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
-          <rect x="12" y="8" width="30" height="38" rx="3" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF"/>
-          <circle cx="27" cy="22" r="7" fill={goldLight} stroke={stroke} strokeWidth="2"/>
-          <path d="M23 21C23 21 25 19 27 21" stroke={stroke} strokeWidth="1.8"/>
-          <path d="M24 25C25.5 27 28.5 27 30 25" stroke={gold} strokeWidth="2" strokeLinecap="round"/>
-          <path d="M19 38C19 32 23 30 27 30C31 30 35 32 35 38" fill={goldLight} stroke={stroke} strokeWidth="2"/>
+          <rect x="12" y="8" width="30" height="38" rx="3" stroke={stroke} strokeWidth="2.5" fill="#FFFFFF" />
+          <circle cx="27" cy="22" r="7" fill={goldLight} stroke={stroke} strokeWidth="2" />
+          <path d="M23 21C23 21 25 19 27 21" stroke={stroke} strokeWidth="1.8" />
+          <path d="M24 25C25.5 27 28.5 27 30 25" stroke={gold} strokeWidth="2" strokeLinecap="round" />
+          <path d="M19 38C19 32 23 30 27 30C31 30 35 32 35 38" fill={goldLight} stroke={stroke} strokeWidth="2" />
         </svg>
       );
     case 'clocks':
     case 'clock':
       return (
         <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
-          <circle cx="27" cy="27" r="18" stroke={stroke} strokeWidth="2.8" fill="#FFFFFF"/>
-          <circle cx="27" cy="27" r="14" fill={goldLight} stroke={gold} strokeWidth="1.5"/>
-          <line x1="27" y1="27" x2="27" y2="18" stroke={stroke} strokeWidth="2.5" strokeLinecap="round"/>
-          <line x1="27" y1="27" x2="34" y2="23" stroke={gold} strokeWidth="2.5" strokeLinecap="round"/>
-          <circle cx="27" cy="27" r="2" fill={stroke}/>
-          <line x1="27" y1="13" x2="27" y2="15" stroke={stroke} strokeWidth="2"/>
-          <line x1="27" y1="39" x2="27" y2="41" stroke={stroke} strokeWidth="2"/>
-          <line x1="13" y1="27" x2="15" y2="27" stroke={stroke} strokeWidth="2"/>
-          <line x1="39" y1="27" x2="41" y2="27" stroke={stroke} strokeWidth="2"/>
+          <circle cx="27" cy="27" r="18" stroke={stroke} strokeWidth="2.8" fill="#FFFFFF" />
+          <circle cx="27" cy="27" r="14" fill={goldLight} stroke={gold} strokeWidth="1.5" />
+          <line x1="27" y1="27" x2="27" y2="18" stroke={stroke} strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="27" y1="27" x2="34" y2="23" stroke={gold} strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx="27" cy="27" r="2" fill={stroke} />
+          <line x1="27" y1="13" x2="27" y2="15" stroke={stroke} strokeWidth="2" />
+          <line x1="27" y1="39" x2="27" y2="41" stroke={stroke} strokeWidth="2" />
+          <line x1="13" y1="27" x2="15" y2="27" stroke={stroke} strokeWidth="2" />
+          <line x1="39" y1="27" x2="41" y2="27" stroke={stroke} strokeWidth="2" />
         </svg>
       );
     case 'wooden-engraving':
       return (
         <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
-          <rect x="8" y="14" width="38" height="26" rx="3" fill="#FDE68A" stroke={stroke} strokeWidth="2.5"/>
-          <path d="M42 16V36C42 38 44 38 44 38V18L42 16Z" fill={gold} stroke={stroke} strokeWidth="1.5"/>
-          <circle cx="20" cy="24" r="5" fill={goldLight} stroke={stroke} strokeWidth="1.8"/>
-          <path d="M14 36C14 31 17 29 20 29C23 29 26 31 26 36" fill={goldLight} stroke={stroke} strokeWidth="1.8"/>
-          <circle cx="33" cy="24" r="5" fill={goldLight} stroke={stroke} strokeWidth="1.8"/>
-          <path d="M27 36C27 31 30 29 33 29C36 29 39 31 39 36" fill={goldLight} stroke={stroke} strokeWidth="1.8"/>
+          <rect x="8" y="14" width="38" height="26" rx="3" fill="#FDE68A" stroke={stroke} strokeWidth="2.5" />
+          <path d="M42 16V36C42 38 44 38 44 38V18L42 16Z" fill={gold} stroke={stroke} strokeWidth="1.5" />
+          <circle cx="20" cy="24" r="5" fill={goldLight} stroke={stroke} strokeWidth="1.8" />
+          <path d="M14 36C14 31 17 29 20 29C23 29 26 31 26 36" fill={goldLight} stroke={stroke} strokeWidth="1.8" />
+          <circle cx="33" cy="24" r="5" fill={goldLight} stroke={stroke} strokeWidth="1.8" />
+          <path d="M27 36C27 31 30 29 33 29C36 29 39 31 39 36" fill={goldLight} stroke={stroke} strokeWidth="1.8" />
         </svg>
       );
     default:
@@ -113,10 +113,12 @@ const OCCASIONS_DATA = [
 ];
 
 const PRODUCTS_LIST = [
-  
+
 ];
 
 const PersonalizedGifts = () => {
+  const [searchParams] = useSearchParams();
+  const routeQuery = searchParams.get('q') || '';
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const resultsRef = useRef(null);
@@ -127,9 +129,12 @@ const PersonalizedGifts = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+<<<<<<< HEAD
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     if (document.documentElement) document.documentElement.scrollTop = 0;
     if (document.body) document.body.scrollTop = 0;
+=======
+>>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
     const fetchLiveProducts = async () => {
       setLoading(true);
       try {
@@ -237,7 +242,7 @@ const PersonalizedGifts = () => {
     return () => window.removeEventListener('products_updated', fetchLiveProducts);
   }, []);
 
-  // Base raw products catalog from PostgreSQL
+  // Base raw products Catalogue from PostgreSQL
   const rawProducts = liveProducts;
 
   // ── Dynamic Subcategories built from real DB products ──────────────
@@ -323,19 +328,25 @@ const PersonalizedGifts = () => {
   const categoriesForFilter = dynamicCategories;
 
   // Filter States
+<<<<<<< HEAD
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get('category') || searchParams.get('subCategory');
 
   const [searchQuery, setSearchQuery] = useState('');
+=======
+  const [searchQuery, setSearchQuery] = useState(routeQuery);
+>>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
   const [activeSubCategory, setActiveSubCategory] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [minPrice, setMinPrice] = useState('100');
+  const [minPrice, setMinPrice] = useState('0');
   const [maxPrice, setMaxPrice] = useState('5000');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [selectedOccasions, setSelectedOccasions] = useState([]);
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
 
+<<<<<<< HEAD
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -401,6 +412,12 @@ const PersonalizedGifts = () => {
       setActiveSubCategory('all');
     }
   }, [categoryParam, categoriesForFilter]);
+=======
+  useEffect(() => {
+    setSearchQuery(routeQuery);
+    setCurrentPage(1);
+  }, [routeQuery]);
+>>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
 
   // Quote Modal State
   const [showQuoteModal, setShowQuoteModal] = useState(false);
@@ -450,6 +467,7 @@ const PersonalizedGifts = () => {
   };
 
   const handleApplyFilters = () => {
+    setMobileFiltersOpen(false);
     toast.success('Filters applied successfully!');
   };
 
@@ -457,7 +475,7 @@ const PersonalizedGifts = () => {
     setSearchQuery('');
     setSelectedCategory('all');
     setActiveSubCategory('all');
-    setMinPrice('100');
+    setMinPrice('0');
     setMaxPrice('5000');
     setSelectedOccasions([]);
     setCurrentPage(1);
@@ -524,7 +542,7 @@ const PersonalizedGifts = () => {
         const pOccasions = Array.isArray(prod.occasions) ? prod.occasions.map(o => o.toLowerCase()) : [];
         const pTags = Array.isArray(prod.tags) ? prod.tags.map(t => t.toLowerCase()) : [];
         const pStr = `${(prod.name || '').toLowerCase()} ${(prod.description || '').toLowerCase()}`;
-        
+
         const hasMatch = selectedOccasions.some(occ => {
           const occLower = occ.toLowerCase();
           return pOccasions.includes(occLower) || pTags.includes(occLower) || pStr.includes(occLower);
@@ -623,8 +641,16 @@ const PersonalizedGifts = () => {
 
         {/* Main Workspace */}
         <div className={styles.workspace}>
+          <button
+            type="button"
+            className={`${styles.mobileFilterBtn} ${styles.mobileFilterTopBtn}`}
+            onClick={() => setMobileFiltersOpen((open) => !open)}
+            aria-expanded={mobileFiltersOpen}
+          >
+            Filter <span>{mobileFiltersOpen ? '−' : '+'}</span>
+          </button>
           {/* Left Filter Sidebar */}
-          <aside className={styles.filterSidebar}>
+          <aside className={`${styles.filterSidebar} ${mobileFiltersOpen ? styles.filterSidebarOpen : ''}`}>
             <div className={styles.filterHeader}>
               <h3>Filters</h3>
               <button onClick={handleClearAll} className={styles.clearAllBtn}>
@@ -763,7 +789,14 @@ const PersonalizedGifts = () => {
             {/* Top Toolbar */}
             <div className={styles.contentHeader}>
               <div className={styles.titleGroup}>
+<<<<<<< HEAD
                 <h2>{selectedCategory !== 'all' ? (categoriesForFilter.find(c => c.id === selectedCategory || c.slug === selectedCategory)?.name || selectedCategory) : 'All Products'}</h2>
+=======
+                <div className={styles.mobileTitleRow}>
+                  <h2>All Products</h2>
+                  <button type="button" className={styles.mobileFilterBtn} onClick={() => setMobileFiltersOpen((open) => !open)} aria-expanded={mobileFiltersOpen}>Filter <span>{mobileFiltersOpen ? '−' : '+'}</span></button>
+                </div>
+>>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
                 <p>Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, displayProducts.length)} of {displayProducts.length} products</p>
               </div>
 
@@ -789,6 +822,8 @@ const PersonalizedGifts = () => {
                     </button>
                   )}
                 </div>
+
+                <button type="button" className={`${styles.mobileFilterBtn} ${styles.searchFilterBtn}`} onClick={() => setMobileFiltersOpen((open) => !open)} aria-expanded={mobileFiltersOpen}>Filter <span>{mobileFiltersOpen ? '−' : '+'}</span></button>
 
                 <div className={styles.sortSelectWrapper}>
                   <span>Sort by:</span>

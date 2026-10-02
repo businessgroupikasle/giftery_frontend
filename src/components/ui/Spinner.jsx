@@ -12,4 +12,16 @@ export const PageSpinner = () => (
   </div>
 );
 
+export const AppPageLoader = () => (
+  <div className={styles.appPageLoader} role="status" aria-label="Loading page">
+    <div className={styles.brandLoader} aria-hidden="true">
+      <span className={styles.loaderRing} />
+      <span className={styles.loaderIcon}>
+        <img src="/favicon.svg" alt="" />
+      </span>
+    </div>
+    <span className={styles.loaderText}>Loading...</span>
+  </div>
+);
+
 export default Spinner;

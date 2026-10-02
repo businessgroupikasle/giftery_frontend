@@ -219,7 +219,7 @@ const CategoriesSection = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      
+
       {/* Upper Stats Banner & Primary Actions Header */}
       <div className={styles.cardContainer} style={{ background: '#ffffff', padding: '1.25rem' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
@@ -228,7 +228,7 @@ const CategoriesSection = ({
               Store Categories Management
             </h3>
             <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: '#64748b' }}>
-              Organize store catalog with Parent Categories and Subcategories
+              Organize store Catalogue with Parent Categories and Subcategories
             </p>
           </div>
 
@@ -294,7 +294,7 @@ const CategoriesSection = ({
 
       {/* Interactive Controls Bar: Parent Category Tabs & View Switcher */}
       <div className={styles.cardContainer} style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        
+
         {/* Row 1: Parent Category Filter Tabs */}
         <div>
           <div style={{ marginBottom: '0.5rem' }}>
@@ -349,7 +349,7 @@ const CategoriesSection = ({
 
         {/* Row 2: Search Bar + View Mode Switcher Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', borderTop: '1px solid #f1f5f9', paddingTop: '0.85rem' }}>
-          
+
           {/* Search Box */}
           <div style={{ position: 'relative', minWidth: '240px', flex: '1', maxWidth: '380px' }}>
             <input

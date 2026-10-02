@@ -697,6 +697,12 @@
 }
 
 @media (max-width: 768px) {
+  .rightCol {
+    order: 1;
+  }
+  .leftCol {
+    order: 2;
+  }
   .stepperContainer {
     padding: 1rem 1rem;
   }
@@ -714,7 +720,50 @@
     padding: 1rem 0 4rem;
   }
   .container {
-    padding: 0 1rem;
+    padding: 0 0.75rem;
+  }
+  .checkoutMainGrid {
+    gap: 1rem;
+  }
+  .summarySidebarCard {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+  .sidebarTitle {
+    font-size: 1.05rem;
+  }
+  .sidebarImg {
+    width: 38px;
+    height: 38px;
+  }
+  .sidebarItemName,
+  .sidebarItemPrice {
+    font-size: 0.68rem;
+  }
+  .sidebarItemQty,
+  .sidebarRow {
+    font-size: 0.62rem;
+  }
+  .sidebarTotalRow {
+    font-size: 0.75rem;
+  }
+  .totalGoldText {
+    font-size: 1.05rem;
+  }
+  .cardBox {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+  .cardTitle {
+    font-size: 1rem;
+  }
+  .cardTitleRow {
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+  .stepBadge {
+    flex-shrink: 0;
+    font-size: 0.62rem;
   }
   .stepperContainer {
     padding: 0.75rem 0.75rem;

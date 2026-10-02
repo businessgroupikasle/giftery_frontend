@@ -925,11 +925,31 @@
   .splitRight {
     flex-direction: column;
     text-align: center;
+    justify-content: center;
+    min-height: 430px;
+    padding: 3rem 1.5rem;
+  }
+  .missionContent {
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
   }
   .missionVisual {
-    margin-left: 0;
-    margin-top: 2rem;
-    width: 220px;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+  }
+  .missionVisual::after {
+    background: linear-gradient(
+      to bottom,
+      rgba(11, 12, 14, 0.7) 0%,
+      rgba(11, 12, 14, 0.84) 48%,
+      rgba(11, 12, 14, 0.9) 100%
+    );
+  }
+  .bagImg {
+    object-position: center;
   }
   .teamRowSingle {
     grid-template-columns: repeat(3, 1fr);
@@ -937,16 +957,138 @@
 }
 
 @media (max-width: 640px) {
+<<<<<<< HEAD
   .storyCardsGrid,
+=======
+  .ctaSection {
+    position: relative;
+    overflow: hidden;
+    padding: 3rem 1rem;
+    background:
+      radial-gradient(circle at 50% 20%, rgba(229, 193, 88, 0.06), transparent 42%),
+      linear-gradient(145deg, #12141a 0%, #07080b 100%);
+  }
+  .ctaContainer {
+    max-width: 360px;
+    padding: 0;
+  }
+  .ctaTitle {
+    max-width: 280px;
+    margin: 0 auto 0.75rem;
+    font-size: 1.6rem;
+    line-height: 1.3;
+  }
+  .ctaDesc {
+    max-width: 320px;
+    margin: 0 auto 1.5rem;
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+  .ctaBtn {
+    width: 100%;
+    max-width: 300px;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 0.8rem 1rem;
+    font-size: 0.68rem;
+    letter-spacing: 1px;
+    border-radius: 8px;
+  }
+>>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
   .valuesGrid {
     grid-template-columns: 1fr;
   }
   .teamRowSingle {
+<<<<<<< HEAD
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+=======
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+  .teamCard {
+    min-width: 0;
+    height: 180px;
+    border-radius: 10px;
+  }
+  .numberBadge {
+    top: 0.4rem;
+    right: 0.4rem;
+    padding: 0.1rem 0.3rem;
+    font-size: 0.58rem;
+    border-radius: 4px;
+  }
+  .memberInfoOverlay {
+    padding: 1.5rem 0.45rem 0.55rem;
+  }
+  .memberName {
+    font-size: 0.68rem;
+    margin-bottom: 0.15rem;
+  }
+  .memberRole {
+    font-size: 0.52rem;
+  }
+  .storySection {
+    padding: 3.5rem 0;
+  }
+  .storyContainer {
+    padding: 0 1rem;
+    gap: 2rem;
+  }
+  .storyCardsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  .storyCard {
+    min-width: 0;
+    padding: 1rem 0.5rem;
+    border-radius: 12px;
+  }
+  .cardIconBadge {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 0.65rem;
+  }
+  .cardIconBadge svg {
+    width: 20px;
+    height: 20px;
+  }
+  .cardHighlight {
+    font-size: 1rem;
+  }
+  .cardTitle {
+    font-size: 0.72rem;
+    margin-bottom: 0.3rem;
+  }
+  .cardSubtitle {
+    font-size: 0.58rem;
+    line-height: 1.35;
+>>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
   }
   .processStepsRow {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem 0.75rem;
+    margin-bottom: 2rem;
+  }
+  .processStepItem {
+    min-width: 0;
+  }
+  .blackBadgeCircle {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 0.7rem;
+  }
+  .blackBadgeCircle svg {
+    width: 20px;
+    height: 20px;
+  }
+  .stepTitleBold {
+    font-size: 0.78rem;
+    margin-bottom: 0.25rem;
+  }
+  .stepDescLight {
+    font-size: 0.62rem;
+    line-height: 1.4;
   }
   .featuresRow {
     flex-direction: column;
@@ -955,26 +1097,122 @@
 }
 
 @media (max-width: 480px) {
+  .ctaSection {
+    padding: 2.5rem 1rem;
+  }
+  .ctaTitle {
+    max-width: 240px;
+    font-size: 1.35rem;
+    line-height: 1.28;
+  }
+  .ctaDesc {
+    max-width: 280px;
+    margin-bottom: 1.25rem;
+    font-size: 0.7rem;
+  }
+  .ctaBtn {
+    max-width: 270px;
+    padding: 0.72rem 0.8rem;
+    font-size: 0.6rem;
+  }
+  .teamSection {
+    padding: 3.5rem 0;
+  }
+  .teamContainer {
+    padding: 0 0.75rem;
+  }
+  .teamTitle {
+    margin-bottom: 2rem;
+  }
+  .teamRowSingle {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+  .teamCard {
+    height: 155px;
+    border-radius: 8px;
+  }
+  .memberName {
+    font-size: 0.6rem;
+  }
+  .memberRole {
+    font-size: 0.46rem;
+  }
+  .splitRight {
+    min-height: 390px;
+    padding: 2.5rem 1.1rem;
+  }
+  .missionSubheading {
+    font-size: 0.66rem;
+    letter-spacing: 1.7px;
+  }
+  .missionTitle {
+    font-size: 1.65rem;
+    margin-bottom: 1rem;
+  }
+  .missionDesc {
+    max-width: 300px;
+    margin: 0 auto 1.5rem;
+    font-size: 0.8rem;
+    line-height: 1.55;
+  }
+  .scriptSignature {
+    font-size: 1.4rem;
+  }
   .heroSection {
-    padding: 3rem 1rem 2rem;
-    min-height: auto;
+    padding: 0;
+    min-height: 215px;
+  }
+  .heroContainer {
+    min-height: 215px;
+    padding: 0.65rem;
+    gap: 0;
+  }
+  .heroBgImage {
+    object-position: 62% center;
+  }
+  .heroOverlay {
+    background: linear-gradient(to right, rgba(7, 8, 10, 0.97) 0%, rgba(7, 8, 10, 0.86) 58%, rgba(7, 8, 10, 0.48) 100%);
+  }
+  .topSubheading {
+    font-size: 0.5rem;
+    letter-spacing: 1px;
+    margin-bottom: 0.4rem;
   }
   .heroTitle {
-    font-size: clamp(1.5rem, 7vw, 2.25rem);
+    font-size: clamp(0.98rem, 5vw, 1.2rem);
+    line-height: 1.08;
+    margin-bottom: 0.4rem;
   }
-  .heroSubtitle {
-    font-size: 0.9rem;
+  .heroDescription {
+    max-width: 88%;
+    font-size: 0.6rem;
+    line-height: 1.3;
+    margin-bottom: 0.55rem;
   }
-  .heroCtaGroup {
-    flex-direction: column;
-    gap: 0.75rem;
-    align-items: stretch;
+  .featuresRow {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
   }
-  .heroPrimaryBtn,
-  .heroSecondaryBtn {
-    text-align: center;
-    justify-content: center;
-    width: 100%;
+  .featureItem {
+    min-width: 0;
+    gap: 0.3rem;
+  }
+  .featureIcon {
+    width: 22px;
+    height: 22px;
+  }
+  .featureIcon svg {
+    width: 12px;
+    height: 12px;
+  }
+  .featureTitle {
+    font-size: 0.56rem;
+  }
+  .featureDesc {
+    font-size: 0.46rem;
+    line-height: 1.25;
   }
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
@@ -985,6 +1223,9 @@
   }
   .statsValue {
     font-size: 1.75rem;
+  }
+  .storyCardsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .teamGrid {
     grid-template-columns: 1fr;

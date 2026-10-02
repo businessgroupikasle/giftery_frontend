@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Layout from '@components/layout/Layout';
-import { removeFromCart, updateQuantity, clearCart, addToCart } from '@store/slices/cartSlice';
+import { removeFromCart, updateQuantity, clearCartAsync, addToCart } from '@store/slices/cartSlice';
 import { formatCurrency } from '@utils/formatters';
 import { getImageUrl } from '@utils/imageUrl';
 import { ROUTES } from '@constants/routes';
@@ -128,11 +128,15 @@ const Cart = () => {
     toast.info(`Removed "${name}" from cart`);
   };
 
-  const handleClearCart = () => {
-    dispatch(clearCart());
-    setAppliedCoupon(null);
-    localStorage.removeItem('giftery_applied_coupon');
-    toast.info('Cart cleared');
+  const handleClearCart = async () => {
+    try {
+      await dispatch(clearCartAsync()).unwrap();
+      setAppliedCoupon(null);
+      localStorage.removeItem('giftery_applied_coupon');
+      toast.info('Cart cleared');
+    } catch (error) {
+      toast.error(error || 'Unable to clear cart. Please try again.');
+    }
   };
 
   const getSuggestedViewAllLink = () => {

@@ -90,10 +90,10 @@ const Categories = () => {
   const { slug } = useParams();
   const activeCategory = slug
     ? CATEGORY_DETAILS[slug] || {
-        title: slug.replace(/-/g, ' ').toUpperCase(),
-        subtitle: 'Browse curated items in this collection.',
-        banner: '/images/corporate_gifting_banner.png',
-      }
+      title: slug.replace(/-/g, ' ').toUpperCase(),
+      subtitle: 'Browse curated items in this collection.',
+      banner: '/images/corporate_gifting_banner.png',
+    }
     : null;
 
   const [liveProducts, setLiveProducts] = useState([]);
@@ -126,12 +126,12 @@ const Categories = () => {
     };
   }, []);
 
-    const products = slug
+  const products = slug
     ? liveProducts.filter(p => {
-        const pCatSlug = p.category?.slug || p.categorySlug;
-        const pCatParentSlug = p.category?.parent?.slug;
-        return pCatSlug === slug || pCatParentSlug === slug;
-      })
+      const pCatSlug = p.category?.slug || p.categorySlug;
+      const pCatParentSlug = p.category?.parent?.slug;
+      return pCatSlug === slug || pCatParentSlug === slug;
+    })
     : liveProducts;
 
   return (
@@ -199,7 +199,7 @@ const Categories = () => {
             <div className={styles.allProductsHeader}>
               <h2>All Available Products</h2>
               <Link to={ROUTES.SHOP} className={styles.viewShopBtn}>
-                Open Full Shop Catalog &rarr;
+                Open Full Shop Catalogue &rarr;
               </Link>
             </div>
             <ProductGrid products={products} loading={loading} />

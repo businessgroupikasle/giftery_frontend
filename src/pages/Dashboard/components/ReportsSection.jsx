@@ -57,7 +57,7 @@ const ReportsSection = ({
             </div>
             <div>
               <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '700', color: '#1e293b' }}>Products Inventory Report</h4>
-              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>Catalog of product SKUs, stock levels, pricing, and active status.</p>
+              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>Catalogue of product SKUs, stock levels, pricing, and active status.</p>
             </div>
             <button
               type="button"

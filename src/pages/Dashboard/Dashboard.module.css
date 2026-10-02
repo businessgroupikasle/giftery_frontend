@@ -155,13 +155,14 @@
   border-radius: 12px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
 }
 
 .profileInfo {
   display: flex;
   align-items: center;
   gap: 0.65rem;
+  min-width: 0;
 }
 
 .profileAvatar {
@@ -188,9 +189,14 @@
 }
 
 .profileDots {
-  background: none;
-  border: none;
-  color: #64748b;
+  flex-shrink: 0;
+  gap: 0.3rem;
+  min-height: 32px;
+  padding: 0.35rem 0.55rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  color: #f87171;
   cursor: pointer;
   font-size: 1.1rem;
   padding: 0.2rem;
@@ -198,10 +204,18 @@
   align-items: center;
   justify-content: center;
   transition: color 0.15s ease;
+  width: 100%;
 }
 
 .profileDots:hover {
-  color: #ef4444 !important;
+  color: #ffffff !important;
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.logoutLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
 }
 
 /* ── MAIN WORKSPACE CONTENT ───────────────────────────────────── */
@@ -332,8 +346,71 @@
     font-size: 0.75rem;
   }
   .sidebarProfile {
+    flex-direction: row;
+    gap: 0.6rem;
+    padding: 0.65rem 0.7rem;
+  }
+  .profileInfo {
+    flex: 1;
+  }
+  .profileDots {
+    min-height: 30px;
+    padding: 0.3rem 0.45rem;
+  }
+  .logoutLabel {
+    font-size: 0.62rem;
+  }
+}
+
+/* Mobile dashboard KPI summary: 3 columns x 2 rows. */
+@media (max-width: 640px) {
+  .kpiGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .kpiGrid .kpiCard {
+    min-width: 0;
+    gap: 0.3rem;
+    padding: 0.5rem 0.4rem;
+    border-radius: 9px;
+  }
+
+  .kpiCard .kpiHeader {
+    min-width: 0;
     flex-direction: column;
-    gap: 0.5rem;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .kpiCard .kpiIconCircle {
+    width: 24px;
+    height: 24px;
+    font-size: 0.72rem;
+  }
+
+  .kpiCard .kpiTitle {
+    width: 100%;
+    font-size: 0.52rem;
+    line-height: 1.2;
+    white-space: normal;
+  }
+
+  .kpiCard .kpiValue {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.82rem;
+  }
+
+  .kpiCard .kpiFooter {
+    gap: 0.15rem;
+    font-size: 0.48rem;
+    white-space: nowrap;
+  }
+
+  .kpiSubtext {
+    display: none;
   }
 }
 
@@ -917,15 +994,15 @@
 
 @media (max-width: 640px) {
   .kpiGrid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
   }
 }
 
 @media (max-width: 480px) {
   .kpiGrid {
-    grid-template-columns: 1fr;
-    gap: 0.65rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
   }
   .kpiCard {
     padding: 0.85rem 0.75rem;

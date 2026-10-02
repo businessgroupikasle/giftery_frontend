@@ -212,30 +212,69 @@
 
 @media (max-width: 480px) {
   .bulkSection {
-    padding: 0 1rem;
-    margin: 2.5rem auto;
+    padding: 0 0.6rem;
+    margin: 1.5rem auto;
   }
   .bulkCard {
-    padding: 2rem 1.25rem;
-    border-radius: 14px;
+    padding: 1rem 0.7rem;
+    border-radius: 12px;
+  }
+  .bulkCard::before {
+    border-radius: 12px;
+  }
+  .bulkLeft {
+    width: 100%;
   }
   .giftBoxImg {
     width: 240px;
     height: 190px;
   }
   .contactBtn {
-    width: 100%;
+    width: auto;
     justify-content: center;
-    padding: 1rem 1.5rem;
+    padding: 0.58rem 1rem;
+    border-radius: 8px;
+    font-size: 0.58rem;
+    letter-spacing: 0.8px;
+  }
+  .bulkRight {
+    margin-top: 0.7rem;
+  }
+  .benefitsGroup {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 0.3rem;
   }
   .benefitBadge {
+    flex-direction: column;
     justify-content: center;
+    gap: 0.25rem;
+  }
+  .benefitIcon {
+    width: 27px;
+    height: 27px;
+    border-radius: 6px;
+  }
+  .benefitIcon svg {
+    width: 14px;
+    height: 14px;
+  }
+  .benefitText {
+    max-width: 75px;
+    font-size: 0.5rem;
+    line-height: 1.2;
+    text-align: center;
   }
   .bulkTitle {
-    font-size: clamp(1.35rem, 6vw, 1.75rem);
+    margin-bottom: 0.3rem;
+    font-size: clamp(0.95rem, 4.7vw, 1.15rem);
+    line-height: 1.15;
   }
   .bulkSubtitle {
-    font-size: 0.9rem;
+    margin-bottom: 0.7rem;
+    font-size: 0.58rem;
+    line-height: 1.35;
   }
 }
 

@@ -9,7 +9,7 @@ import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { ROUTES } from '@constants/routes';
 import { addToCart } from '@store/slices/cartSlice';
-import { removeFromWishlist, clearWishlist } from '@store/slices/wishlistSlice';
+import { removeFromWishlist, clearWishlistAsync } from '@store/slices/wishlistSlice';
 import { formatCurrency } from '@utils/formatters';
 import { getImageUrl } from '@utils/imageUrl';
 import styles from './Wishlist.module.css';
@@ -53,7 +53,7 @@ const Wishlist = () => {
   const wishlistItems = Array.from(itemsMap.values());
   const itemCount = wishlistItems.length;
 
-  // Live Recommended Catalog items from store
+  // Live Recommended Catalogue items from store
   const [recommendedItems, setRecommendedItems] = useState([]);
 
   useEffect(() => {
@@ -68,7 +68,7 @@ const Wishlist = () => {
         else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
         else if (res?.products && Array.isArray(res.products)) extracted = res.products;
         apiProducts = extracted;
-      } catch (err) {}
+      } catch (err) { }
 
       if (apiProducts.length > 0) {
         // Exclude items already in wishlist
@@ -132,9 +132,14 @@ const Wishlist = () => {
     toast.info(`Removed "${name}" from wishlist`);
   };
 
-  const handleClearWishlist = () => {
-    dispatch(clearWishlist());
-    toast.info('Wishlist cleared');
+  const handleClearWishlist = async () => {
+    try {
+      await dispatch(clearWishlistAsync()).unwrap();
+      await refetchWishlist();
+      toast.info('Wishlist cleared');
+    } catch (error) {
+      toast.error(error || 'Unable to clear wishlist. Please try again.');
+    }
   };
 
   const handleAddRecommendedToWishlist = (item) => {
@@ -255,13 +260,13 @@ const Wishlist = () => {
                           className={styles.buyNowBtn}
                           onClick={() => handleBuyNow(item)}
                         >
-                          ⚡ BUY NOW
+                          BUY NOW
                         </button>
                         <button
                           className={styles.addToCartOutlineBtn}
                           onClick={() => handleAddToCart(item)}
                         >
-                          🛒 Add to Cart
+                          Add to Cart
                         </button>
                       </div>
                     </div>
@@ -271,9 +276,9 @@ const Wishlist = () => {
             )}
           </div>
 
-          {/* Recommended Catalog Items Section */}
+          {/* Recommended Catalogue Items Section */}
           {recommendedItems.length > 0 && (
-            <div style={{ marginTop: '2.5rem' }}>
+            <div className={styles.recommendedContainer}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Recommended For You</h3>
                 <Link to={ROUTES.SHOP} style={{ color: '#d99b26', fontWeight: 700, textDecoration: 'none', fontSize: '0.9rem' }}>View All →</Link>

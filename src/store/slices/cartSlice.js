@@ -147,14 +147,14 @@ export const removeFromCartAsync = createAsyncThunk('cart/removeFromCartAsync', 
 });
 
 export const clearCartAsync = createAsyncThunk('cart/clearCartAsync', async (_, { dispatch, rejectWithValue }) => {
-  dispatch(cartSlice.actions.clearCart());
-
-  if (getToken()) {
-    try {
+  try {
+    if (getToken()) {
       await cartService.clearCart();
-    } catch (err) {
-      console.warn('Backend cart sync error on clear:', err.message);
     }
+    dispatch(cartSlice.actions.clearCart());
+    return true;
+  } catch (err) {
+    return rejectWithValue(err.message || 'Failed to clear cart');
   }
 });
 

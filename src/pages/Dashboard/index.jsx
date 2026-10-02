@@ -23,10 +23,11 @@ import CouponsSection from './components/CouponsSection';
 import UsersRolesSection from './components/UsersRolesSection';
 import SettingsSection from './components/SettingsSection';
 import ReportsSection from './components/ReportsSection';
+import CatalogueRequestsSection from './components/CatalogueRequestsSection';
 const ADMIN_ROLES = [
   { id: 'role-1', name: 'SUPER_ADMIN', title: 'Super Admin', badgeColor: '#d99b26', description: 'Full unrestricted system access & store configuration', userCount: 1, permissions: ['Dashboard', 'Products', 'Categories', 'Orders', 'Quotes', 'Customers', 'Enquiries', 'Coupons', 'Users & Roles', 'Settings'] },
   { id: 'role-2', name: 'STORE_ADMIN', title: 'Store Manager', badgeColor: '#2563eb', description: 'Full access to products, categories, orders, quotes & customers', userCount: 1, permissions: ['Dashboard', 'Products', 'Categories', 'Orders', 'Quotes', 'Customers', 'Enquiries', 'Coupons'] },
-  { id: 'role-3', name: 'ORDER_MANAGER', title: 'Order & Inventory Manager', badgeColor: '#059669', description: 'Manage store orders, products, catalog & quote responses', userCount: 0, permissions: ['Dashboard', 'Products', 'Categories', 'Orders', 'Quotes'] },
+  { id: 'role-3', name: 'ORDER_MANAGER', title: 'Order & Inventory Manager', badgeColor: '#059669', description: 'Manage store orders, products, Catalogue & quote responses', userCount: 0, permissions: ['Dashboard', 'Products', 'Categories', 'Orders', 'Quotes'] },
   { id: 'role-4', name: 'SUPPORT_AGENT', title: 'Customer Support Agent', badgeColor: '#d97706', description: 'Manage customer enquiries, quote followups & support', userCount: 0, permissions: ['Dashboard', 'Quotes', 'Customers', 'Enquiries'] },
 ];
 
@@ -47,7 +48,7 @@ const Dashboard = () => {
         localStorage.removeItem('giftery_orders');
         localStorage.setItem('giftery_cleaned_mock_v2', 'true');
       }
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   // Sidebar Mobile Toggle State
@@ -60,7 +61,7 @@ const Dashboard = () => {
       if (hashTab) return hashTab;
       const storedTab = localStorage.getItem('admin_dashboard_active_tab');
       if (storedTab) return storedTab;
-    } catch (e) {}
+    } catch (e) { }
     return 'dashboard';
   });
 
@@ -69,14 +70,14 @@ const Dashboard = () => {
     try {
       localStorage.setItem('admin_dashboard_active_tab', tabId);
       window.location.hash = tabId;
-    } catch (e) {}
+    } catch (e) { }
   };
 
   useEffect(() => {
     try {
       localStorage.setItem('admin_dashboard_active_tab', activeTab);
       window.location.hash = activeTab;
-    } catch (e) {}
+    } catch (e) { }
   }, [activeTab]);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -107,7 +108,7 @@ const Dashboard = () => {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch (e) {}
+    } catch (e) { }
     if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') {
       return [{
         id: user.id || 'adm-01',
@@ -218,7 +219,7 @@ const Dashboard = () => {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) localUsers = parsed;
       }
-    } catch (e) {}
+    } catch (e) { }
 
     const map = new Map();
     localUsers.forEach(lu => map.set(lu.email, lu));
@@ -236,7 +237,7 @@ const Dashboard = () => {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch (e) {}
+    } catch (e) { }
     return [];
   });
 
@@ -259,7 +260,7 @@ const Dashboard = () => {
     try {
       const stored = localStorage.getItem('store_basic_settings');
       if (stored) return JSON.parse(stored);
-    } catch (e) {}
+    } catch (e) { }
     return {
       storeName: 'GIFTERYS',
       storeTagline: 'PREMIUM GIFTS, LASTING IMPRESSIONS',
@@ -417,7 +418,7 @@ const Dashboard = () => {
       if (dateStr) {
         try {
           formattedDate = new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-        } catch (e) {}
+        } catch (e) { }
       }
 
       const itemsArr = Array.isArray(o.items) ? o.items : [];
@@ -733,7 +734,7 @@ const Dashboard = () => {
           try {
             const parsed = JSON.parse(trimmed);
             if (Array.isArray(parsed)) return parsed.map((s) => String(s).trim()).filter(Boolean);
-          } catch (err) {}
+          } catch (err) { }
         }
         if (trimmed.includes('|||')) {
           return trimmed.split('|||').map((s) => s.trim()).filter(Boolean);
@@ -1140,6 +1141,7 @@ const Dashboard = () => {
                 {activeTab === 'corporate-quotes' && 'Corporate Gift Quote Requests'}
                 {activeTab === 'customers' && 'Customers & Registered Users'}
                 {activeTab === 'enquiries' && 'Customer Enquiries & Contact Messages'}
+                {activeTab === 'catalogue-requests' && 'Catalogue Download Requests'}
                 {activeTab === 'coupons' && 'Coupons & Promotional Offers'}
                 {activeTab === 'reports' && 'Store Analytics & Downloadable Reports'}
                 {activeTab === 'users-roles' && 'Users & Roles Access Control'}
@@ -1284,6 +1286,13 @@ const Dashboard = () => {
 
           {activeTab === 'enquiries' && (
             <EnquiriesSection
+              enquiriesList={enquiriesList}
+              handleUpdateEnquiryStatus={handleUpdateEnquiryStatus}
+            />
+          )}
+
+          {activeTab === 'catalogue-requests' && (
+            <CatalogueRequestsSection
               enquiriesList={enquiriesList}
               handleUpdateEnquiryStatus={handleUpdateEnquiryStatus}
             />
@@ -1514,7 +1523,7 @@ const Dashboard = () => {
             </h3>
 
             <p style={{ margin: '0 0 1.6rem 0', fontSize: '0.9rem', color: '#475569', lineHeight: '1.6' }}>
-              Delete <strong style={{ color: '#0f172a' }}>"{deleteConfirmModal.name}"</strong>? This action cannot be undone and will permanently remove this {deleteConfirmModal.type} from the store catalog.
+              Delete <strong style={{ color: '#0f172a' }}>"{deleteConfirmModal.name}"</strong>? This action cannot be undone and will permanently remove this {deleteConfirmModal.type} from the store Catalogue.
             </p>
 
             <div style={{ display: 'flex', gap: '0.85rem', justifyContent: 'center' }}>

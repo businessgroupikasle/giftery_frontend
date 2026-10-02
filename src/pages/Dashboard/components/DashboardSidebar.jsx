@@ -39,6 +39,7 @@ const sidebarItems = [
   {id: 'orders', label: 'Orders', icon: FiShoppingBag, hasCaret: true },
   { id: 'customers', label: 'Customers', icon: FiUsers, hasCaret: false },
   { id: 'enquiries', label: 'Enquiries', icon: FiHelpCircle, hasCaret: false },
+  { id: 'catalogue-requests', label: 'Catalogue Requests', icon: FiFileText, hasCaret: false },
   { id: 'coupons', label: 'Coupons & Offers', icon: FiPercent, hasCaret: false },
   { id: 'reports', label: 'Reports & Analytics', icon: FiBarChart2, hasCaret: false },
   { id: 'users-roles', label: 'Users & Roles', icon: FiShield, hasCaret: false },
@@ -98,17 +99,6 @@ const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout, side
 
       {/* Bottom Profile Box with Logout */}
       <div className={styles.sidebarProfile}>
-        <div className={styles.profileInfo}>
-          <img
-            src={user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"}
-            alt="Admin Avatar"
-            className={styles.profileAvatar}
-          />
-          <div>
-            <h4 className={styles.profileName}>{user?.name || 'Admin'}</h4>
-            <p className={styles.profileRole}>{user?.role || 'Super Admin'}</p>
-          </div>
-        </div>
         <button
           type="button"
           className={styles.profileDots}
@@ -116,6 +106,7 @@ const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout, side
           title="Logout Super Admin"
         >
           <FiLogOut />
+          <span className={styles.logoutLabel}>Logout</span>
         </button>
       </div>
     </aside>

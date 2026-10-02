@@ -323,13 +323,129 @@
 }
 
 @media (max-width: 480px) {
+  .footer {
+    padding: 1.5rem 0 0.8rem;
+  }
+
+  .container {
+    padding: 0 0.75rem;
+  }
+
   .grid {
-    grid-template-columns: 1fr;
-    gap: 1.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem 0.75rem;
+  }
+
+  .brandCol {
+    grid-column: 1 / -1;
+    align-items: center;
+    text-align: center;
+  }
+
+  .brandLink img {
+    height: 52px !important;
+    max-width: 220px !important;
+  }
+
+  .brandDescription {
+    max-width: 280px;
+    margin-top: 0.55rem;
+    font-size: 0.64rem;
+    line-height: 1.4;
+  }
+
+  .socialIcons {
+    gap: 7px;
+    margin-top: 0.65rem;
+  }
+
+  .socialBtn {
+    width: 28px;
+    height: 28px;
+    font-size: 10px;
+  }
+
+  .col {
+    min-width: 0;
+  }
+
+  .colTitle {
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.35rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.45px;
+  }
+
+  .colTitle::after {
+    width: 18px;
+  }
+
+  .linkList {
+    gap: 0.3rem;
+  }
+
+  .linkList a {
+    gap: 3px;
+    font-size: 0.61rem;
+    line-height: 1.3;
+  }
+
+  .chevron {
+    font-size: 6px;
+  }
+
+  .toggleMoreBtn {
+    margin-top: 0.4rem;
+    font-size: 0.58rem;
+  }
+
+  .infoList {
+    gap: 0.55rem;
+  }
+
+  .infoItem {
+    gap: 0.4rem;
+    font-size: 0.59rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .infoIcon {
+    margin-top: 1px;
+    font-size: 10px;
   }
 
   .bottomBar {
+    margin-top: 1.25rem;
+    padding-top: 0.75rem;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    gap: 0.6rem;
+    text-align: center;
+  }
+
+  .copyright {
+    font-size: 0.57rem;
+    line-height: 1.4;
+  }
+
+  .paymentSection {
+    justify-content: center;
+    gap: 0.4rem;
+  }
+
+  .weAcceptLabel {
+    font-size: 0.58rem;
+  }
+
+  .paymentMethods {
+    justify-content: center;
+    gap: 3px;
+  }
+
+  .payCard {
+    height: 18px;
+    padding: 0 5px;
+    font-size: 7px;
   }
 }
