@@ -259,6 +259,20 @@
   box-shadow: 0 0 0 3px rgba(217, 155, 38, 0.15);
 }
 
+.inputFieldError {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+}
+
+.fieldErrorText {
+  color: #f87171;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
+  font-weight: 500;
+  animation: fadeInShake 0.25s ease;
+}
+
 .eyeBtn {
   position: absolute;
   right: 0.85rem;
@@ -451,6 +465,52 @@
 
 .errorAlertClose:hover {
   background: rgba(239, 68, 68, 0.2);
+}
+
+.errorAlertActions {
+  margin-top: 0.45rem;
+}
+
+.alertCreateAccountLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #f59e0b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.alertCreateAccountLink:hover {
+  color: #fbbf24;
+}
+
+.formFooterPrompt {
+  text-align: center;
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: #94a3b8;
+}
+
+.switchAuthModeBtn {
+  background: none;
+  border: none;
+  color: #d99b26;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.82rem;
+  text-decoration: underline;
+  margin-left: 0.25rem;
+}
+
+.switchAuthModeBtn:hover {
+  color: #f59e0b;
 }
 
 @keyframes fadeInShake {

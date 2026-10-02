@@ -324,7 +324,15 @@ const ShopByCategory = () => {
 
         {/* View All Products CTA Button */}
         <div style={{ textAlign: 'center', marginTop: '2.5rem' }}>
-          <Link to={ROUTES.SHOP} className={styles.viewAllProductsBtn}>
+          <Link
+            to={ROUTES.SHOP}
+            className={styles.viewAllProductsBtn}
+            onClick={() => {
+              window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              if (document.documentElement) document.documentElement.scrollTop = 0;
+              if (document.body) document.body.scrollTop = 0;
+            }}
+          >
             View All Products <FiArrowRight style={{ marginLeft: '6px' }} />
           </Link>
         </div>

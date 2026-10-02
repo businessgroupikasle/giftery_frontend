@@ -121,17 +121,57 @@
   position: absolute;
   top: 100%;
   left: 0;
-  min-width: 210px;
+  min-width: 215px;
+  max-height: min(390px, calc(100vh - 90px));
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
   background: #14161d;
   border: 1px solid rgba(229, 193, 88, 0.25);
   border-radius: 8px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-  padding: 0.5rem 0;
+  padding: 0.5rem 0.2rem 0.5rem 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
   z-index: 1100;
   animation: fadeIn 0.18s ease-out;
+}
+
+/* Specific styling for Toys dropdown */
+.toysDropdownMenu {
+  min-width: 220px;
+  max-height: min(380px, calc(100vh - 90px));
+}
+
+/* Custom scrollbar for dropdown menus */
+.dropdownMenu::-webkit-scrollbar,
+.dropdownMenuWide::-webkit-scrollbar {
+  width: 5px;
+}
+
+.dropdownMenu::-webkit-scrollbar-track,
+.dropdownMenuWide::-webkit-scrollbar-track {
+  background: rgba(20, 22, 29, 0.7);
+  border-radius: 4px;
+}
+
+.dropdownMenu::-webkit-scrollbar-thumb,
+.dropdownMenuWide::-webkit-scrollbar-thumb {
+  background: rgba(229, 193, 88, 0.35);
+  border-radius: 4px;
+}
+
+.dropdownMenu::-webkit-scrollbar-thumb:hover,
+.dropdownMenuWide::-webkit-scrollbar-thumb:hover {
+  background: rgba(229, 193, 88, 0.65);
+}
+
+.dropdownMenu,
+.dropdownMenuWide {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(229, 193, 88, 0.35) rgba(20, 22, 29, 0.7);
 }
 
 @keyframes fadeIn {
@@ -151,6 +191,7 @@
   color: #d1d5db;
   text-decoration: none;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .dropdownMenu a:hover {
@@ -165,6 +206,11 @@
   top: 100%;
   left: -20px;
   min-width: 380px;
+  max-height: min(440px, calc(100vh - 90px));
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
   background: #14161d;
   border: 1px solid rgba(229, 193, 88, 0.3);
   border-radius: 10px;

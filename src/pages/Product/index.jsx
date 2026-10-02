@@ -152,6 +152,7 @@ const Product = () => {
             setQuantity(data.minOrder || 1);
             setLoading(false);
           }
+          fetchLiveRelated(data);
           return;
         }
       } catch (err) {
@@ -165,9 +166,9 @@ const Product = () => {
     };
 
     // Related Products from Live Catalog
-    const fetchLiveRelated = async () => {
+    const fetchLiveRelated = async (currProd) => {
       try {
-        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=20');
+        const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=60');
         let extracted = [];
         if (Array.isArray(res)) extracted = res;
         else if (res?.data && Array.isArray(res.data)) extracted = res.data;
@@ -177,8 +178,32 @@ const Product = () => {
 
         if (extracted.length > 0 && isMounted) {
           const normalizedSlug = slug ? slug.toLowerCase().trim() : '';
-          const filtered = extracted
-            .filter(p => p.slug !== normalizedSlug && p.id !== slug)
+          const currId = currProd?.id;
+          const currCatId = currProd?.categoryId || currProd?.category?.id;
+          const currCatSlug = (currProd?.category?.slug || currProd?.categorySlug || '').toLowerCase();
+          const currCatName = (currProd?.category?.name || currProd?.categoryName || '').toLowerCase();
+          const currSubSlug = (currProd?.subCategory?.slug || currProd?.subcategory || '').toLowerCase();
+
+          const candidates = extracted.filter(p => p.slug !== normalizedSlug && p.id !== slug && p.id !== currId && p.isActive !== false);
+
+          const sameCategory = candidates.filter(p => {
+            const pCatId = p.categoryId || p.category?.id;
+            const pCatSlug = (p.category?.slug || p.categorySlug || '').toLowerCase();
+            const pCatName = (p.category?.name || p.categoryName || '').toLowerCase();
+            const pSubSlug = (p.subCategory?.slug || p.subcategory || '').toLowerCase();
+
+            if (currCatId && pCatId && pCatId === currCatId) return true;
+            if (currCatSlug && pCatSlug && pCatSlug === currCatSlug) return true;
+            if (currCatName && pCatName && (pCatName.includes(currCatName) || currCatName.includes(pCatName))) return true;
+            if (currSubSlug && pSubSlug && pSubSlug === currSubSlug) return true;
+            return false;
+          });
+
+          const pool = sameCategory.length >= 4
+            ? sameCategory
+            : [...sameCategory, ...candidates.filter(p => !sameCategory.some(s => s.id === p.id))];
+
+          const filtered = pool
             .slice(0, 4)
             .map(p => ({
               id: p.id,
@@ -195,11 +220,9 @@ const Product = () => {
     };
 
     fetchProduct();
-    fetchLiveRelated();
 
     const handleUpdate = () => {
       fetchProduct();
-      fetchLiveRelated();
     };
 
     window.addEventListener('products_updated', handleUpdate);
@@ -262,6 +285,48 @@ const Product = () => {
     const lower = String(catName).toLowerCase();
     if (lower.includes('toy')) return ROUTES.TOYS;
     if (lower.includes('personal') || lower.includes('frame') || lower.includes('photo') || lower.includes('acrylic') || lower.includes('caricature')) return ROUTES.PERSONALIZED_GIFTS;
+    return ROUTES.CORPORATE_GIFTS;
+  };
+
+  const getRelatedViewAllLink = () => {
+    if (!product) return ROUTES.CORPORATE_GIFTS;
+
+    const rawCat = product.category;
+    const catName = (typeof rawCat === 'string' ? rawCat : (rawCat?.name || product.categoryName || '')).toLowerCase().trim();
+    const catSlug = (typeof rawCat === 'string' ? rawCat.toLowerCase().replace(/[^a-z0-9]+/g, '-') : (rawCat?.slug || product.categorySlug || '')).toLowerCase().trim();
+    const subCatObj = product.subCategory || product.subcategory;
+    const subCatName = typeof subCatObj === 'object' ? (subCatObj?.name || '') : (product.subcategory || product.subCategory || '');
+    const subCatSlug = typeof subCatObj === 'object' ? (subCatObj?.slug || '') : (product.subcategorySlug || product.subCategorySlug || '');
+    const targetSub = (subCatSlug || subCatName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+    // 1. Toys category & subcategories
+    const isToy = catSlug === 'toys' || catName.includes('toy') || targetSub.includes('toy') ||
+      ['0-2-years', '3-5-years', '6-8-years', '9-12-years', 'teens', 'educational-toys', 'remote-control-toys', 'rc-toys', 'soft-toys', 'building-blocks', 'dolls', 'cars-bikes', 'outdoor-toys'].some(s => targetSub.includes(s) || catSlug.includes(s));
+    if (isToy) {
+      return targetSub && targetSub !== 'all' && targetSub !== 'toys'
+        ? `${ROUTES.TOYS}?category=${encodeURIComponent(targetSub)}`
+        : ROUTES.TOYS;
+    }
+
+    // 2. Personalized Gifts category & subcategories
+    const isPersonalized = catSlug === 'personalized-gifts' || catName.includes('personal') ||
+      catName.includes('frame') || catName.includes('photo') || catName.includes('acrylic') || catName.includes('caricature') || catName.includes('clock') || catName.includes('engraving') ||
+      ['photo-frames', 'acrylic-frames', 'caricatures', 'clocks', 'wooden-photo-engraving'].some(s => targetSub.includes(s) || catSlug.includes(s));
+    if (isPersonalized) {
+      return targetSub && targetSub !== 'all' && targetSub !== 'personalized-gifts'
+        ? `${ROUTES.PERSONALIZED_GIFTS}?category=${encodeURIComponent(targetSub)}`
+        : ROUTES.PERSONALIZED_GIFTS;
+    }
+
+    // 3. Corporate Gifts / Specific subcategory
+    if (targetSub && targetSub !== 'all' && targetSub !== 'corporate-gifts' && targetSub !== 'gifts') {
+      return `${ROUTES.CORPORATE_GIFTS}?subCategory=${encodeURIComponent(targetSub)}`;
+    }
+
+    if (catSlug && catSlug !== 'corporate-gifts' && catSlug !== 'all' && catSlug !== 'gifts') {
+      return `${ROUTES.CORPORATE_GIFTS}?subCategory=${encodeURIComponent(catSlug)}`;
+    }
+
     return ROUTES.CORPORATE_GIFTS;
   };
 
@@ -773,7 +838,7 @@ const Product = () => {
             <div className={styles.relatedProductsColumn}>
               <div className={styles.relatedHeaderRow}>
                 <h3 className={styles.relatedTitle}>You May Also Like</h3>
-                <Link to={ROUTES.CORPORATE_GIFTS} className={styles.viewAllLink}>View All →</Link>
+                <Link to={getRelatedViewAllLink()} className={styles.viewAllLink}>View All →</Link>
               </div>
 
               <div className={styles.relatedGrid}>

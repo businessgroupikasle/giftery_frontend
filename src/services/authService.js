@@ -20,8 +20,8 @@ const authService = {
   /**
    * Request Email Verification OTP inline
    */
-  requestOTP: async ({ email, name }) => {
-    const response = await axiosInstance.post(ENDPOINTS.AUTH.REQUEST_OTP, { email, name });
+  requestOTP: async ({ email, name, phone }) => {
+    const response = await axiosInstance.post(ENDPOINTS.AUTH.REQUEST_OTP, { email, name, phone });
     return response.data || response;
   },
 

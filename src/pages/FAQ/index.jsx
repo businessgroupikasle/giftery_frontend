@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import Layout from '@components/layout/Layout';
 import { 
   FiSearch, 
   FiChevronDown, 
@@ -12,7 +13,8 @@ import {
   FiPhoneCall, 
   FiMail, 
   FiMessageSquare,
-  FiSmile
+  FiSmile,
+  FiArrowLeft
 } from 'react-icons/fi';
 import { ROUTES } from '@constants/routes';
 import styles from './FAQ.module.css';
@@ -159,13 +161,26 @@ const FAQ = () => {
   }, [activeCategory, searchQuery]);
 
   return (
-    <div className={styles.faqPage}>
-      {/* Hero Header */}
-      <section className={styles.heroSection}>
-        <div className={styles.heroContainer}>
-          <span className={styles.badgeLabel}>
-            <FiHelpCircle style={{ color: '#d99b26' }} /> Help Center &amp; Support
-          </span>
+    <Layout>
+      <div className={styles.faqPage}>
+        {/* Hero Header */}
+        <section className={styles.heroSection}>
+          <div className={styles.heroContainer}>
+            {/* Top Navigation Row: Back to Home + Breadcrumb */}
+            <div className={styles.navRow}>
+              <Link to={ROUTES.HOME} className={styles.backHomeBtn}>
+                <FiArrowLeft className={styles.backArrowIcon} /> Back to Home
+              </Link>
+              <nav className={styles.breadcrumb} aria-label="Breadcrumb">
+                <Link to={ROUTES.HOME} className={styles.breadcrumbLink}>Home</Link>
+                <span className={styles.breadcrumbSeparator}>/</span>
+                <span className={styles.breadcrumbActive}>FAQs</span>
+              </nav>
+            </div>
+
+            <span className={styles.badgeLabel}>
+              <FiHelpCircle style={{ color: '#d99b26' }} /> Help Center &amp; Support
+            </span>
           <h1 className={styles.heroTitle}>Frequently Asked Questions</h1>
           <p className={styles.heroSubtitle}>
             Everything you need to know about Giftery corporate hampers, custom logo branding, bulk pricing, delivery timelines, and returns.
@@ -306,7 +321,8 @@ const FAQ = () => {
         </div>
       </div>
     </div>
-  );
+  </Layout>
+);
 };
 
 export default FAQ;

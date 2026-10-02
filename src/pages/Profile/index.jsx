@@ -16,17 +16,26 @@ import { Link } from 'react-router-dom';
 import Layout from '@components/layout/Layout';
 import useAuth from '@hooks/useAuth';
 import axiosInstance from '@api/axiosInstance';
-import { isValidMobile } from '@utils/validation';
+import { isValidMobile, isValidFullName } from '@utils/validation';
 import styles from './Profile.module.css';
 
 const Profile = () => {
   const { user, updateUserState } = useAuth();
 
   // Personal Info Form
-  const [name, setName] = useState(user?.name || 'Gowtham');
-  const [email] = useState(user?.email || 'rilir77518@adsprite.com');
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone && user?.phone !== 'Not provided' ? user?.phone : '');
   const [savingProfile, setSavingProfile] = useState(false);
+
+  // Sync state when user object changes
+  useEffect(() => {
+    if (user) {
+      if (user.name) setName(user.name);
+      if (user.email) setEmail(user.email);
+      if (user.phone && user.phone !== 'Not provided') setPhone(user.phone);
+    }
+  }, [user]);
 
   // Change Password Form
   const [currentPassword, setCurrentPassword] = useState('');
@@ -53,6 +62,7 @@ const Profile = () => {
         const userData = res.data?.user || res.user || res;
         if (userData) {
           if (userData.name) setName(userData.name);
+          if (userData.email) setEmail(userData.email);
           if (userData.phone && userData.phone !== 'Not provided') setPhone(userData.phone);
         }
       } catch (err) {}
@@ -80,6 +90,10 @@ const Profile = () => {
       toast.error('Full name is required');
       return;
     }
+    if (!isValidFullName(name)) {
+      toast.error('Full Name should allow only valid alphabetic characters and spaces.');
+      return;
+    }
     if (phone && !isValidMobile(phone)) {
       toast.error('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9');
       return;
@@ -91,7 +105,7 @@ const Profile = () => {
       const updatedUser = res.data?.user || res.user || { ...user, name: name.trim(), phone: phone.trim() };
       
       if (updateUserState) updateUserState(updatedUser);
-      toast.success('Personal information saved successfully in Database!');
+      toast.success('Personal information saved successfully');
     } catch (err) {
       toast.error(err.message || 'Failed to update profile');
     } finally {

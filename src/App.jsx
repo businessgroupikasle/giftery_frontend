@@ -8,6 +8,7 @@ import { ENDPOINTS } from '@api/endpoints';
 import axiosInstance from '@api/axiosInstance';
 import Maintenance from '@pages/Maintenance';
 import { getSocket } from '@api/socket';
+import ScrollToTop from '@components/common/ScrollToTop';
 
 // ── Lazy-loaded Pages ─────────────────────────────────────────
 const Home        = lazy(() => import('@pages/Home'));
@@ -135,7 +136,9 @@ const App = () => {
   }
 
   return (
-    <Suspense fallback={<PageLoader />}>
+    <>
+      <ScrollToTop />
+      <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* Public */}
         <Route path={ROUTES.HOME}       element={<Home />} />
@@ -188,6 +191,7 @@ const App = () => {
         <Route path={ROUTES.NOT_FOUND} element={<NotFound />} />
       </Routes>
     </Suspense>
+    </>
   );
 };
 

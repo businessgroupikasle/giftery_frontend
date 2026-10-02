@@ -96,7 +96,15 @@ const TermsAndConditions = () => {
             <p className={styles.supportDesc}>
               Our corporate support team is here to assist you with any legal, order, or customization inquiries.
             </p>
-            <Link to={ROUTES.CONTACT} className={styles.supportBtn}>
+            <Link
+              to={ROUTES.CONTACT}
+              className={styles.supportBtn}
+              onClick={() => {
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                if (document.documentElement) document.documentElement.scrollTop = 0;
+                if (document.body) document.body.scrollTop = 0;
+              }}
+            >
               CONTACT OUR TEAM &rarr;
             </Link>
           </div>

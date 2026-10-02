@@ -9,7 +9,8 @@ import { ROUTES } from '@constants/routes';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { addressService } from '@services/addressService';
-import { isValidMobile, isValidPincode } from '@utils/validation';
+import { isValidMobile, isValidPincode, isValidFullName } from '@utils/validation';
+import { getStoredCoupons } from '@constants/coupons';
 import styles from './Checkout.module.css';
 
 const Checkout = () => {
@@ -135,6 +136,7 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay' | 'cod' | 'card'
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderCompleted, setOrderCompleted] = useState(null);
+  const [paymentError, setPaymentError] = useState(null);
 
   const [storeSettings] = useState(() => {
     try {
@@ -150,13 +152,91 @@ const Checkout = () => {
     return { freeShippingThreshold: 5000, standardShippingFee: 99 };
   });
 
-  const [appliedCoupon] = useState(() => {
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(() => {
     try {
       const stored = localStorage.getItem('giftery_applied_coupon');
       if (stored) return JSON.parse(stored);
     } catch (e) {}
     return null;
   });
+
+  const [availableCoupons, setAvailableCoupons] = useState(() => getStoredCoupons());
+
+  useEffect(() => {
+    const handleCouponsUpdate = () => {
+      setAvailableCoupons(getStoredCoupons());
+    };
+    window.addEventListener('admin_coupons_updated', handleCouponsUpdate);
+    window.addEventListener('storage', handleCouponsUpdate);
+    return () => {
+      window.removeEventListener('admin_coupons_updated', handleCouponsUpdate);
+      window.removeEventListener('storage', handleCouponsUpdate);
+    };
+  }, []);
+
+  const handleApplyCoupon = (e) => {
+    e.preventDefault();
+    if (!couponCode || !couponCode.trim()) {
+      toast.error('Please enter a coupon code');
+      return;
+    }
+
+    const trimmedInput = couponCode.trim().toUpperCase();
+
+    // Query live list combining fresh storage, current state, and canonical defaults
+    const freshCoupons = getStoredCoupons();
+    const candidateList = [...availableCoupons, ...freshCoupons];
+    const map = new Map();
+    candidateList.forEach((c) => {
+      if (c && c.code) map.set(c.code.toUpperCase(), c);
+    });
+    const allCoupons = Array.from(map.values());
+
+    const matched = allCoupons.find(
+      (c) => c.code.toUpperCase() === trimmedInput && String(c.status || 'Active').toUpperCase() === 'ACTIVE'
+    );
+
+    if (!matched) {
+      toast.error(`Invalid or expired coupon code "${couponCode}"`);
+      return;
+    }
+
+    let type = 'percent';
+    let val = 0;
+
+    if (matched.discount.includes('%')) {
+      type = 'percent';
+      val = parseFloat(matched.discount.replace(/[^0-9.]/g, '')) || 0;
+    } else {
+      type = 'fixed';
+      val = parseFloat(matched.discount.replace(/[^0-9.]/g, '')) || 0;
+    }
+
+    const newApplied = {
+      code: matched.code,
+      discountText: matched.discount,
+      type,
+      value: val,
+    };
+
+    setAppliedCoupon(newApplied);
+    setCouponCode('');
+    try {
+      localStorage.setItem('giftery_applied_coupon', JSON.stringify(newApplied));
+    } catch (err) {}
+
+    toast.success(`Coupon "${matched.code}" applied! Discount updated`);
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    try {
+      localStorage.removeItem('giftery_applied_coupon');
+    } catch (err) {}
+    toast.info('Coupon removed');
+  };
 
   // Totals
   const itemCount = cartItems.length;
@@ -241,6 +321,10 @@ const Checkout = () => {
       toast.error('Please complete all required address fields (*)');
       return;
     }
+    if (!isValidFullName(addressForm.fullName)) {
+      toast.error('Full Name should allow only valid alphabetic characters and spaces.');
+      return;
+    }
     if (!isValidMobile(addressForm.phone)) {
       toast.error('Please enter a valid 10-digit mobile number (e.g. 9876543210 or +91 9876543210)');
       return;
@@ -255,6 +339,7 @@ const Checkout = () => {
   // Complete Order Handler (Razorpay or COD)
   const handleCompleteOrder = async () => {
     setIsProcessing(true);
+    setPaymentError(null);
 
     const orderData = {
       orderId: `ORD-${Date.now().toString().slice(-6)}`,
@@ -293,14 +378,14 @@ const Checkout = () => {
         const razorpayOrderId = orderInfo?.orderId || `order_${Date.now()}`;
         const razorpayKey = orderInfo?.keyId || 'rzp_test_TLFIsTqKaVIKOY';
 
-        // 2. Trigger Razorpay SDK Popup
+        // 2. Trigger Razorpay SDK Popup with robust options
+        const cleanPhone = addressForm.phone ? addressForm.phone.replace(/[^0-9]/g, '').slice(-10) : '';
         const options = {
           key: razorpayKey,
-          amount: orderInfo?.amount || grandTotal * 100,
+          amount: Math.round(Number(orderInfo?.amount || grandTotal * 100)),
           currency: orderInfo?.currency || 'INR',
           name: 'GIFTERY Store',
           description: `Order #${orderData.orderId} - Corporate & Personalized Gifts`,
-          image: '/favicon.ico',
           order_id: razorpayOrderId,
           handler: async function (response) {
             try {
@@ -311,9 +396,14 @@ const Checkout = () => {
                 razorpay_signature: response.razorpay_signature || '',
               });
 
+              setIsProcessing(false);
+              setPaymentError(null);
               toast.success(`Payment Successful! Razorpay ID: ${response.razorpay_payment_id || 'pay_verified'}`);
               finishOrderSuccess({ ...orderData, paymentId: response.razorpay_payment_id });
             } catch (verErr) {
+              console.warn('Backend payment verification fallback:', verErr);
+              setIsProcessing(false);
+              setPaymentError(null);
               toast.success(`Payment Completed! Razorpay ID: ${response.razorpay_payment_id || 'pay_success'}`);
               finishOrderSuccess({ ...orderData, paymentId: response.razorpay_payment_id });
             }
@@ -321,32 +411,67 @@ const Checkout = () => {
           prefill: {
             name: addressForm.fullName,
             email: addressForm.email,
-            contact: addressForm.phone,
+            contact: cleanPhone,
           },
           theme: {
             color: '#1b4d2e',
           },
+          retry: {
+            enabled: true,
+            max_count: 3,
+          },
           modal: {
             ondismiss: function () {
               setIsProcessing(false);
-              toast.info('Payment cancelled');
             },
+            escape: true,
+            backdropclose: false,
           },
         };
 
         if (window.Razorpay) {
           const rzp = new window.Razorpay(options);
+
+          // Listen for Razorpay failure event to capture exact failure reason and allow retry
+          rzp.on('payment.failed', function (failureResponse) {
+            setIsProcessing(false);
+            const errObj = failureResponse?.error || {};
+            const failureReason =
+              errObj.description ||
+              errObj.reason ||
+              'Payment failed or was declined by the bank. Please retry or choose Cash on Delivery.';
+
+            setPaymentError({
+              title: 'Payment Failed',
+              message: failureReason,
+              code: errObj.code || 'PAYMENT_FAILED',
+              orderId: errObj.metadata?.order_id || razorpayOrderId,
+              paymentId: errObj.metadata?.payment_id,
+            });
+
+            toast.error(`Payment Failed: ${failureReason}`);
+          });
+
           rzp.open();
         } else {
-          simulatePaymentSuccess(orderData);
+          setIsProcessing(false);
+          const errMsg = 'Razorpay payment gateway failed to load. Please check your network or try Cash on Delivery.';
+          setPaymentError({ message: errMsg, code: 'SDK_NOT_LOADED' });
+          toast.error(errMsg);
         }
       } catch (err) {
-        console.warn('Backend Razorpay order endpoint fallback to test mode:', err.message);
-        simulatePaymentSuccess(orderData);
+        setIsProcessing(false);
+        const errMsg = err.response?.data?.message || err.message || 'Failed to initialize payment gateway';
+        setPaymentError({
+          message: errMsg,
+          code: 'ORDER_INIT_FAILED',
+        });
+        toast.error(`Payment error: ${errMsg}`);
       }
     } else {
       // COD or Card
       setTimeout(() => {
+        setIsProcessing(false);
         finishOrderSuccess(orderData);
       }, 1200);
     }
@@ -775,6 +900,73 @@ const Checkout = () => {
 
                   </div>
 
+{/* Payment Failure Card with Retry & Fallback Options */}
+                  {paymentError && (
+                    <div className={styles.paymentErrorCard}>
+                      <div className={styles.paymentErrorHeader}>
+                        <span className={styles.paymentErrorIcon}>⚠️</span>
+                        <div className={styles.paymentErrorTextGroup}>
+                          <strong className={styles.paymentErrorTitle}>Payment Failed</strong>
+                          <p className={styles.paymentErrorReason}>{paymentError.message}</p>
+                          {paymentError.code && (
+                            <span className={styles.paymentErrorCode}>Reason Code: {paymentError.code}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className={styles.paymentErrorActions}>
+                        <button
+                          type="button"
+                          className={styles.retryPaymentBtn}
+                          onClick={handleCompleteOrder}
+                        >
+                          🔄 Retry Payment
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.codFallbackBtn}
+                          onClick={() => {
+                            setPaymentMethod('cod');
+                            setPaymentError(null);
+                          }}
+                        >
+                          📦 Switch to Cash on Delivery (COD)
+                        </button>
+                        {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+                          <button
+                            type="button"
+                            className={styles.devSimulateBtn}
+                            onClick={() => {
+                              setPaymentError(null);
+                              setIsProcessing(true);
+                              simulatePaymentSuccess({
+                                orderId: `ORD-${Date.now().toString().slice(-6)}`,
+                                items: cartItems,
+                                totalAmount: grandTotal,
+                                shippingAddress: {
+                                  fullName: addressForm.fullName.trim(),
+                                  email: addressForm.email.trim(),
+                                  phone: addressForm.phone.trim(),
+                                  street: [addressForm.addressLine1.trim(), addressForm.landmark?.trim()].filter(Boolean).join(', '),
+                                  addressLine1: addressForm.addressLine1.trim(),
+                                  landmark: addressForm.landmark ? addressForm.landmark.trim() : '',
+                                  city: addressForm.city.trim(),
+                                  state: addressForm.state.trim(),
+                                  zip: addressForm.pincode.trim(),
+                                  pincode: addressForm.pincode.trim(),
+                                  country: addressForm.country || 'India',
+                                },
+                                paymentMethod: 'razorpay',
+                              });
+                            }}
+                            title="Complete order simulation for development testing"
+                          >
+                            ✓ Complete Test Order (Dev Mode)
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Complete Payment Button */}
                   <div className={styles.stepCtaRow} style={{ marginTop: '2rem' }}>
                     <button type="button" className={styles.backOutlineBtn} onClick={() => setCurrentStep(2)}>
@@ -820,16 +1012,54 @@ const Checkout = () => {
 
                 <div className={styles.sidebarDivider} />
 
+                {/* Coupon Apply Option */}
+                <div className={styles.sidebarCouponWrapper}>
+                  {appliedCoupon ? (
+                    <div className={styles.appliedCouponPill}>
+                      <div className={styles.appliedCouponInfo}>
+                        <span className={styles.appliedCouponCode}>🎟️ {appliedCoupon.code}</span>
+                        <span className={styles.appliedCouponDesc}>({appliedCoupon.discountText})</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        className={styles.removeCouponBtn}
+                        title="Remove coupon"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleApplyCoupon} className={styles.sidebarCouponForm}>
+                      <div className={styles.sidebarCouponInputWrapper}>
+                        <span className={styles.couponTagIcon}>🏷️</span>
+                        <input
+                          type="text"
+                          placeholder="Promo / Coupon code"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          className={styles.sidebarCouponInput}
+                        />
+                      </div>
+                      <button type="submit" className={styles.sidebarCouponApplyBtn}>
+                        APPLY
+                      </button>
+                    </form>
+                  )}
+                </div>
+
                 {/* Price calculations */}
                 <div className={styles.sidebarTotals}>
                   <div className={styles.sidebarRow}>
                     <span>Subtotal ({itemCount} items)</span>
                     <span>₹{subtotal.toLocaleString('en-IN')}.00</span>
                   </div>
-                  <div className={styles.sidebarRow}>
-                    <span>Discount (10% OFF)</span>
-                    <span style={{ color: '#16a34a', fontWeight: 700 }}>-₹{discountAmount.toLocaleString('en-IN')}.00</span>
-                  </div>
+                  {appliedCoupon && discountAmount > 0 && (
+                    <div className={styles.sidebarRow}>
+                      <span>Discount ({appliedCoupon.code} - {appliedCoupon.discountText})</span>
+                      <span style={{ color: '#16a34a', fontWeight: 700 }}>-₹{discountAmount.toLocaleString('en-IN')}.00</span>
+                    </div>
+                  )}
                   <div className={styles.sidebarRow}>
                     <span>Delivery Charges</span>
                     <span style={{ color: shippingFee === 0 ? '#16a34a' : 'inherit', fontWeight: 700 }}>

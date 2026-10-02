@@ -18,7 +18,7 @@ import useAuth from '@hooks/useAuth';
 import authService from '@services/authService';
 import { ROUTES } from '@constants/routes';
 import { MESSAGES } from '@constants/messages';
-import { isValidEmail, isValidMobile } from '../../utils/validation';
+import { isValidEmail, isValidMobile, isValidFullName } from '../../utils/validation';
 import styles from './Login.module.css';
 
 const GiftLogoSvg = () => (
@@ -49,6 +49,8 @@ const Login = () => {
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
   // Forgot Password Modal State
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -104,6 +106,8 @@ const Login = () => {
 
   const handleTabSwitch = (tab) => {
     setAuthError('');
+    setNameError('');
+    setPhoneError('');
     setActiveTab(tab);
     if (tab === 'login' && location.pathname !== ROUTES.LOGIN) {
       navigate(ROUTES.LOGIN, { replace: true });
@@ -113,11 +117,54 @@ const Login = () => {
   };
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setAuthError('');
-    setForm({ ...form, [e.target.name]: e.target.value });
+    if (name === 'name') {
+      if (value && !/^[A-Za-z\s]*$/.test(value)) {
+        setNameError('Full Name should allow only valid alphabetic characters and spaces.');
+      } else {
+        setNameError('');
+      }
+    }
+    if (name === 'phone') {
+      if (value && !/^\d*$/.test(value)) {
+        setPhoneError('Phone number should allow only numeric digits (no letters or special characters).');
+      } else if (value && value.length === 10 && !/^[6-9]\d{9}$/.test(value)) {
+        setPhoneError('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
+      } else {
+        setPhoneError('');
+      }
+    }
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleNameBlur = () => {
+    if (form.name && !isValidFullName(form.name)) {
+      setNameError('Full Name should allow only valid alphabetic characters and spaces.');
+    } else {
+      setNameError('');
+    }
+  };
+
+  const handlePhoneBlur = () => {
+    if (form.phone) {
+      if (!/^\d+$/.test(form.phone)) {
+        setPhoneError('Phone number should allow only numeric digits (no letters or special characters).');
+      } else if (!isValidMobile(form.phone)) {
+        setPhoneError('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
+      } else {
+        setPhoneError('');
+      }
+    }
   };
 
   const handleRequestOTP = async () => {
+    if (form.name && !isValidFullName(form.name)) {
+      const errorMsg = 'Full Name should allow only valid alphabetic characters and spaces.';
+      setNameError(errorMsg);
+      toast.error(errorMsg);
+      return;
+    }
     if (!form.email || !isValidEmail(form.email)) {
       toast.error('Please enter a valid email address (e.g. name@domain.com)');
       return;
@@ -125,7 +172,7 @@ const Login = () => {
 
     setSendingOTP(true);
     try {
-      await authService.requestOTP({ email: form.email, name: form.name });
+      await authService.requestOTP({ email: form.email, name: form.name, phone: form.phone });
       setOtpSent(true);
       setForm((prev) => ({ ...prev, otp: '' }));
       toast.success('Verification code sent');
@@ -182,9 +229,42 @@ const Login = () => {
           navigate(redirectTarget);
         }
       } else {
-        if (!form.phone || !isValidMobile(form.phone)) {
+        if (!form.name || !form.name.trim()) {
+          const errorMsg = 'Please enter your full name';
+          setAuthError(errorMsg);
+          setNameError(errorMsg);
+          toast.error(errorMsg);
+          setLoading(false);
+          return;
+        }
+        if (!isValidFullName(form.name)) {
+          const errorMsg = 'Full Name should allow only valid alphabetic characters and spaces.';
+          setAuthError(errorMsg);
+          setNameError(errorMsg);
+          toast.error(errorMsg);
+          setLoading(false);
+          return;
+        }
+        if (!form.phone || !form.phone.trim()) {
           const errorMsg = 'Please enter a valid 10-digit mobile number';
           setAuthError(errorMsg);
+          setPhoneError(errorMsg);
+          toast.error(errorMsg);
+          setLoading(false);
+          return;
+        }
+        if (!/^\d+$/.test(form.phone)) {
+          const errorMsg = 'Phone number should allow only numeric digits (no letters or special characters).';
+          setAuthError(errorMsg);
+          setPhoneError(errorMsg);
+          toast.error(errorMsg);
+          setLoading(false);
+          return;
+        }
+        if (!isValidMobile(form.phone)) {
+          const errorMsg = 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.';
+          setAuthError(errorMsg);
+          setPhoneError(errorMsg);
           toast.error(errorMsg);
           setLoading(false);
           return;
@@ -232,6 +312,7 @@ const Login = () => {
           name: form.name,
           email: form.email,
           password: form.password,
+          phone: form.phone.trim(),
           otp: form.otp,
         });
 
@@ -263,7 +344,13 @@ const Login = () => {
         }
       }
     } catch (err) {
-      const errText = err.message || (activeTab === 'login' ? 'Invalid username or password. Please check your credentials.' : MESSAGES.GENERIC.ERROR);
+      const isNotFound = err.status === 404 ||
+        err.message?.toLowerCase()?.includes('account not found') ||
+        err.message?.toLowerCase()?.includes('create an account');
+      const defaultMsg = isNotFound
+        ? MESSAGES.AUTH.ACCOUNT_NOT_FOUND
+        : (activeTab === 'login' ? 'Invalid username or password. Please check your credentials.' : MESSAGES.GENERIC.ERROR);
+      const errText = err.message || defaultMsg;
       setAuthError(errText);
       toast.error(errText);
     } finally {
@@ -342,8 +429,25 @@ const Login = () => {
             <div className={styles.errorAlertBanner}>
               <span className={styles.errorAlertIcon}>⚠️</span>
               <div className={styles.errorAlertText}>
-                <strong>Authentication Failed</strong>
-                <p>{authError}</p>
+                {authError.toLowerCase().includes('account not found') || authError.toLowerCase().includes('create an account') ? (
+                  <>
+                    <strong>Account not found. Please create an account first.</strong>
+                    <div className={styles.errorAlertActions}>
+                      <Link
+                        to={ROUTES.REGISTER}
+                        onClick={() => handleTabSwitch('register')}
+                        className={styles.alertCreateAccountLink}
+                      >
+                        Create Account &rarr;
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <strong>Authentication Failed</strong>
+                    <p>{authError}</p>
+                  </>
+                )}
               </div>
               <button type="button" onClick={() => setAuthError('')} className={styles.errorAlertClose}>✕</button>
             </div>
@@ -360,10 +464,14 @@ const Login = () => {
                   placeholder="e.g. Alexander Vance"
                   value={form.name}
                   onChange={handleChange}
-                  className={styles.inputField}
+                  onBlur={handleNameBlur}
+                  className={`${styles.inputField} ${nameError ? styles.inputFieldError : ''}`}
                   required
                 />
               </div>
+              {nameError && (
+                <span className={styles.fieldErrorText}>{nameError}</span>
+              )}
             </div>
           )}
 
@@ -380,10 +488,14 @@ const Login = () => {
                   maxLength={10}
                   value={form.phone || ''}
                   onChange={handleChange}
-                  className={styles.inputField}
+                  onBlur={handlePhoneBlur}
+                  className={`${styles.inputField} ${phoneError ? styles.inputFieldError : ''}`}
                   required
                 />
               </div>
+              {phoneError && (
+                <span className={styles.fieldErrorText}>{phoneError}</span>
+              )}
             </div>
           )}
 
@@ -605,6 +717,32 @@ const Login = () => {
             </span>
             <FiArrowRight />
           </button>
+
+          <div className={styles.formFooterPrompt}>
+            {activeTab === 'login' ? (
+              <p>
+                Don't have an account?{' '}
+                <button
+                  type="button"
+                  className={styles.switchAuthModeBtn}
+                  onClick={() => handleTabSwitch('register')}
+                >
+                  Create Account
+                </button>
+              </p>
+            ) : (
+              <p>
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  className={styles.switchAuthModeBtn}
+                  onClick={() => handleTabSwitch('login')}
+                >
+                  Sign In
+                </button>
+              </p>
+            )}
+          </div>
         </form>
 
       </div>

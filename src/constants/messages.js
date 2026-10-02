@@ -7,6 +7,7 @@ export const MESSAGES = {
     LOGOUT_SUCCESS: 'You have been logged out.',
     REGISTER_SUCCESS: 'Account created successfully!',
     INVALID_CREDENTIALS: 'Invalid email or password.',
+    ACCOUNT_NOT_FOUND: 'Account not found. Please create an account first.',
     SESSION_EXPIRED: 'Your session has expired. Please log in again.',
   },
   CART: {

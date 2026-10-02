@@ -6,6 +6,7 @@ import useAuth from '@hooks/useAuth';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { ROUTES } from '@constants/routes';
+import { formatEnquiryId } from '@utils/formatters';
 import styles from './Dashboard.module.css';
 
 // Modular Dashboard Subcomponents
@@ -42,7 +43,6 @@ const Dashboard = () => {
         localStorage.removeItem('customer_enquiries');
         localStorage.removeItem('registered_users');
         localStorage.removeItem('corporate_quotes');
-        localStorage.removeItem('admin_coupons');
         localStorage.removeItem('admin_users_roles');
         localStorage.removeItem('giftery_orders');
         localStorage.setItem('giftery_cleaned_mock_v2', 'true');
@@ -472,12 +472,20 @@ const Dashboard = () => {
       console.warn('Backend enquiry fetch warning:', err.message);
     }
 
-    const localEnquiries = JSON.parse(localStorage.getItem('giftery_enquiries') || '[]');
+    const local1 = JSON.parse(localStorage.getItem('customer_enquiries') || '[]');
+    const local2 = JSON.parse(localStorage.getItem('giftery_enquiries') || '[]');
+    const localEnquiries = [...local1, ...local2];
     const map = new Map();
     localEnquiries.forEach(le => map.set(le.id, le));
     backendEnquiries.forEach(be => map.set(be.id, be));
 
-    setEnquiriesList(Array.from(map.values()));
+    const rawList = Array.from(map.values());
+    const formattedList = rawList.map((e, index) => ({
+      ...e,
+      displayId: e.displayId || e.enquiryNumber || formatEnquiryId(e.id, e.createdAt, index),
+    }));
+
+    setEnquiriesList(formattedList);
   };
 
   const fetchSettings = async () => {
@@ -1055,8 +1063,15 @@ const Dashboard = () => {
 
   const handleExportEnquiriesCSV = () => {
     const headers = ['Enquiry ID', 'Customer Name', 'Email Address', 'Phone Number', 'Category / Subject', 'Enquiry Message', 'Submitted Date', 'Status'];
-    const rows = (enquiriesList || []).map(e => [
-      e.id, e.name, e.email, e.phone || 'N/A', e.subject || e.category || 'General Inquiry', e.message || '', e.createdAt || e.date || 'Recent', e.status || 'New',
+    const rows = (enquiriesList || []).map((e, index) => [
+      e.displayId || formatEnquiryId(e.id, e.createdAt, index),
+      e.name,
+      e.email,
+      e.phone || 'N/A',
+      e.subject || e.category || 'General Inquiry',
+      e.message || '',
+      e.createdAt || e.date || 'Recent',
+      e.status || 'New',
     ]);
     triggerDownloadConfirmation('Customer_Enquiries_Report', 'Customer Enquiries Report', headers, rows);
   };
@@ -1275,7 +1290,7 @@ const Dashboard = () => {
           )}
 
           {activeTab === 'coupons' && (
-            <CouponsSection initialCoupons={[]} />
+            <CouponsSection />
           )}
 
           {activeTab === 'reports' && (

@@ -147,23 +147,23 @@ const Header = () => {
             </NavLink>
             {activeDropdown === 'corporate' && (
               <div className={styles.dropdownMenuWide}>
-                <Link to={ROUTES.CORPORATE_GIFTS}>All Corporate Gifts</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Onboarding Kit</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Work Anniversary Kit</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Employee Anniversary Kit</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Diaries & Notebooks</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Drinkware</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Apparel</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Electronics</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Backpacks</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Accessories</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Trophies & Awards</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Caps</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Umbrellas</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Card Holders</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Premium Gifts</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Cups & Mugs</Link>
-                <Link to={ROUTES.CORPORATE_GIFTS}>Keychains</Link>
+                <Link to={ROUTES.CORPORATE_GIFTS} onClick={() => setActiveDropdown(null)}>All Corporate Gifts</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=onboarding`} onClick={() => setActiveDropdown(null)}>Onboarding Kit</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=work-anniversary`} onClick={() => setActiveDropdown(null)}>Work Anniversary Kit</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=employee-anniversary`} onClick={() => setActiveDropdown(null)}>Employee Anniversary Kit</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=diaries`} onClick={() => setActiveDropdown(null)}>Diaries & Notebooks</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=drinkware`} onClick={() => setActiveDropdown(null)}>Drinkware</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=apparel`} onClick={() => setActiveDropdown(null)}>Apparel</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=electronics`} onClick={() => setActiveDropdown(null)}>Electronics</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=backpacks`} onClick={() => setActiveDropdown(null)}>Backpacks</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=accessories`} onClick={() => setActiveDropdown(null)}>Accessories</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=trophies`} onClick={() => setActiveDropdown(null)}>Trophies & Awards</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=caps`} onClick={() => setActiveDropdown(null)}>Caps</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=umbrellas`} onClick={() => setActiveDropdown(null)}>Umbrellas</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=card-holders`} onClick={() => setActiveDropdown(null)}>Card Holders</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=premium-gifts`} onClick={() => setActiveDropdown(null)}>Premium Gifts</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=cups-mugs`} onClick={() => setActiveDropdown(null)}>Cups & Mugs</Link>
+                <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=keychains`} onClick={() => setActiveDropdown(null)}>Keychains</Link>
               </div>
             )}
           </div>
@@ -182,12 +182,12 @@ const Header = () => {
             </NavLink>
             {activeDropdown === 'personalized' && (
               <div className={styles.dropdownMenu}>
-                <Link to={ROUTES.PERSONALIZED_GIFTS}>All Personalized Gifts</Link>
-                <Link to={ROUTES.PERSONALIZED_GIFTS}>Photo Frames</Link>
-                <Link to={ROUTES.PERSONALIZED_GIFTS}>Acrylic Frames</Link>
-                <Link to={ROUTES.PERSONALIZED_GIFTS}>Caricatures</Link>
-                <Link to={ROUTES.PERSONALIZED_GIFTS}>Clocks</Link>
-                <Link to={ROUTES.PERSONALIZED_GIFTS}>Wooden Photo Engraving</Link>
+                <Link to={ROUTES.PERSONALIZED_GIFTS} onClick={() => setActiveDropdown(null)}>All Personalized Gifts</Link>
+                <Link to={`${ROUTES.PERSONALIZED_GIFTS}?category=photo-frames`} onClick={() => setActiveDropdown(null)}>Photo Frames</Link>
+                <Link to={`${ROUTES.PERSONALIZED_GIFTS}?category=acrylic-frames`} onClick={() => setActiveDropdown(null)}>Acrylic Frames</Link>
+                <Link to={`${ROUTES.PERSONALIZED_GIFTS}?category=caricatures`} onClick={() => setActiveDropdown(null)}>Caricatures</Link>
+                <Link to={`${ROUTES.PERSONALIZED_GIFTS}?category=clocks`} onClick={() => setActiveDropdown(null)}>Clocks</Link>
+                <Link to={`${ROUTES.PERSONALIZED_GIFTS}?category=wooden-engraving`} onClick={() => setActiveDropdown(null)}>Wooden Photo Engraving</Link>
               </div>
             )}
           </div>
@@ -205,20 +205,20 @@ const Header = () => {
               Toys <span className={styles.dropdownArrow}>⌄</span>
             </NavLink>
             {activeDropdown === 'toys' && (
-              <div className={styles.dropdownMenu}>
-                <Link to={ROUTES.TOYS}>All Toys</Link>
-                <Link to={ROUTES.TOYS}>0 - 2 Years</Link>
-                <Link to={ROUTES.TOYS}>3 - 5 Years</Link>
-                <Link to={ROUTES.TOYS}>6 - 8 Years</Link>
-                <Link to={ROUTES.TOYS}>9 - 12 Years</Link>
-                <Link to={ROUTES.TOYS}>Teens</Link>
-                <Link to={ROUTES.TOYS}>Educational Toys</Link>
-                <Link to={ROUTES.TOYS}>Remote Control Toys</Link>
-                <Link to={ROUTES.TOYS}>Soft Toys</Link>
-                <Link to={ROUTES.TOYS}>Building Blocks</Link>
-                <Link to={ROUTES.TOYS}>Dolls</Link>
-                <Link to={ROUTES.TOYS}>Cars & Bikes</Link>
-                <Link to={ROUTES.TOYS}>Outdoor Toys</Link>
+              <div className={`${styles.dropdownMenu} ${styles.toysDropdownMenu}`}>
+                <Link to={ROUTES.TOYS} onClick={() => setActiveDropdown(null)}>All Toys</Link>
+                <Link to={`${ROUTES.TOYS}?category=0-2-years`} onClick={() => setActiveDropdown(null)}>0 - 2 Years</Link>
+                <Link to={`${ROUTES.TOYS}?category=3-5-years`} onClick={() => setActiveDropdown(null)}>3 - 5 Years</Link>
+                <Link to={`${ROUTES.TOYS}?category=6-8-years`} onClick={() => setActiveDropdown(null)}>6 - 8 Years</Link>
+                <Link to={`${ROUTES.TOYS}?category=9-12-years`} onClick={() => setActiveDropdown(null)}>9 - 12 Years</Link>
+                <Link to={`${ROUTES.TOYS}?category=teens`} onClick={() => setActiveDropdown(null)}>Teens</Link>
+                <Link to={`${ROUTES.TOYS}?category=educational-toys`} onClick={() => setActiveDropdown(null)}>Educational Toys</Link>
+                <Link to={`${ROUTES.TOYS}?category=rc-toys`} onClick={() => setActiveDropdown(null)}>Remote Control Toys</Link>
+                <Link to={`${ROUTES.TOYS}?category=soft-toys`} onClick={() => setActiveDropdown(null)}>Soft Toys</Link>
+                <Link to={`${ROUTES.TOYS}?category=building-blocks`} onClick={() => setActiveDropdown(null)}>Building Blocks</Link>
+                <Link to={`${ROUTES.TOYS}?category=dolls`} onClick={() => setActiveDropdown(null)}>Dolls</Link>
+                <Link to={`${ROUTES.TOYS}?category=cars-bikes`} onClick={() => setActiveDropdown(null)}>Cars & Bikes</Link>
+                <Link to={`${ROUTES.TOYS}?category=outdoor-toys`} onClick={() => setActiveDropdown(null)}>Outdoor Toys</Link>
               </div>
             )}
           </div>

@@ -93,7 +93,9 @@ const DashboardNavbar = ({
     const matchedEnquiries = (enquiriesList || []).filter(enq =>
       enq.name?.toLowerCase().includes(q) ||
       enq.subject?.toLowerCase().includes(q) ||
-      enq.category?.toLowerCase().includes(q)
+      enq.category?.toLowerCase().includes(q) ||
+      enq.displayId?.toLowerCase().includes(q) ||
+      enq.id?.toLowerCase().includes(q)
     ).slice(0, 3);
 
     const totalMatches =
@@ -382,7 +384,14 @@ const DashboardNavbar = ({
                         onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                       >
-                        <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block' }}>Enquiry: {enq.name}</strong>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                          {enq.displayId && (
+                            <code style={{ background: '#fef3c7', color: '#b45309', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: '700' }}>
+                              {enq.displayId}
+                            </code>
+                          )}
+                          <strong style={{ fontSize: '0.85rem', color: '#0f172a' }}>{enq.name}</strong>
+                        </div>
                         <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{enq.subject || enq.category}</span>
                       </div>
                     ))}

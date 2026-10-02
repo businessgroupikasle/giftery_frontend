@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 // import { Helmet } from 'react-helmet';
 import Layout from '@components/layout/Layout';
@@ -215,6 +215,7 @@ const CorporateGifts = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const carouselRef = useRef(null);
+  const resultsRef = useRef(null);
 
   // Live Products State from Database
   // Live Products State from PostgreSQL Database via API
@@ -325,6 +326,9 @@ const CorporateGifts = () => {
       }
     };
 
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+    if (document.body) document.body.scrollTop = 0;
     fetchLiveProducts();
     window.addEventListener('products_updated', fetchLiveProducts);
     return () => window.removeEventListener('products_updated', fetchLiveProducts);
@@ -371,12 +375,26 @@ const CorporateGifts = () => {
     });
 
     const subList = Array.from(subMap.values());
-    return [{ id: 'all', name: 'All Products', count: liveProducts.length }, ...subList];
+    if (subList.length === 0 && SUBCATEGORIES_DATA && SUBCATEGORIES_DATA.length > 1) {
+      return SUBCATEGORIES_DATA.map(sub => {
+        if (sub.id === 'all') return { ...sub, slug: 'all', count: liveProducts.length };
+        const cleanSubId = sub.id.toLowerCase().replace(/-kit$/i, '');
+        const count = liveProducts.filter(p => {
+          const pSub = (p.subCategorySlug || p.subCategoryName || p.subcategory || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          return pSub.includes(cleanSubId) || cleanSubId.includes(pSub);
+        }).length;
+        return { ...sub, slug: sub.id, count };
+      });
+    }
+    return [{ id: 'all', slug: 'all', name: 'All Products', count: liveProducts.length }, ...subList];
   })();
 
   const categoriesForFilter = dynamicCategories;
 
   // Filter States
+  const [searchParams, setSearchParams] = useSearchParams();
+  const subCategoryParam = searchParams.get('subCategory') || searchParams.get('category');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSubCategory, setActiveSubCategory] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -387,9 +405,111 @@ const CorporateGifts = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const handleCategorySelect = (catId) => {
-    setSelectedCategory(catId);
-    setActiveSubCategory(catId);
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Helper to determine if a category item is active in the filter panel
+  const isCategoryActive = (cat) => {
+    if (!cat) return false;
+    const current = (selectedCategory || 'all').toLowerCase().trim();
+    const cId = (cat.id || '').toLowerCase().trim();
+    const cSlug = (cat.slug || '').toLowerCase().trim();
+    const cName = (cat.name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+
+    const isCurrentAll = current === 'all' || current === 'all-products';
+    const isCatAll = cId === 'all' || cSlug === 'all';
+
+    if (isCurrentAll) {
+      return isCatAll;
+    }
+
+    if (isCatAll) {
+      return false;
+    }
+
+    if (cId && cId === current) return true;
+    if (cSlug && cSlug === current) return true;
+    if (cName && cName === current) return true;
+
+    const normCurrent = current.replace(/-kit$/i, '');
+    const normSlug = cSlug ? cSlug.replace(/-kit$/i, '') : '';
+    const normName = cName.replace(/-kit$/i, '');
+
+    if (normSlug && normSlug === normCurrent) return true;
+    if (normName && normName === normCurrent) return true;
+
+    return false;
+  };
+
+  // Sync category filter from URL query param
+  useEffect(() => {
+    if (subCategoryParam) {
+      const cleanParam = subCategoryParam.toLowerCase().trim();
+      if (cleanParam === 'all' || cleanParam === 'all-products') {
+        setSelectedCategory('all');
+        setActiveSubCategory('all');
+        return;
+      }
+
+      const normParam = cleanParam.replace(/-kit$/i, '');
+      const matched = categoriesForFilter.find(c => {
+        if (c.id === 'all' || c.slug === 'all') return false;
+        const cId = (c.id || '').toLowerCase().trim();
+        const cSlug = (c.slug || '').toLowerCase().trim();
+        const cName = (c.name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+        return (
+          cId === cleanParam ||
+          cSlug === cleanParam ||
+          cName === cleanParam ||
+          cId.replace(/-kit$/i, '') === normParam ||
+          cSlug.replace(/-kit$/i, '') === normParam ||
+          cName.replace(/-kit$/i, '') === normParam
+        );
+      });
+      if (matched) {
+        const targetVal = matched.slug || matched.id;
+        setSelectedCategory(targetVal);
+        setActiveSubCategory(targetVal);
+      } else {
+        setSelectedCategory(subCategoryParam);
+        setActiveSubCategory(subCategoryParam);
+      }
+    } else {
+      setSelectedCategory('all');
+      setActiveSubCategory('all');
+    }
+  }, [subCategoryParam, categoriesForFilter]);
+
+  const scrollToResults = () => {
+    setTimeout(() => {
+      if (resultsRef.current) {
+        const headerOffset = 96; // 88px sticky header + padding
+        const elementPosition = resultsRef.current.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        window.scrollTo({
+          top: Math.max(0, offsetPosition),
+          behavior: 'smooth',
+        });
+      }
+    }, 20);
+  };
+
+  const handleCategorySelect = (cat) => {
+    const catVal = typeof cat === 'object' && cat !== null ? (cat.slug || cat.id) : cat;
+    setSelectedCategory(catVal);
+    setActiveSubCategory(catVal);
+    setCurrentPage(1);
+    const nextParams = new URLSearchParams(searchParams);
+    if (catVal === 'all' || catVal === 'all-products') {
+      nextParams.delete('subCategory');
+      nextParams.delete('category');
+    } else {
+      nextParams.set('subCategory', catVal);
+    }
+    setSearchParams(nextParams, { replace: true });
+    scrollToResults();
   };
 
   const toggleOccasion = (id) => {
@@ -409,7 +529,13 @@ const CorporateGifts = () => {
     setMinPrice('100');
     setMaxPrice('5000');
     setSelectedOccasions([]);
+    setCurrentPage(1);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('subCategory');
+    nextParams.delete('category');
+    setSearchParams(nextParams, { replace: true });
     toast.info('Filters cleared');
+    scrollToResults();
   };
 
   // Filtered & Sorted Products computation
@@ -445,13 +571,21 @@ const CorporateGifts = () => {
       const activeCat = selectedCategory !== 'all' ? selectedCategory : activeSubCategory;
       if (activeCat !== 'all') {
         const catObj = categoriesForFilter.find(c => c.id === activeCat || c.slug === activeCat);
-        const targetId = catObj?.id || activeCat;
+        const targetId = (catObj?.id || activeCat).toLowerCase();
         const targetSlug = (catObj?.slug || activeCat).toLowerCase();
+        const cleanTarget = targetSlug.replace(/-kit$/i, '');
 
         // Exact DB Subcategory ID match or slug match
-        if (prod.subCategoryId && (prod.subCategoryId === targetId || prod.subCategoryId === targetSlug)) return true;
-        if (prod.subCategorySlug && (prod.subCategorySlug.toLowerCase() === targetSlug || prod.subCategorySlug === targetId)) return true;
-        if (prod.categoryId && prod.categoryId === targetId) return true;
+        if (prod.subCategoryId && (prod.subCategoryId.toLowerCase() === targetId || prod.subCategoryId.toLowerCase() === targetSlug)) return true;
+        if (prod.subCategorySlug && (prod.subCategorySlug.toLowerCase() === targetSlug || prod.subCategorySlug.toLowerCase() === targetId)) return true;
+        if (prod.categoryId && (prod.categoryId.toLowerCase() === targetId || prod.categoryId.toLowerCase() === targetSlug)) return true;
+
+        const subName = (prod.subCategoryName || (typeof prod.subCategory === 'string' ? prod.subCategory : prod.subCategory?.name) || prod.subcategory || '').toLowerCase();
+        const subSlug = (prod.subCategorySlug || (typeof prod.subCategory === 'object' ? prod.subCategory?.slug : '') || subName).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const cleanSub = subSlug.replace(/-kit$/i, '');
+
+        if (cleanSub && cleanTarget && (cleanSub === cleanTarget || cleanSub.includes(cleanTarget) || cleanTarget.includes(cleanSub))) return true;
+        if (subName && (subName.includes(targetSlug) || targetSlug.includes(subName))) return true;
 
         return false;
       }
@@ -599,12 +733,12 @@ const CorporateGifts = () => {
               </div>
               <div className={styles.categoryList}>
                 {categoriesForFilter.map((cat) => {
-                  const isActive = selectedCategory === cat.id;
+                  const isActive = isCategoryActive(cat);
                   return (
                     <div
                       key={cat.id}
                       className={`${styles.categoryItem} ${isActive ? styles.categoryActive : ''}`}
-                      onClick={() => handleCategorySelect(cat.id)}
+                      onClick={() => handleCategorySelect(cat)}
                     >
                       <div className={styles.categoryLeft}>
                         {isActive && <span className={styles.goldDot} />}
@@ -718,11 +852,11 @@ const CorporateGifts = () => {
           </aside>
 
           {/* Right Product Grid Area */}
-          <main className={styles.contentArea}>
+          <main ref={resultsRef} className={styles.contentArea}>
             {/* Top Toolbar */}
             <div className={styles.contentHeader}>
               <div className={styles.titleGroup}>
-                <h2>All Products</h2>
+                <h2>{selectedCategory !== 'all' ? (categoriesForFilter.find(c => c.id === selectedCategory || c.slug === selectedCategory)?.name || selectedCategory) : 'All Products'}</h2>
                 <p>Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, displayProducts.length)} of {displayProducts.length} products</p>
               </div>
 
@@ -805,7 +939,7 @@ const CorporateGifts = () => {
 
             {/* Pagination Controls */}
             <div className={styles.pagination}>
-              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
             </div>
           </main>
         </div>

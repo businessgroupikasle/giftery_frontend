@@ -7,6 +7,7 @@ import { removeFromCart, updateQuantity, clearCart, addToCart } from '@store/sli
 import { formatCurrency } from '@utils/formatters';
 import { getImageUrl } from '@utils/imageUrl';
 import { ROUTES } from '@constants/routes';
+import { getStoredCoupons, DEFAULT_COUPONS } from '@constants/coupons';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import styles from './Cart.module.css';
@@ -45,6 +46,9 @@ const Cart = () => {
             price: p.price,
             image: Array.isArray(p.images) ? p.images[0] : (p.image || '/placeholder.jpg'),
             slug: p.slug,
+            categoryName: p.categoryName || p.category?.name || (typeof p.category === 'string' ? p.category : ''),
+            categorySlug: p.categorySlug || p.category?.slug || '',
+            subCategorySlug: p.subCategorySlug || p.subCategory?.slug || '',
           }));
         setSuggestedProducts(filtered);
       }
@@ -64,28 +68,18 @@ const Cart = () => {
     return null;
   });
 
-  const [availableCoupons, setAvailableCoupons] = useState(() => {
-    try {
-      const stored = localStorage.getItem('admin_coupons');
-      if (stored) return JSON.parse(stored);
-    } catch (e) {}
-    return [
-      { id: 'c-1', code: 'LUXURY20', discount: '20% OFF', category: 'Corporate Gifts', status: 'Active' },
-      { id: 'c-2', code: 'WELCOME10', discount: '₹100 OFF', category: 'First Purchase', status: 'Active' },
-      { id: 'c-3', code: 'GIFTERY10', discount: '10% OFF', category: 'All Products', status: 'Active' },
-      { id: 'c-4', code: 'SAVE10', discount: '₹50 OFF', category: 'Special Offer', status: 'Active' },
-    ];
-  });
+  const [availableCoupons, setAvailableCoupons] = useState(() => getStoredCoupons());
 
   useEffect(() => {
     const handleCouponsUpdate = () => {
-      try {
-        const stored = localStorage.getItem('admin_coupons');
-        if (stored) setAvailableCoupons(JSON.parse(stored));
-      } catch (e) {}
+      setAvailableCoupons(getStoredCoupons());
     };
     window.addEventListener('admin_coupons_updated', handleCouponsUpdate);
-    return () => window.removeEventListener('admin_coupons_updated', handleCouponsUpdate);
+    window.addEventListener('storage', handleCouponsUpdate);
+    return () => {
+      window.removeEventListener('admin_coupons_updated', handleCouponsUpdate);
+      window.removeEventListener('storage', handleCouponsUpdate);
+    };
   }, []);
 
   const [storeSettings] = useState(() => {
@@ -141,6 +135,31 @@ const Cart = () => {
     toast.info('Cart cleared');
   };
 
+  const getSuggestedViewAllLink = () => {
+    // 1. Check cart items for dominant category
+    for (const item of cartItems) {
+      const cat = (item.categoryName || item.category || '').toLowerCase();
+      if (cat.includes('toy')) return ROUTES.TOYS;
+      if (cat.includes('personal') || cat.includes('frame') || cat.includes('photo') || cat.includes('acrylic') || cat.includes('caricature')) {
+        return ROUTES.PERSONALIZED_GIFTS;
+      }
+    }
+    // 2. Check suggested products
+    if (suggestedProducts.length > 0) {
+      const first = suggestedProducts[0];
+      const catSlug = (first.categorySlug || '').toLowerCase();
+      const catName = (first.categoryName || '').toLowerCase();
+      if (catSlug === 'toys' || catName.includes('toy')) return ROUTES.TOYS;
+      if (catSlug === 'personalized-gifts' || catName.includes('personal') || catName.includes('frame') || catName.includes('photo')) {
+        return ROUTES.PERSONALIZED_GIFTS;
+      }
+      if (first.subCategorySlug) {
+        return `${ROUTES.CORPORATE_GIFTS}?subCategory=${encodeURIComponent(first.subCategorySlug)}`;
+      }
+    }
+    return ROUTES.CORPORATE_GIFTS;
+  };
+
   const handleApplyCoupon = (e) => {
     e.preventDefault();
     if (!couponCode || !couponCode.trim()) {
@@ -149,8 +168,18 @@ const Cart = () => {
     }
 
     const trimmedInput = couponCode.trim().toUpperCase();
-    const matched = availableCoupons.find(
-      (c) => c.code.toUpperCase() === trimmedInput && c.status === 'Active'
+
+    // Query live list combining fresh storage, current state, and canonical defaults
+    const freshCoupons = getStoredCoupons();
+    const candidateList = [...availableCoupons, ...freshCoupons];
+    const map = new Map();
+    candidateList.forEach((c) => {
+      if (c && c.code) map.set(c.code.toUpperCase(), c);
+    });
+    const allCoupons = Array.from(map.values());
+
+    const matched = allCoupons.find(
+      (c) => c.code.toUpperCase() === trimmedInput && String(c.status || 'Active').toUpperCase() === 'ACTIVE'
     );
 
     if (!matched) {
@@ -214,24 +243,43 @@ const Cart = () => {
           </div>
 
           {/* Free Shipping Progress Banner */}
-          <div className={styles.shippingBannerCard}>
-            <div className={styles.shippingBannerContent}>
-              <div className={styles.eligibleBadge}>
-                <span className={styles.greenCheck}>✓</span>
-                <span>You are eligible for free shipping!</span>
-              </div>
-              <div className={styles.progressBarWrapper}>
-                <div className={styles.progressBarFill} style={{ width: `${progressPercent}%` }} />
-              </div>
-              <div className={styles.shippingMsgText}>
+          {cartItems.length > 0 && (
+            <div className={`${styles.shippingBannerCard} ${isFreeShipping ? styles.shippingBannerEligible : ''}`}>
+              <div className={styles.shippingBannerContent}>
                 {isFreeShipping ? (
-                  <span style={{ color: '#16a34a', fontWeight: 700 }}>FREE shipping unlocked!</span>
+                  <>
+                    <div className={styles.eligibleBadge}>
+                      <span className={styles.greenCheck}>✓</span>
+                      <span>You are eligible for free shipping!</span>
+                    </div>
+                    <div className={styles.progressBarWrapper}>
+                      <div
+                        className={`${styles.progressBarFill} ${styles.progressBarFillEligible}`}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <div className={styles.shippingMsgText}>
+                      <span className={styles.freeShippingUnlockedText}>FREE shipping unlocked!</span>
+                    </div>
+                  </>
                 ) : (
-                  <span>Add ₹{amountNeededForFreeShipping} more to get <strong>FREE shipping</strong></span>
+                  <>
+                    <div className={styles.progressBarWrapper}>
+                      <div
+                        className={styles.progressBarFill}
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                    <div className={styles.shippingMsgText}>
+                      <span>
+                        Add ₹{amountNeededForFreeShipping.toLocaleString('en-IN')} more to get <strong>FREE shipping</strong>
+                      </span>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
-          </div>
+          )}
 
           {/* ── 2. MAIN CART GRID ── */}
           {cartItems.length === 0 ? (
@@ -451,7 +499,7 @@ const Cart = () => {
             <div className={styles.relatedProductsSection}>
               <div className={styles.relatedHeaderRow}>
                 <h2 className={styles.relatedSectionTitle}>You May Also Like</h2>
-                <Link to={ROUTES.CORPORATE_GIFTS} className={styles.viewAllLink}>View All →</Link>
+                <Link to={getSuggestedViewAllLink()} className={styles.viewAllLink}>View All →</Link>
               </div>
 
               <div className={styles.suggestedGrid}>

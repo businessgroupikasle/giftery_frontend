@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { isValidEmail, isValidMobile } from '../../utils/validation';
 import { Link } from 'react-router-dom';
@@ -6,6 +6,7 @@ import Layout from '@components/layout/Layout';
 import { ROUTES } from '@constants/routes';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
+import { formatEnquiryId } from '@utils/formatters';
 import styles from './Contact.module.css';
 
 /* ── SVG Icon components ─────────────────────────────── */
@@ -100,6 +101,18 @@ const Contact = () => {
   const [submitted, setSubmitted] = useState(false);
   const [charCount, setCharCount] = useState(0);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+    if (document.body) document.body.scrollTop = 0;
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    }, 50);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Book an Appointment Modal State
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [appointmentSubmitted, setAppointmentSubmitted] = useState(false);
@@ -138,8 +151,12 @@ const Contact = () => {
       return;
     }
 
+    const stored = JSON.parse(localStorage.getItem('customer_enquiries') || '[]');
+    const readableId = formatEnquiryId(null, new Date(), stored.length);
+
     const newBooking = {
-      id: `apt-${Date.now()}`,
+      id: readableId,
+      displayId: readableId,
       name: appointmentData.name,
       email: appointmentData.email,
       phone: appointmentData.phone,
@@ -150,7 +167,6 @@ const Contact = () => {
     };
 
     try {
-      const stored = JSON.parse(localStorage.getItem('customer_enquiries') || '[]');
       localStorage.setItem('customer_enquiries', JSON.stringify([newBooking, ...stored]));
       window.dispatchEvent(new Event('enquiries_updated'));
     } catch (e) {}
@@ -211,8 +227,12 @@ const Contact = () => {
         message: formData.message,
       });
 
+      const stored = JSON.parse(localStorage.getItem('customer_enquiries') || '[]');
+      const fallbackId = formatEnquiryId(null, new Date(), stored.length);
+
       const savedItem = res.data?.data || res.data || {
-        id: `enq-${Date.now()}`,
+        id: fallbackId,
+        displayId: fallbackId,
         name: formData.fullName,
         email: formData.email,
         phone: formData.phone || 'Not provided',
@@ -221,9 +241,11 @@ const Contact = () => {
         status: 'New',
         createdAt: new Date().toISOString(),
       };
+      if (!savedItem.displayId) {
+        savedItem.displayId = savedItem.enquiryNumber || formatEnquiryId(savedItem.id, savedItem.createdAt, stored.length);
+      }
 
       try {
-        const stored = JSON.parse(localStorage.getItem('customer_enquiries') || '[]');
         localStorage.setItem('customer_enquiries', JSON.stringify([savedItem, ...stored]));
         window.dispatchEvent(new Event('enquiries_updated'));
       } catch (e) {}

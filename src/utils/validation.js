@@ -28,3 +28,10 @@ export const isValidPincode = (pincode) => {
   return /^[1-9][0-9]{5}$/.test(clean) || /^[0-9]{5,6}$/.test(clean);
 };
 
+export const isValidFullName = (name) => {
+  if (!name || typeof name !== 'string') return false;
+  const clean = name.trim();
+  // Allow only valid alphabetic characters and spaces (minimum 2 characters)
+  return clean.length >= 2 && /^[A-Za-z\s]+$/.test(clean);
+};
+

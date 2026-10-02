@@ -10,6 +10,7 @@ import {
   FiFilter,
   FiX,
 } from 'react-icons/fi';
+import { formatEnquiryId } from '../../../utils/formatters';
 import styles from '../Dashboard.module.css';
 
 const EnquiriesSection = ({
@@ -27,8 +28,10 @@ const EnquiriesSection = ({
       (e.status || 'New').toUpperCase() === statusFilter.toUpperCase();
 
     const query = searchTerm.toLowerCase().trim();
+    const formattedId = (e.displayId || formatEnquiryId(e.id, e.createdAt)).toLowerCase();
     const matchesSearch =
       !query ||
+      formattedId.includes(query) ||
       (e.id && e.id.toLowerCase().includes(query)) ||
       (e.name && e.name.toLowerCase().includes(query)) ||
       (e.email && e.email.toLowerCase().includes(query)) ||
@@ -159,12 +162,12 @@ const EnquiriesSection = ({
                 </tr>
               </thead>
               <tbody>
-                {filteredEnquiries.map((e) => (
+                {filteredEnquiries.map((e, idx) => (
                   <tr key={e.id}>
                     {/* 1. Enquiry ID */}
                     <td>
-                      <code style={{ background: '#f1f5f9', color: '#d99b26', padding: '0.25rem 0.55rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: '800' }}>
-                        {e.id}
+                      <code style={{ background: '#f1f5f9', color: '#d99b26', padding: '0.25rem 0.55rem', borderRadius: '6px', fontSize: '0.82rem', fontWeight: '800', letterSpacing: '0.5px' }}>
+                        {e.displayId || formatEnquiryId(e.id, e.createdAt, idx)}
                       </code>
                     </td>
 
@@ -329,8 +332,8 @@ const EnquiriesSection = ({
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
-              <code style={{ background: '#f1f5f9', color: '#d99b26', padding: '0.2rem 0.55rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: '800' }}>
-                {selectedEnquiry.id}
+              <code style={{ background: '#f1f5f9', color: '#d99b26', padding: '0.25rem 0.65rem', borderRadius: '6px', fontSize: '0.9rem', fontWeight: '800', letterSpacing: '0.5px' }}>
+                {selectedEnquiry.displayId || formatEnquiryId(selectedEnquiry.id, selectedEnquiry.createdAt)}
               </code>
               <span className={`${styles.pillStatus} ${selectedEnquiry.status === 'Resolved' ? styles.pillDelivered : selectedEnquiry.status === 'In Progress' ? styles.pillProcessing : styles.pillPending}`}>
                 {selectedEnquiry.status || 'New'}

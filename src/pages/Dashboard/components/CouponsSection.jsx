@@ -1,16 +1,12 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { getStoredCoupons, DEFAULT_COUPONS } from '../../../constants/coupons';
 import styles from '../Dashboard.module.css';
-
-const DEFAULT_COUPONS = [];
 
 const CouponsSection = ({ initialCoupons }) => {
   const [coupons, setCoupons] = useState(() => {
-    try {
-      const stored = localStorage.getItem('admin_coupons');
-      if (stored) return JSON.parse(stored);
-    } catch (e) {}
-    return initialCoupons || [];
+    if (initialCoupons && initialCoupons.length > 0) return initialCoupons;
+    return getStoredCoupons();
   });
 
   const [showModal, setShowModal] = useState(false);
@@ -32,6 +28,21 @@ const CouponsSection = ({ initialCoupons }) => {
       window.dispatchEvent(new Event('admin_coupons_updated'));
     } catch (e) {}
   };
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('admin_coupons');
+      if (!stored) {
+        localStorage.setItem('admin_coupons', JSON.stringify(coupons));
+      }
+    } catch (e) {}
+
+    const handleStorageUpdate = () => {
+      setCoupons(getStoredCoupons());
+    };
+    window.addEventListener('storage', handleStorageUpdate);
+    return () => window.removeEventListener('storage', handleStorageUpdate);
+  }, []);
 
   const handleOpenAddModal = () => {
     setEditingCoupon(null);

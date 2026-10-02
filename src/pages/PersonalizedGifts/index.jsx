@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import Layout from '@components/layout/Layout';
 import Pagination from '../../components/common/Pagination';
@@ -119,13 +119,17 @@ const PRODUCTS_LIST = [
 const PersonalizedGifts = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const resultsRef = useRef(null);
 
   // Live Products State from PostgreSQL Database via API
   const [liveProducts, setLiveProducts] = useState([]);
   const [categoriesList, setCategoriesList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+    if (document.body) document.body.scrollTop = 0;
     const fetchLiveProducts = async () => {
       setLoading(true);
       try {
@@ -302,12 +306,26 @@ const PersonalizedGifts = () => {
     });
 
     const subList = Array.from(subMap.values());
-    return [{ id: 'all', name: 'All Products', count: liveProducts.length }, ...subList];
+    if (subList.length === 0 && SUBCATEGORIES_DATA && SUBCATEGORIES_DATA.length > 1) {
+      return SUBCATEGORIES_DATA.map(sub => {
+        if (sub.id === 'all') return { ...sub, slug: 'all', count: liveProducts.length };
+        const cleanSubId = sub.id.toLowerCase();
+        const count = liveProducts.filter(p => {
+          const pSub = (p.subCategorySlug || p.subCategoryName || p.subcategory || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          return pSub.includes(cleanSubId) || cleanSubId.includes(pSub);
+        }).length;
+        return { ...sub, slug: sub.id, count };
+      });
+    }
+    return [{ id: 'all', slug: 'all', name: 'All Products', count: liveProducts.length }, ...subList];
   })();
 
   const categoriesForFilter = dynamicCategories;
 
   // Filter States
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryParam = searchParams.get('category') || searchParams.get('subCategory');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSubCategory, setActiveSubCategory] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -317,6 +335,72 @@ const PersonalizedGifts = () => {
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Helper to determine if a category item is active in the filter panel
+  const isCategoryActive = (cat) => {
+    if (!cat) return false;
+    const current = (selectedCategory || 'all').toLowerCase().trim();
+    const cId = (cat.id || '').toLowerCase().trim();
+    const cSlug = (cat.slug || '').toLowerCase().trim();
+    const cName = (cat.name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+
+    const isCurrentAll = current === 'all' || current === 'all-products';
+    const isCatAll = cId === 'all' || cSlug === 'all';
+
+    if (isCurrentAll) {
+      return isCatAll;
+    }
+
+    if (isCatAll) {
+      return false;
+    }
+
+    if (cId && cId === current) return true;
+    if (cSlug && cSlug === current) return true;
+    if (cName && cName === current) return true;
+
+    return false;
+  };
+
+  // Sync category filter from URL query param
+  useEffect(() => {
+    if (categoryParam) {
+      const cleanParam = categoryParam.toLowerCase().trim();
+      if (cleanParam === 'all' || cleanParam === 'all-products') {
+        setSelectedCategory('all');
+        setActiveSubCategory('all');
+        return;
+      }
+
+      const matched = categoriesForFilter.find(c => {
+        if (c.id === 'all' || c.slug === 'all') return false;
+        const cId = (c.id || '').toLowerCase().trim();
+        const cSlug = (c.slug || '').toLowerCase().trim();
+        const cName = (c.name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+        return (
+          cId === cleanParam ||
+          cSlug === cleanParam ||
+          cName === cleanParam
+        );
+      });
+      if (matched) {
+        const targetVal = matched.slug || matched.id;
+        setSelectedCategory(targetVal);
+        setActiveSubCategory(targetVal);
+      } else {
+        setSelectedCategory(categoryParam);
+        setActiveSubCategory(categoryParam);
+      }
+    } else {
+      setSelectedCategory('all');
+      setActiveSubCategory('all');
+    }
+  }, [categoryParam, categoriesForFilter]);
 
   // Quote Modal State
   const [showQuoteModal, setShowQuoteModal] = useState(false);
@@ -329,9 +413,34 @@ const PersonalizedGifts = () => {
     notes: '',
   });
 
-  const handleCategorySelect = (catId) => {
-    setSelectedCategory(catId);
-    setActiveSubCategory(catId);
+  const scrollToResults = () => {
+    setTimeout(() => {
+      if (resultsRef.current) {
+        const headerOffset = 96;
+        const elementPosition = resultsRef.current.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        window.scrollTo({
+          top: Math.max(0, offsetPosition),
+          behavior: 'smooth',
+        });
+      }
+    }, 20);
+  };
+
+  const handleCategorySelect = (cat) => {
+    const catVal = typeof cat === 'object' && cat !== null ? (cat.slug || cat.id) : cat;
+    setSelectedCategory(catVal);
+    setActiveSubCategory(catVal);
+    setCurrentPage(1);
+    const nextParams = new URLSearchParams(searchParams);
+    if (catVal === 'all' || catVal === 'all-products') {
+      nextParams.delete('category');
+      nextParams.delete('subCategory');
+    } else {
+      nextParams.set('category', catVal);
+    }
+    setSearchParams(nextParams, { replace: true });
+    scrollToResults();
   };
 
   const toggleOccasion = (id) => {
@@ -351,7 +460,13 @@ const PersonalizedGifts = () => {
     setMinPrice('100');
     setMaxPrice('5000');
     setSelectedOccasions([]);
+    setCurrentPage(1);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('category');
+    nextParams.delete('subCategory');
+    setSearchParams(nextParams, { replace: true });
     toast.info('Filters cleared');
+    scrollToResults();
   };
 
   // Filtered & Sorted Products computation
@@ -387,13 +502,19 @@ const PersonalizedGifts = () => {
       const activeCat = selectedCategory !== 'all' ? selectedCategory : activeSubCategory;
       if (activeCat !== 'all') {
         const catObj = categoriesForFilter.find(c => c.id === activeCat || c.slug === activeCat);
-        const targetId = catObj?.id || activeCat;
+        const targetId = (catObj?.id || activeCat).toLowerCase();
         const targetSlug = (catObj?.slug || activeCat).toLowerCase();
 
         // Exact DB Subcategory ID match or slug match
-        if (prod.subCategoryId && (prod.subCategoryId === targetId || prod.subCategoryId === targetSlug)) return true;
+        if (prod.subCategoryId && (prod.subCategoryId.toLowerCase() === targetId || prod.subCategoryId.toLowerCase() === targetSlug)) return true;
         if (prod.subCategorySlug && (prod.subCategorySlug.toLowerCase() === targetSlug || prod.subCategorySlug === targetId)) return true;
-        if (prod.categoryId && prod.categoryId === targetId) return true;
+        if (prod.categoryId && (prod.categoryId.toLowerCase() === targetId || prod.categoryId.toLowerCase() === targetSlug)) return true;
+
+        const subName = (prod.subCategoryName || (typeof prod.subCategory === 'string' ? prod.subCategory : prod.subCategory?.name) || prod.subcategory || '').toLowerCase();
+        const subSlug = (prod.subCategorySlug || (typeof prod.subCategory === 'object' ? prod.subCategory?.slug : '') || subName).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+        if (subSlug && targetSlug && (subSlug === targetSlug || subSlug.includes(targetSlug) || targetSlug.includes(subSlug))) return true;
+        if (subName && (subName.includes(targetSlug) || targetSlug.includes(subName))) return true;
 
         return false;
       }
@@ -519,12 +640,12 @@ const PersonalizedGifts = () => {
               </div>
               <div className={styles.categoryList}>
                 {categoriesForFilter.map((cat) => {
-                  const isActive = selectedCategory === cat.id;
+                  const isActive = isCategoryActive(cat);
                   return (
                     <div
                       key={cat.id}
                       className={`${styles.categoryItem} ${isActive ? styles.categoryActive : ''}`}
-                      onClick={() => handleCategorySelect(cat.id)}
+                      onClick={() => handleCategorySelect(cat)}
                     >
                       <div className={styles.categoryLeft}>
                         {isActive && <span className={styles.goldDot} />}
@@ -638,11 +759,11 @@ const PersonalizedGifts = () => {
           </aside>
 
           {/* Right Product Grid Area */}
-          <main className={styles.contentArea}>
+          <main ref={resultsRef} className={styles.contentArea}>
             {/* Top Toolbar */}
             <div className={styles.contentHeader}>
               <div className={styles.titleGroup}>
-                <h2>All Products</h2>
+                <h2>{selectedCategory !== 'all' ? (categoriesForFilter.find(c => c.id === selectedCategory || c.slug === selectedCategory)?.name || selectedCategory) : 'All Products'}</h2>
                 <p>Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, displayProducts.length)} of {displayProducts.length} products</p>
               </div>
 
@@ -724,7 +845,7 @@ const PersonalizedGifts = () => {
             </div>
 
             {/* Pagination Controls */}
-            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
           </main>
         </div>
       </div>

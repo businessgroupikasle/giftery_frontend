@@ -12,7 +12,7 @@ import {
   FiUserPlus,
   FiMessageSquare
 } from 'react-icons/fi';
-import { formatOrderId } from '@utils/formatters';
+import { formatOrderId, formatEnquiryId } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
 
 const DEFAULT_RECENT_ORDERS = [];
@@ -667,7 +667,12 @@ const DashboardOverview = ({
                   }}
                 >
                   <div>
-                    <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block' }}>{enq.name}</strong>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.15rem' }}>
+                      <code style={{ background: '#fef3c7', color: '#b45309', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: '700' }}>
+                        {enq.displayId || formatEnquiryId(enq.id, enq.createdAt)}
+                      </code>
+                      <strong style={{ fontSize: '0.85rem', color: '#0f172a' }}>{enq.name}</strong>
+                    </div>
                     <span style={{ fontSize: '0.78rem', color: '#64748b' }}>{enq.subject || enq.category || 'General Inquiry'}</span>
                   </div>
                   <span className={`${styles.pillStatus} ${enq.status === 'Resolved' ? styles.pillDelivered : enq.status === 'In Progress' ? styles.pillProcessing : styles.pillPending}`}>
