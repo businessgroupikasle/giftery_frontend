@@ -1,5 +1,6 @@
 import BulkImportModal from './BulkImportModal';
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { FiUpload, FiSearch, FiPlus, FiX } from 'react-icons/fi';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { toast } from 'react-toastify';
@@ -423,7 +424,7 @@ const ProductsSection = ({
               }}
               title="Bulk import products from Excel (.xlsx) or ZIP package with images"
             >
-              <span style={{ fontSize: '1rem' }}>📥</span>
+              <FiUpload style={{ fontSize: '1rem', color: '#b45309' }} />
               <span>Bulk Import</span>
             </button>
 
@@ -450,7 +451,8 @@ const ProductsSection = ({
                 transition: 'all 0.15s ease',
               }}
             >
-              <span>+ Add Product</span>
+              <FiPlus style={{ fontSize: '1rem' }} />
+              <span>Add Product</span>
             </button>
           </div>
         </div>
@@ -473,10 +475,9 @@ const ProductsSection = ({
                 fontSize: '0.85rem',
                 color: '#1e293b',
               }}
-            />
-            <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}>
-              🔍
-            </span>
+            >
+            </input>
+            <FiSearch style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.95rem' }} />
           </div>
 
           {searchQuery && (
@@ -564,7 +565,7 @@ const ProductsSection = ({
                   fontWeight: '700',
                 }}
               >
-                ✕
+                <FiX aria-hidden="true" />
               </button>
             </div>
 
@@ -820,7 +821,7 @@ const ProductsSection = ({
                                   justifyContent: 'center',
                                 }}
                               >
-                                ✕
+
                               </button>
                             </>
                           ) : (

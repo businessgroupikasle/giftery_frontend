@@ -43,6 +43,14 @@
   flex-shrink: 0;
 }
 
+.sidebarBrandLogo {
+  max-height: 48px;
+  max-width: 210px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
+
 .brandTextGroup {
   display: flex;
   flex-direction: column;
@@ -224,6 +232,9 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Responsive Sidebar */
@@ -840,6 +851,12 @@
   background: #f1f5f9;
   border-color: #cbd5e1;
   color: #1e293b;
+}
+.filterBtnActive {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fde68a;
+  font-weight: 700;
 }
 .filterBtn svg:last-child {
   transition: transform 0.2s ease;
@@ -1459,6 +1476,90 @@
 .miniCardRed    { background: #fef2f2; border: 1px solid #fee2e2; }
 .miniCardBlue   { background: #f0f9ff; border: 1px solid #e0f2fe; }
 .miniCardGreen  { background: #f0fdf4; border: 1px solid #dcfce7; }
+.miniCardPurple { background: #faf5ff; border: 1px solid #f3e8ff; }
+
+/* Quick Status Grid (KAN-52, KAN-54) */
+.quickStatusGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1100px) {
+  .quickStatusGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .quickStatusGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Timeline Feed & Items for Recent Activity (KAN-53, KAN-54) */
+.timelineList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.timelineBadge {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.bgTimelineGreen { background: #10b981; box-shadow: 0 0 0 3px #d1fae5; }
+.bgTimelineBlue { background: #3b82f6; box-shadow: 0 0 0 3px #dbeafe; }
+.bgTimelineOrange { background: #f59e0b; box-shadow: 0 0 0 3px #fef3c7; }
+.bgTimelinePurple { background: #8b5cf6; box-shadow: 0 0 0 3px #ede9fe; }
+
+.timelineText {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.82rem;
+  color: #334155;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* Reports section icons and buttons (KAN-61, KAN-63) */
+.reportIconBox {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reportDownloadBtn {
+  margin-top: auto;
+  padding: 0.65rem 1rem;
+  background: #d99b26;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(217, 155, 38, 0.25);
+  transition: all 0.15s ease;
+}
+
+.reportDownloadBtn:hover {
+  background: #b8821d;
+  transform: translateY(-1px);
+}
+
 
 .miniLabel {
   font-size: 0.68rem;

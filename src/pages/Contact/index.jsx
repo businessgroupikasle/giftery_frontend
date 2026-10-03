@@ -126,6 +126,27 @@ const Contact = () => {
     notes: '',
   });
 
+  // Corporate Catalogue Modal State
+  const [showCatalogueModal, setShowCatalogueModal] = useState(false);
+  const [catalogueDownloading, setCatalogueDownloading] = useState(false);
+  const [catalogueForm, setCatalogueForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+  });
+
+  // Prevent background scrolling when modals are open (KAN-43)
+  useEffect(() => {
+    if (showAppointmentModal || showCatalogueModal) {
+      const orig = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = orig;
+      };
+    }
+  }, [showAppointmentModal, showCatalogueModal]);
+
   const handleAppointmentChange = (e) => {
     const { name, value } = e.target;
     if (name === 'phone') {
@@ -133,7 +154,53 @@ const Contact = () => {
       setAppointmentData((prev) => ({ ...prev, phone: cleaned }));
       return;
     }
+    if (name === 'name') {
+      const cleaned = value.replace(/[^a-zA-Z\s.'-]/g, '');
+      setAppointmentData((prev) => ({ ...prev, name: cleaned }));
+      return;
+    }
     setAppointmentData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCatalogueSubmit = async (e) => {
+    e.preventDefault();
+    if (catalogueDownloading) return;
+    if (!catalogueForm.name?.trim() || !/^[a-zA-Z\s.'-]+$/.test(catalogueForm.name.trim())) {
+      toast.error('Please enter a valid full name containing only letters');
+      return;
+    }
+    if (!isValidEmail(catalogueForm.email)) {
+      toast.error('Please enter a valid corporate email address');
+      return;
+    }
+    if (!isValidMobile(catalogueForm.phone)) {
+      toast.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
+    setCatalogueDownloading(true);
+    try {
+      await axiosInstance.post(ENDPOINTS.ENQUIRIES.SUBMIT, {
+        name: catalogueForm.name.trim(),
+        email: catalogueForm.email.trim(),
+        phone: catalogueForm.phone.trim(),
+        subject: 'Corporate Catalogue Request',
+        message: `Company: ${catalogueForm.company.trim() || 'Not specified'}\nRequested corporate gifting catalogue from Contact Page.`,
+      });
+      const link = document.createElement('a');
+      link.href = '/downloads/Giftery_Corporate_Catalogue.pdf';
+      link.download = 'Giftery_Corporate_Catalogue.pdf';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setShowCatalogueModal(false);
+      setCatalogueForm({ name: '', email: '', phone: '', company: '' });
+      toast.success('Corporate catalogue downloaded successfully!');
+      window.dispatchEvent(new Event('enquiries_updated'));
+    } catch (err) {
+      toast.error('Failed to process catalogue request. Please try again.');
+    } finally {
+      setCatalogueDownloading(false);
+    }
   };
 
   const handleAppointmentSubmit = (e) => {
@@ -142,8 +209,12 @@ const Contact = () => {
       toast.error('Please fill in your name, email and phone number');
       return;
     }
-    if (!isValidEmail(appointmentData.email)) {
-      toast.error('Please enter a valid email address');
+    if (!/^[a-zA-Z\s.'-]+$/.test(appointmentData.name.trim())) {
+      toast.error('Full Name should contain only valid letters and spaces');
+      return;
+    }
+    if (!isValidEmail(appointmentData.email) || /^\d+$/.test(appointmentData.email.trim())) {
+      toast.error('Please enter a valid email address (e.g. name@example.com)');
       return;
     }
     if (!isValidMobile(appointmentData.phone)) {
@@ -195,6 +266,11 @@ const Contact = () => {
       setFormData((prev) => ({ ...prev, phone: cleaned }));
       return;
     }
+    if (name === 'fullName') {
+      const cleaned = value.replace(/[^a-zA-Z\s.'-]/g, '');
+      setFormData((prev) => ({ ...prev, fullName: cleaned }));
+      return;
+    }
     if (name === 'message') setCharCount(value.length);
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -205,8 +281,16 @@ const Contact = () => {
       toast.error('Please fill in required fields (Name, Email, Message)');
       return;
     }
-    if (!isValidEmail(formData.email)) {
-      toast.error('Please enter a valid email address');
+    if (!/^[a-zA-Z\s.'-]+$/.test(formData.fullName.trim())) {
+      toast.error('Name should contain only letters and spaces (numbers not allowed)');
+      return;
+    }
+    if (formData.email.trim().length > 80) {
+      toast.error('Email address cannot exceed 80 characters');
+      return;
+    }
+    if (!isValidEmail(formData.email) || /^\d+$/.test(formData.email.trim())) {
+      toast.error('Please enter a valid email address (e.g. name@example.com)');
       return;
     }
     if (!formData.phone || !formData.phone.trim()) {
@@ -252,9 +336,35 @@ const Contact = () => {
 
       setSubmitted(true);
       toast.success('Your enquiry has been submitted successfully!');
+      setTimeout(() => {
+        setSubmitted(false);
+        setFormData({
+          fullName: '',
+          email: '',
+          phone: '',
+          company: '',
+          subject: '',
+          inquiryType: 'general',
+          message: '',
+        });
+        setCharCount(0);
+      }, 5000);
     } catch (err) {
       setSubmitted(true);
       toast.success('Your enquiry has been submitted!');
+      setTimeout(() => {
+        setSubmitted(false);
+        setFormData({
+          fullName: '',
+          email: '',
+          phone: '',
+          company: '',
+          subject: '',
+          inquiryType: 'general',
+          message: '',
+        });
+        setCharCount(0);
+      }, 5000);
     }
   };
 
@@ -267,7 +377,7 @@ const Contact = () => {
           {/* Background image + overlay */}
           <img
             src="/images/contact_hero_bg.png"
-            alt="Gifterys luxury gift collection"
+            alt="GIFTERY luxury gift collection"
             className={styles.heroBgImage}
           />
           <div className={styles.heroOverlay} />
@@ -318,9 +428,37 @@ const Contact = () => {
 
               {submitted ? (
                 <div className={styles.successMessage}>
-                  <span className={styles.successEmoji}>🎉</span>
                   <h4>Message Sent Successfully!</h4>
                   <p>Our gifting specialist will get back to you within 24 hours.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSubmitted(false);
+                      setFormData({
+                        fullName: '',
+                        email: '',
+                        phone: '',
+                        company: '',
+                        subject: '',
+                        inquiryType: 'general',
+                        message: '',
+                      });
+                      setCharCount(0);
+                    }}
+                    style={{
+                      marginTop: '1rem',
+                      background: '#d99b26',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '0.6rem 1.25rem',
+                      fontWeight: '700',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Send Another Message
+                  </button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit}>
@@ -332,6 +470,7 @@ const Contact = () => {
                       name="fullName"
                       placeholder="Your Full Name *"
                       required
+                      maxLength={50}
                       value={formData.fullName}
                       onChange={handleChange}
                     />
@@ -341,6 +480,7 @@ const Contact = () => {
                       name="email"
                       placeholder="Your Email Address *"
                       required
+                      maxLength={80}
                       value={formData.email}
                       onChange={handleChange}
                     />
@@ -575,9 +715,24 @@ const Contact = () => {
             <p className={styles.bulkCardDesc}>
               Get special pricing and exclusive benefits on orders over 25+ units with custom branding.
             </p>
-            <Link to={ROUTES.CORPORATE_GIFTS} className={styles.bulkLink}>
-              REQUEST CORPORATE Catalogue <ArrowRight />
-            </Link>
+            <button
+              type="button"
+              onClick={() => setShowCatalogueModal(true)}
+              className={styles.bulkLink}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                textAlign: 'left',
+                padding: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                font: 'inherit',
+              }}
+            >
+              REQUEST CORPORATE CATALOGUE <ArrowRight />
+            </button>
           </div>
         </div>
 
@@ -588,7 +743,7 @@ const Contact = () => {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }} onClick={() => setShowAppointmentModal(false)}>
           <div style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '520px', width: '100%', padding: '2rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
             <button type="button" style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 'bold' }} onClick={() => setShowAppointmentModal(false)}>
-              ✕
+
             </button>
             <h3 style={{ margin: '0 0 0.4rem 0', color: '#0f172a', fontSize: '1.35rem', fontWeight: '800' }}>
               Book Studio Appointment
@@ -599,7 +754,7 @@ const Contact = () => {
 
             {appointmentSubmitted ? (
               <div style={{ padding: '2rem 1rem', textAlign: 'center', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
-                <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '0.5rem' }}>🎉</span>
+                <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '0.5rem' }}></span>
                 <h4 style={{ margin: 0, color: '#166534', fontSize: '1.1rem', fontWeight: '800' }}>Appointment Confirmed!</h4>
                 <p style={{ margin: '0.5rem 0 0 0', color: '#15803d', fontSize: '0.85rem' }}>We look forward to seeing you. Check your email for details.</p>
               </div>
@@ -710,6 +865,171 @@ const Contact = () => {
                 </button>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── CORPORATE CATALOGUE DOWNLOAD MODAL (KAN-41) ── */}
+      {showCatalogueModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem',
+          }}
+          onClick={() => !catalogueDownloading && setShowCatalogueModal(false)}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: '16px',
+              maxWidth: '480px',
+              width: '100%',
+              padding: '2rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              style={{
+                position: 'absolute',
+                top: '1.25rem',
+                right: '1.25rem',
+                background: '#f1f5f9',
+                border: 'none',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#64748b',
+                fontWeight: 'bold',
+              }}
+              onClick={() => setShowCatalogueModal(false)}
+            >
+
+            </button>
+
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                background: '#fef3c7',
+                color: '#b45309',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem',
+                marginBottom: '1rem',
+              }}
+            >
+
+            </div>
+
+            <h3 style={{ margin: '0 0 0.4rem 0', color: '#0f172a', fontSize: '1.3rem', fontWeight: '800' }}>
+              Download Corporate Catalogue
+            </h3>
+            <p style={{ margin: '0 0 1.25rem 0', color: '#64748b', fontSize: '0.88rem', lineHeight: '1.5' }}>
+              Please share your business details to download our complete 2026 Corporate Gifts Catalogue (PDF).
+            </p>
+
+            <form onSubmit={handleCatalogueSubmit} style={{ display: 'grid', gap: '0.9rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Your Name (letters only)"
+                  value={catalogueForm.name}
+                  onChange={(e) => {
+                    const cleaned = e.target.value.replace(/[^a-zA-Z\s.'-]/g, '');
+                    setCatalogueForm({ ...catalogueForm, name: cleaned });
+                  }}
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>
+                    Corporate Email *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    maxLength={80}
+                    placeholder="name@company.com"
+                    value={catalogueForm.email}
+                    onChange={(e) => setCatalogueForm({ ...catalogueForm, email: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    maxLength={10}
+                    pattern="[6-9][0-9]{9}"
+                    placeholder="10-digit number"
+                    value={catalogueForm.phone}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setCatalogueForm({ ...catalogueForm, phone: cleaned });
+                    }}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>
+                  Company Name (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Your organization"
+                  value={catalogueForm.company}
+                  onChange={(e) => setCatalogueForm({ ...catalogueForm, company: e.target.value })}
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={catalogueDownloading}
+                style={{
+                  marginTop: '0.5rem',
+                  background: '#dfa843',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '0.85rem',
+                  fontWeight: '800',
+                  fontSize: '0.9rem',
+                  cursor: catalogueDownloading ? 'wait' : 'pointer',
+                  boxShadow: '0 4px 12px rgba(223, 168, 67, 0.35)',
+                }}
+              >
+                {catalogueDownloading ? 'Preparing PDF...' : 'Submit & Download PDF'}
+              </button>
+            </form>
           </div>
         </div>
       )}

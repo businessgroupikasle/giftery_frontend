@@ -719,36 +719,26 @@
     grid-template-columns: repeat(3, 1fr);
   }
 }
-
 @media (max-width: 640px) {
-<<<<<<< HEAD
-  .shippingBannerContent {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.65rem;
-  }
-  .shippingMsgText {
-    text-align: center;
-    white-space: normal;
-  }
-  .eligibleBadge {
-    justify-content: center;
-=======
   .container {
     padding: 0 0.85rem;
   }
   .shippingBannerContent {
-    flex-wrap: wrap;
-    gap: 0.6rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
   }
   .progressBarWrapper {
     flex: 1 1 100%;
     order: 3;
   }
   .shippingMsgText {
+    text-align: center;
     white-space: normal;
     font-size: 0.68rem;
->>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
+  }
+  .eligibleBadge {
+    justify-content: center;
   }
   .tableHeaderRow {
     display: none;

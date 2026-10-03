@@ -125,9 +125,9 @@ const Home = () => {
         <div className="container">
           <div className={styles.trustGrid}>
             {[
-              { icon: '🚀', title: 'Express Delivery', desc: 'Timely dispatch for all corporate orders' },
-              { icon: '🔒', title: 'Secure Payment', desc: 'Encrypted B2B checkout' },
-              { icon: '🎨', title: 'Custom Branding', desc: 'Logo printing & engraving on all products' },
+              { icon: '', title: 'Express Delivery', desc: 'Timely dispatch for all corporate orders' },
+              { icon: '', title: 'Secure Payment', desc: 'Encrypted B2B checkout' },
+              { icon: '', title: 'Custom Branding', desc: 'Logo printing & engraving on all products' },
               { icon: '⭐', title: 'Premium Quality', desc: 'Handpicked products guaranteed to impress' },
             ].map(({ icon, title, desc }) => (
               <div key={title} className={styles.trustCard}>

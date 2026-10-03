@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
+import { FiX } from 'react-icons/fi';
 import styles from '../Dashboard.module.css';
 
 const CategoriesSection = ({
@@ -373,7 +374,7 @@ const CategoriesSection = ({
                 onClick={() => setSearchQuery('')}
                 style={{ position: 'absolute', right: '0.6rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.9rem' }}
               >
-                ✕
+
               </button>
             )}
           </div>
@@ -464,7 +465,7 @@ const CategoriesSection = ({
                 onClick={resetCategoryForm}
                 style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', fontSize: '1rem', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                ✕
+                <FiX aria-hidden="true" />
               </button>
             </div>
 

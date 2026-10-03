@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import Layout from '@components/layout/Layout';
@@ -129,7 +129,7 @@ const TOYS_MOCK_PRODUCTS = [
 ];
 
 const Toys = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const routeQuery = searchParams.get('q') || '';
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -318,13 +318,8 @@ const Toys = () => {
   const categoriesForFilter = dynamicCategories;
 
   // Filter States
-<<<<<<< HEAD
-  const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get('category') || searchParams.get('subCategory');
-  const [searchQuery, setSearchQuery] = useState('');
-=======
-  const [searchQuery, setSearchQuery] = useState(routeQuery);
->>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
+  const [searchQuery, setSearchQuery] = useState(routeQuery || '');
   const [activeSubCategory, setActiveSubCategory] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [minPrice, setMinPrice] = useState('0');
@@ -335,7 +330,6 @@ const Toys = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
 
-<<<<<<< HEAD
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -380,8 +374,9 @@ const Toys = () => {
 
   // Sync category filter from URL query param
   useEffect(() => {
-    if (categoryParam) {
-      const cleanParam = categoryParam.toLowerCase().trim();
+    const rawTarget = categoryParam || routeQuery;
+    if (rawTarget) {
+      const cleanParam = rawTarget.toLowerCase().trim();
       if (cleanParam === 'all' || cleanParam === 'all-toys') {
         setSelectedCategory('all');
         setActiveSubCategory('all');
@@ -412,21 +407,23 @@ const Toys = () => {
         const targetVal = matched.slug || matched.id;
         setSelectedCategory(targetVal);
         setActiveSubCategory(targetVal);
-      } else {
+      } else if (categoryParam) {
         setSelectedCategory(categoryParam);
         setActiveSubCategory(categoryParam);
+      } else {
+        setSelectedCategory('all');
+        setActiveSubCategory('all');
       }
     } else {
       setSelectedCategory('all');
       setActiveSubCategory('all');
     }
-  }, [categoryParam, categoriesForFilter]);
-=======
+  }, [categoryParam, routeQuery, categoriesForFilter]);
+
   useEffect(() => {
     setSearchQuery(routeQuery);
     setCurrentPage(1);
   }, [routeQuery]);
->>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
 
   // Quote Modal State
   const [showQuoteModal, setShowQuoteModal] = useState(false);
@@ -795,21 +792,17 @@ const Toys = () => {
             {/* Top Toolbar */}
             <div className={styles.contentHeader}>
               <div className={styles.titleGroup}>
-<<<<<<< HEAD
-                <h2>
-                  {selectedCategory !== 'all' && selectedCategory !== 'all-toys'
-                    ? (categoriesForFilter.find(c => {
-                        if (c.id === 'all' || c.slug === 'all') return false;
-                        return isCategoryActive(c);
-                      })?.name || selectedCategory)
-                    : 'Toys & Games Catalog'}
-                </h2>
-=======
                 <div className={styles.mobileTitleRow}>
-                  <h2>Toys & Games Catalogue</h2>
+                  <h2>
+                    {selectedCategory !== 'all' && selectedCategory !== 'all-toys'
+                      ? (categoriesForFilter.find(c => {
+                          if (c.id === 'all' || c.slug === 'all') return false;
+                          return isCategoryActive(c);
+                        })?.name || selectedCategory)
+                      : 'Toys & Games Catalog'}
+                  </h2>
                   <button type="button" className={styles.mobileFilterBtn} onClick={() => setMobileFiltersOpen((open) => !open)} aria-expanded={mobileFiltersOpen}>Filter <span>{mobileFiltersOpen ? '−' : '+'}</span></button>
                 </div>
->>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
                 <p>Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, displayProducts.length)} of {displayProducts.length} products</p>
               </div>
 
@@ -831,7 +824,7 @@ const Toys = () => {
                   />
                   {searchQuery && (
                     <button type="button" onClick={() => setSearchQuery('')} className={styles.clearSearchBtn} aria-label="Clear Search">
-                      ✕
+
                     </button>
                   )}
                 </div>
@@ -902,12 +895,12 @@ const Toys = () => {
           <div className={styles.modalOverlay} onClick={() => setShowQuoteModal(false)}>
             <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
               <button className={styles.modalClose} onClick={() => setShowQuoteModal(false)}>
-                ✕
+
               </button>
 
               {quoteSubmitted ? (
                 <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-                  <span style={{ fontSize: '3rem' }}>🎉</span>
+                  <span style={{ fontSize: '3rem' }}></span>
                   <h3 style={{ fontSize: '1.4rem', color: '#16a34a', marginTop: '1rem' }}>
                     Quote Request Submitted!
                   </h3>
@@ -974,7 +967,7 @@ const Toys = () => {
                     </div>
 
                     <button type="submit" className={styles.submitQuoteBtn}>
-                      SUBMIT QUOTE REQUEST ➔
+                      SUBMIT QUOTE REQUEST
                     </button>
                   </form>
                 </>

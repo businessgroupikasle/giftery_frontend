@@ -24,7 +24,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
 
   if (requiredRole) {
     const isSuperAdmin = user?.role === 'SUPER_ADMIN';
-    const isAdmin = user?.role === 'ADMIN';
+    const isAdmin = user?.role === 'ADMIN' || user?.role === 'STORE_ADMIN';
 
     if (requiredRole === 'SUPER_ADMIN' && !isSuperAdmin) {
       return <Navigate to={ROUTES.HOME} replace />;

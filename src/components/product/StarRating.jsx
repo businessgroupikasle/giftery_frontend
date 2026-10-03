@@ -15,7 +15,7 @@ const StarRating = ({ rating = 0, max = 5, size = 'md', showValue = false }) => 
           className={`${styles.star} ${star.filled ? styles.filled : star.half ? styles.half : styles.empty}`}
           aria-hidden="true"
         >
-          ★
+
         </span>
       ))}
       {showValue && <span className={styles.value}>{rating.toFixed(1)}</span>}

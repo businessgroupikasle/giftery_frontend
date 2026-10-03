@@ -4,15 +4,15 @@ import useAuth from '@hooks/useAuth';
 import useWishlist from '@hooks/useWishlist';
 import ProtectedRoute from '@routes/ProtectedRoute';
 import { ROUTES } from '@constants/routes';
+import env from '@config/env';
 import { ENDPOINTS } from '@api/endpoints';
 import axiosInstance from '@api/axiosInstance';
 import Maintenance from '@pages/Maintenance';
 import { getSocket } from '@api/socket';
-<<<<<<< HEAD
 import ScrollToTop from '@components/common/ScrollToTop';
-=======
+import { initAnalytics, trackPageView } from '@utils/analytics';
 import { AppPageLoader } from '@components/ui/Spinner';
->>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
+import { normalizeStoreSettings, readStoreSettings } from '@hooks/useStoreSettings';
 
 // ── Lazy-loaded Pages ─────────────────────────────────────────
 const Home        = lazy(() => import('@pages/Home'));
@@ -37,6 +37,7 @@ const FAQ         = lazy(() => import('@pages/FAQ'));
 const TermsAndConditions = lazy(() => import('@pages/TermsAndConditions'));
 const PrivacyPolicy = lazy(() => import('@pages/PrivacyPolicy'));
 const NotFound    = lazy(() => import('@pages/NotFound'));
+const Forbidden   = lazy(() => import('@pages/Forbidden'));
 const Dashboard   = lazy(() => import('@pages/Dashboard'));
 
 // ── Fallback ──────────────────────────────────────────────────
@@ -60,12 +61,14 @@ const App = () => {
     const fetchAndSyncSettings = async () => {
       try {
         const response = await axiosInstance.get(ENDPOINTS.SETTINGS.GET);
-        if (response?.data) {
-          localStorage.setItem('store_basic_settings', JSON.stringify(response.data));
-          if (response.data.storeLogo) {
-            localStorage.setItem('giftery_store_logo', response.data.storeLogo);
+        const settings = response?.data || response;
+        if (settings && typeof settings === 'object') {
+          const mergedSettings = normalizeStoreSettings(settings, readStoreSettings());
+          localStorage.setItem('store_basic_settings', JSON.stringify(mergedSettings));
+          if (mergedSettings.storeLogo) {
+            localStorage.setItem('giftery_store_logo', mergedSettings.storeLogo);
           }
-          setIsMaintenanceMode(response.data.maintenanceMode === true);
+          setIsMaintenanceMode(mergedSettings.maintenanceMode === true);
           window.dispatchEvent(new Event('store_settings_updated'));
           window.dispatchEvent(new Event('store_logo_updated'));
         }
@@ -82,6 +85,23 @@ const App = () => {
       hydrateWishlist();
     }
   }, [user, hydrateWishlist]);
+
+  // ── SEO & Google Analytics Tracking ─────────────────────────
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
+  useEffect(() => {
+    const pageUrl = location.pathname + location.search;
+    const canonicalPath = location.pathname === '/' ? '/' : location.pathname.replace(/\/$/, '');
+    const publicUrl = `${env.SITE_URL}${canonicalPath}`;
+    const canonical = document.querySelector('link[rel="canonical"]');
+    const openGraphUrl = document.querySelector('meta[property="og:url"]');
+    if (canonical) canonical.setAttribute('href', publicUrl);
+    if (openGraphUrl) openGraphUrl.setAttribute('content', publicUrl);
+    trackPageView(pageUrl, document.title);
+  }, [location]);
+
 
   useEffect(() => {
     const handleSettingsUpdate = () => {
@@ -178,6 +198,7 @@ const App = () => {
         <Route path="/terms"            element={<Navigate to={ROUTES.TERMS} replace />} />
         <Route path={ROUTES.PRIVACY}    element={<PrivacyPolicy />} />
         <Route path="/privacy"          element={<Navigate to={ROUTES.PRIVACY} replace />} />
+        <Route path={ROUTES.FORBIDDEN}  element={<Forbidden />} />
 
         {/* Protected */}
         <Route path={ROUTES.ORDERS}    element={<ProtectedRoute><Orders /></ProtectedRoute>} />

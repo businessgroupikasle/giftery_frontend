@@ -77,13 +77,13 @@ const CATEGORY_DETAILS = {
 };
 
 const ALL_COLLECTIONS = [
-  { id: 'corporate-gifts', name: 'Corporate Gifts', emoji: '💼', count: '120+ Products', desc: 'Executive hampers & leather sets', link: `${ROUTES.CATEGORIES}/corporate-gifts` },
-  { id: 'personalized-gifts', name: 'Personalized Gifts', emoji: '🖊️', count: '110+ Products', desc: 'Custom engraved pens, mugs & diaries', link: `${ROUTES.CATEGORIES}/personalized-gifts` },
-  { id: 'toys', name: 'Toys & Desk Games', emoji: '🧩', count: '65+ Products', desc: 'Executive desk games & puzzles', link: `${ROUTES.CATEGORIES}/toys` },
-  { id: 'welcome-kits', name: 'Employee Welcome Kits', emoji: '🎒', count: '85+ Products', desc: 'Onboarding backpacks & journals', link: `${ROUTES.CATEGORIES}/welcome-kits` },
-  { id: 'custom-merchandise', name: 'Custom Merchandise', emoji: '👔', count: '200+ Products', desc: 'Custom polos, caps & swag', link: `${ROUTES.CATEGORIES}/custom-merchandise` },
-  { id: 'tech-gifts', name: 'Tech Gifts', emoji: '🎧', count: '150+ Products', desc: 'Wireless gadgets & accessories', link: `${ROUTES.CATEGORIES}/tech-gifts` },
-  { id: 'eco-gifts', name: 'Eco Friendly Gifts', emoji: '🌿', count: '90+ Products', desc: 'Sustainable jute & bamboo gifts', link: `${ROUTES.CATEGORIES}/eco-gifts` },
+  { id: 'corporate-gifts', name: 'Corporate Gifts', emoji: '', count: '120+ Products', desc: 'Executive hampers & leather sets', link: `${ROUTES.CATEGORIES}/corporate-gifts` },
+  { id: 'personalized-gifts', name: 'Personalized Gifts', emoji: '', count: '110+ Products', desc: 'Custom engraved pens, mugs & diaries', link: `${ROUTES.CATEGORIES}/personalized-gifts` },
+  { id: 'toys', name: 'Toys & Desk Games', emoji: '', count: '65+ Products', desc: 'Executive desk games & puzzles', link: `${ROUTES.CATEGORIES}/toys` },
+  { id: 'welcome-kits', name: 'Employee Welcome Kits', emoji: '', count: '85+ Products', desc: 'Onboarding backpacks & journals', link: `${ROUTES.CATEGORIES}/welcome-kits` },
+  { id: 'custom-merchandise', name: 'Custom Merchandise', emoji: '', count: '200+ Products', desc: 'Custom polos, caps & swag', link: `${ROUTES.CATEGORIES}/custom-merchandise` },
+  { id: 'tech-gifts', name: 'Tech Gifts', emoji: '', count: '150+ Products', desc: 'Wireless gadgets & accessories', link: `${ROUTES.CATEGORIES}/tech-gifts` },
+  { id: 'eco-gifts', name: 'Eco Friendly Gifts', emoji: '', count: '90+ Products', desc: 'Sustainable jute & bamboo gifts', link: `${ROUTES.CATEGORIES}/eco-gifts` },
 ];
 
 const Categories = () => {
@@ -147,7 +147,7 @@ const Categories = () => {
                 </Link>
                 <h1 className={styles.categoryTitle}>{activeCategory.title}</h1>
                 <p className={styles.categorySubtitle}>{activeCategory.subtitle}</p>
-                <div className={styles.heroBadge}>✨ Verified GIFTERY Collection</div>
+                <div className={styles.heroBadge}> Verified GIFTERY Collection</div>
               </div>
               <div className={styles.heroImgWrapper}>
                 <img src={activeCategory.banner} alt={activeCategory.title} className={styles.heroImg} />

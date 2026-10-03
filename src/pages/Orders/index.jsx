@@ -3,8 +3,9 @@ import { useSelector } from 'react-redux';
 import Layout from '@components/layout/Layout';
 import useFetch from '@hooks/useFetch';
 import { ENDPOINTS } from '@api/endpoints';
-import { formatCurrency, formatDate } from '@utils/formatters';
+import { formatDate, formatOrderId } from '@utils/formatters';
 import styles from './Orders.module.css';
+import InvoiceModal from './InvoiceModal';
 
 const STATUS_COLORS = {
   PENDING: '#f59e0b',
@@ -117,18 +118,17 @@ const Orders = () => {
 
         {!isLoading && orders.length > 0 && (
           <div className={styles.list}>
-            {orders.map((order) => {
-              const orderIdStr = String(order.id || order.orderId || 'ORD-000000');
-              const displayId = orderIdStr.length > 8 ? orderIdStr.slice(-8).toUpperCase() : orderIdStr;
+            {orders.map((order, idx) => {
+              const displayId = formatOrderId(order.id || order.orderId, { prefix: '#', index: idx, createdAt: order.createdAt });
               const itemsList = Array.isArray(order.items) ? order.items : [];
               const orderStatus = order.status || 'PENDING';
               const orderTotal = Number(order.totalAmount || order.total || 0);
 
               return (
-                <div key={orderIdStr} className={styles.order}>
+                <div key={order.id || order.orderId || idx} className={styles.order}>
                   <div className={styles.orderHeader}>
                     <div>
-                      <span className={styles.orderId}>#{displayId}</span>
+                      <span className={styles.orderId}>{displayId}</span>
                       <span className={styles.orderDate}>{formatDate(order.createdAt || new Date())}</span>
                     </div>
                     <span className={styles.status} style={{ color: STATUS_COLORS[orderStatus] || '#f59e0b' }}>
@@ -163,77 +163,7 @@ const Orders = () => {
           </div>
         )}
       </div>
-
-      {selectedOrder && (
-        <div className={styles.modalOverlay} onClick={() => setSelectedOrder(null)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <button type="button" className={styles.closeButton} onClick={() => setSelectedOrder(null)}>
-              ×
-            </button>
-            <h2 className={styles.modalTitle}>
-              Order #{String(selectedOrder.id || selectedOrder.orderId || '').slice(-8).toUpperCase()}
-            </h2>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <span className="text-muted">Placed on {formatDate(selectedOrder.createdAt)}</span>
-              <span
-                className={styles.status}
-                style={{ color: STATUS_COLORS[selectedOrder.status] || '#f59e0b' }}
-              >
-                {selectedOrder.status || 'PENDING'}
-              </span>
-            </div>
-
-            <div className={styles.sectionTitle}>Items</div>
-            <div className={styles.itemsList}>
-              {(selectedOrder.items || []).map((item, idx) => (
-                <div key={item.id || idx} className={styles.orderItemFull}>
-                  <img
-                    src={item.image || item.product?.images?.[0] || item.product?.image || '/images/products/placeholder.png'}
-                    alt={item.name || item.product?.name}
-                    className={styles.itemImage}
-                  />
-                  <div className={styles.itemDetails}>
-                    <div style={{ fontWeight: 600 }}>{item.name || item.product?.name || 'Gift Item'}</div>
-                    <div className={styles.itemPriceRow}>
-                      <span className="text-muted">Qty: {item.quantity || 1}</span>
-                      <span>₹{Number(item.price || item.product?.price || 0).toLocaleString('en-IN')}.00</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {selectedOrder.shippingAddress && (
-              <>
-                <div className={styles.sectionTitle}>Shipping Address</div>
-                <div className={styles.addressBlock}>
-                  <strong>{selectedOrder.shippingAddress.fullName || selectedOrder.shippingAddress.name}</strong>
-                  <br />
-                  {selectedOrder.shippingAddress.addressLine1 || selectedOrder.shippingAddress.address || selectedOrder.shippingAddress.street}
-                  <br />
-                  {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}{' '}
-                  {selectedOrder.shippingAddress.pincode || selectedOrder.shippingAddress.zip}
-                  <br />
-                  {selectedOrder.shippingAddress.country || 'India'}
-                  <br />
-                  Phone: {selectedOrder.shippingAddress.phone}
-                </div>
-              </>
-            )}
-
-            <div className={styles.totalRow}>
-              <span>Total Amount:</span>
-              <span>
-                ₹
-                {Number(selectedOrder.totalAmount || selectedOrder.total || 0).toLocaleString('en-IN', {
-                  minimumFractionDigits: 2,
-                })}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+      <InvoiceModal order={selectedOrder} user={reduxUser} onClose={() => setSelectedOrder(null)} />
     </Layout>
   );
 };

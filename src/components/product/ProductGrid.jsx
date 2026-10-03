@@ -8,7 +8,6 @@ const ProductGrid = ({ products = [], loading = false, emptyMessage = 'No produc
   if (!products.length) {
     return (
       <div className={styles.empty}>
-        <span className={styles.emptyIcon}>🔍</span>
         <p>{emptyMessage}</p>
       </div>
     );

@@ -36,7 +36,7 @@ const GiftLogo = () => (
   </div>
 );
 
-const DEFAULT_LOGO_URL = '/images/store-logo.png';
+const DEFAULT_LOGO_URL = '/images/store-logo-light.png';
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -107,6 +107,7 @@ const Header = () => {
           <img
             src={customLogo || DEFAULT_LOGO_URL}
             alt="GIFTERY Logo"
+            className={styles.headerLogo}
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = DEFAULT_LOGO_URL;
@@ -240,7 +241,7 @@ const Header = () => {
           aria-label="Toggle mobile menu"
           aria-expanded={mobileMenuOpen}
         >
-          ☰
+
         </button>
 
         {/* Action Icons: Wishlist, Cart, Profile */}

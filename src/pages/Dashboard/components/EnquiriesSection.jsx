@@ -328,7 +328,7 @@ const EnquiriesSection = ({
                 fontWeight: 'bold',
               }}
             >
-              ✕
+
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>

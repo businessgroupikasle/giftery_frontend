@@ -14,28 +14,12 @@ const FloatingWidgets = () => {
   const [catalogueForm, setCatalogueForm] = useState(EMPTY_FORM);
 
   const downloadCatalogue = () => {
-    const content = `GIFTERY — PREMIUM GIFTS & LASTING IMPRESSIONS
-PRODUCT CATALOGUE 2026
-
-Store Locations:
-1. Giftery Corporate Gift Store, 39, Ramachandra Rd, R.S. Puram, Coimbatore, Tamil Nadu 641002
-2. Giftery Toys & Custom Gifts Store, Ramanathapuram, Coimbatore, Tamil Nadu 641045
-
-Contact: +91 70101 21945 | giftery2023@gmail.com
-
-COLLECTIONS:
-• Corporate Gifts: Executive Hampers, Leather Keychains, Engraved Pens, Custom Flasks
-• Personalized Gifts: 3D Acrylic Frames, Caricatures, Engraved Clocks, Wooden Plaques
-• Toys & Games: STEM Kits, Kinetic Desk Toys, Mechanical Brain Teasers, RC Cars`;
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = url;
-    link.download = 'Giftery_Corporate_Gifts_Catalogue_2026.txt';
+    link.href = '/downloads/Giftery_Corporate_Catalogue.pdf';
+    link.download = 'Giftery_Corporate_Catalogue.pdf';
     document.body.appendChild(link);
     link.click();
     link.remove();
-    URL.revokeObjectURL(url);
   };
 
   const updateField = (field) => (event) => {

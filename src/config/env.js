@@ -13,6 +13,8 @@ const env = {
   APP_NAME: import.meta.env.VITE_APP_NAME || 'GIFTERY',
   APP_VERSION: import.meta.env.VITE_APP_VERSION || '1.0.0',
   APP_ENV: import.meta.env.VITE_APP_ENV || 'development',
+  SITE_URL: (import.meta.env.VITE_SITE_URL || 'https://gifterys.com').replace(/\/$/, ''),
+  GOOGLE_CLIENT_ID: globalThis.__GIFTERY_CONFIG__?.googleClientId || import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
 
   // ── Payments ─────────────────────────────────────────────
   STRIPE_PUBLISHABLE_KEY: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_default',
@@ -35,7 +37,7 @@ if (env.isDev) {
   const required = ['API_BASE_URL'];
   required.forEach((key) => {
     if (!env[key]) {
-      console.warn(`[env] ⚠️ Missing environment variable: VITE_${key}`);
+      console.warn(`[env]  Missing environment variable: VITE_${key}`);
     }
   });
 }

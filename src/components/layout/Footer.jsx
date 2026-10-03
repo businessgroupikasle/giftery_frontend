@@ -23,7 +23,7 @@ const GiftLogoSvg = () => (
       letterSpacing: '0.06em',
       lineHeight: '1',
     }}>
-      GIFTERYS
+      GIFTERY
     </span>
     <span style={{
       fontFamily: "'Inter', sans-serif",
@@ -39,8 +39,13 @@ const GiftLogoSvg = () => (
   </div>
 );
 
-const DEFAULT_LOGO_URL = '/images/store-logo.png';
+const DEFAULT_LOGO_URL = '/images/store-logo-light.png';
 const filteredPath = (basePath, query) => `${basePath}?q=${encodeURIComponent(query)}`;
+const toysCategoryPath = (name) => {
+  if (name === 'All Toys') return ROUTES.TOYS;
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  return `${ROUTES.TOYS}?category=${encodeURIComponent(slug)}`;
+};
 
 const corporateLinks = [
   { name: 'All Corporate Gifts', path: ROUTES.CORPORATE_GIFTS },
@@ -51,7 +56,7 @@ const corporateLinks = [
 const toysLinks = [
   { name: 'All Toys', path: ROUTES.TOYS },
   ...['Educational Toys', 'Soft Toys', 'Remote Control Toys', 'Building Blocks', 'Dolls & Doll Houses', 'Ride On Toys', 'Outdoor Toys', 'Board Games']
-    .map((name) => ({ name, path: filteredPath(ROUTES.TOYS, name) })),
+    .map((name) => ({ name, path: toysCategoryPath(name) })),
 ];
 
 const Footer = () => {
@@ -124,7 +129,7 @@ const Footer = () => {
               <a href="https://www.instagram.com/giftery.india/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={styles.socialBtn}>
                 <FaInstagram />
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className={styles.socialBtn}>
+              <a href="https://www.linkedin.com/company/giftery/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className={styles.socialBtn}>
                 <FaLinkedinIn />
               </a>
               <a href="https://www.youtube.com/@gifteryindia" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className={styles.socialBtn}>

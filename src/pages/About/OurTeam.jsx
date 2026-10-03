@@ -39,7 +39,7 @@ const TEAM_MEMBERS = [
   },
   {
     id: '07',
-    name: 'Vasanthi',
+    name: 'Vasanth',
     role: 'Printing',
     image: '/images/team_member_7.png',
   },

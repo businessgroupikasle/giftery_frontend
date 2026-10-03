@@ -12,7 +12,9 @@ import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { ROUTES } from '@constants/routes';
 import { toast } from 'react-toastify';
+import { FiHeart, FiShoppingCart, FiZap } from 'react-icons/fi';
 import { getImageUrl } from '@utils/imageUrl';
+import { trackEcommerce } from '@utils/analytics';
 import styles from './Product.module.css';
 
 /* ── Fallback Master Products Dataset (for rich Catalogue fallback by slug) ── */
@@ -154,6 +156,7 @@ const Product = () => {
         if (data && (data.id || data.slug)) {
           if (isMounted) {
             setProduct(data);
+            trackEcommerce.viewItem(data);
             const imgs = parseImagesArray(data.images || data.image, 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80');
             setSelectedImage(imgs[0]);
             setQuantity(data.minOrder || 1);
@@ -172,13 +175,8 @@ const Product = () => {
       }
     };
 
-<<<<<<< HEAD
     // Related Products from Live Catalog
     const fetchLiveRelated = async (currProd) => {
-=======
-    // Related Products from Live Catalogue
-    const fetchLiveRelated = async () => {
->>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
       try {
         const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=60');
         let extracted = [];
@@ -566,6 +564,9 @@ const Product = () => {
         slug,
         quantity: maxStock,
         logo: uploadedLogo,
+        sku: product.sku || '',
+        isCustomized: Boolean(uploadedLogo),
+        customization,
         maxStock,
       }));
       return;
@@ -578,9 +579,13 @@ const Product = () => {
       slug,
       quantity,
       logo: uploadedLogo,
+      sku: product.sku || '',
+      isCustomized: Boolean(uploadedLogo),
+      customization,
       maxStock,
     }));
     toast.success(`Added ${quantity} x ${name} to Cart!`);
+    trackEcommerce.addToCart(product, quantity);
   };
 
   const handleBuyNow = () => {
@@ -597,6 +602,11 @@ const Product = () => {
       comparePrice,
       image: selectedImage || galleryImages[0] || '/placeholder.jpg',
       slug,
+      sku: product.sku || '',
+      variant: product.variant || 'Standard Edition',
+      logo: uploadedLogo,
+      isCustomized: Boolean(uploadedLogo),
+      customization,
       quantity: quantity > maxStock ? maxStock : (quantity || 1),
     };
     navigate('/checkout', { state: { buyNowItem } });
@@ -702,7 +712,7 @@ const Product = () => {
                   onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
                 />
                 <button type="button" className={styles.wishlistOverlayBtn} onClick={handleWishlistToggle} aria-label="Add to wishlist">
-                  ♡
+                  <FiHeart aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -718,7 +728,7 @@ const Product = () => {
               {/* Rating & Sold Bar */}
               <div className={styles.ratingSoldRow}>
                 <div className={styles.starsRow}>
-                  <span className={styles.goldStars}>★★★★☆</span>
+                  <span className={styles.goldStars}></span>
                   <span className={styles.ratingNum}>{rating}</span>
                   <span className={styles.reviewsText}>({reviewsCount} reviews)</span>
                 </div>
@@ -761,7 +771,7 @@ const Product = () => {
                   </div>
                   {minOrder > 1 && <span className={styles.minOrderNote}>Minimum Order: {minOrder} Units</span>}
                   <span className={styles.inStockBadge} style={{ color: inStock ? '#059669' : '#dc2626' }}>
-                    {inStock ? `✓ ${maxStock} In Stock` : '✕ Out of Stock'}
+                    {inStock ? ` ${maxStock} In Stock` : ' Out of Stock'}
                   </span>
                 </div>
               </div>
@@ -775,6 +785,7 @@ const Product = () => {
                   disabled={maxStock <= 0}
                   style={{ opacity: maxStock <= 0 ? 0.6 : 1, cursor: maxStock <= 0 ? 'not-allowed' : 'pointer' }}
                 >
+                  <FiShoppingCart aria-hidden="true" />
                   <span>{maxStock <= 0 ? 'OUT OF STOCK' : 'ADD TO CART'}</span>
                 </button>
                 <button
@@ -789,6 +800,7 @@ const Product = () => {
                     cursor: maxStock <= 0 ? 'not-allowed' : 'pointer',
                   }}
                 >
+                  <FiZap aria-hidden="true" />
                   <span>BUY NOW</span>
                 </button>
                 <button type="button" className={styles.requestQuoteOutlineBtn} onClick={handleRequestQuote}>
@@ -809,21 +821,18 @@ const Product = () => {
               </div>
             </div>
             <div className={styles.trustItem}>
-              <div className={styles.trustIconCircle}>🎨</div>
               <div>
                 <strong className={styles.trustTitle}>Custom Branding</strong>
                 <p className={styles.trustDesc}>Your Logo Here</p>
               </div>
             </div>
             <div className={styles.trustItem}>
-              <div className={styles.trustIconCircle}>📦</div>
               <div>
                 <strong className={styles.trustTitle}>Secure Packaging</strong>
                 <p className={styles.trustDesc}>Safe & Elegant</p>
               </div>
             </div>
             <div className={styles.trustItem}>
-              <div className={styles.trustIconCircle}>🚚</div>
               <div>
                 <strong className={styles.trustTitle}>Pan India Delivery</strong>
                 <p className={styles.trustDesc}>Fast & Reliable</p>
@@ -833,15 +842,12 @@ const Product = () => {
 
           <div className={styles.securityRow}>
             <div className={styles.securityItem}>
-              <span className={styles.secIcon}>💳</span>
               <span><strong>Secure Payment</strong> 100% Protected</span>
             </div>
             <div className={styles.securityItem}>
-              <span className={styles.secIcon}>🔄</span>
               <span><strong>Easy Returns</strong> 7 Day Returns</span>
             </div>
             <div className={styles.securityItem}>
-              <span className={styles.secIcon}>🎧</span>
               <span><strong>Dedicated Support</strong> 24/7 Support</span>
             </div>
           </div>
@@ -899,7 +905,7 @@ const Product = () => {
 
               <div className={styles.relatedGrid}>
                 {relatedProducts.map(rel => (
-                  <div key={rel.id} className={styles.relCard} onClick={() => navigate(ROUTES.PRODUCT_PATH(rel.slug))}>
+                  <div key={rel.id} className={styles.relCard} role="link" tabIndex={0} onClick={() => navigate(ROUTES.PRODUCT_PATH(rel.slug))} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') navigate(ROUTES.PRODUCT_PATH(rel.slug)); }}>
                     <div className={styles.relImgBox}>
                       <img src={rel.image} alt={rel.name} />
                     </div>
@@ -908,7 +914,7 @@ const Product = () => {
                       <div className={styles.relPriceRow}>
                         <span className={styles.relPrice}>₹{rel.price?.toLocaleString('en-IN')}.00</span>
                         <button type="button" className={styles.miniCartBtn} onClick={(e) => { e.stopPropagation(); if (!requireAuth()) return; dispatch(addToCart({ id: rel.id, name: rel.name, price: rel.price, image: rel.image, slug: rel.slug })); toast.success(`Added ${rel.name}`); }}>
-                          🛒
+
                         </button>
                       </div>
                     </div>
@@ -922,14 +928,12 @@ const Product = () => {
           {/* ── 5. BOTTOM VALUE HIGHLIGHTS BANNER ── */}
           <div className={styles.bottomHighlightsBanner}>
             <div className={styles.bannerHighlightCard}>
-              <span className={styles.bannerIcon}>🎁</span>
               <div>
                 <strong>Bulk Discounts</strong>
                 <p>Special pricing on orders over 50+ units</p>
               </div>
             </div>
             <div className={styles.bannerHighlightCard}>
-              <span className={styles.bannerIcon}>🎨</span>
               <div>
                 <strong>Custom Branding</strong>
                 <p>Add your logo & brand identity</p>
@@ -943,7 +947,6 @@ const Product = () => {
               </div>
             </div>
             <div className={styles.bannerHighlightCard}>
-              <span className={styles.bannerIcon}>🚚</span>
               <div>
                 <strong>On-time Delivery</strong>
                 <p>Pan India delivery you can trust</p>

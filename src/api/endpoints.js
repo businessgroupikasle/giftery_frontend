@@ -10,6 +10,7 @@ export const ENDPOINTS = {
   // ── Auth ─────────────────────────────────────────────────
   AUTH: {
     LOGIN: '/auth/login',
+    GOOGLE: '/auth/google',
     REGISTER: '/auth/register',
     REQUEST_OTP: '/auth/request-otp',
     VERIFY_EMAIL: '/auth/verify-email',

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { FiHeart } from 'react-icons/fi';
+import { FiHeart, FiShoppingCart, FiZap } from 'react-icons/fi';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '@store/slices/cartSlice';
 import { selectIsWishlisted } from '@store/slices/wishlistSlice';
@@ -108,12 +108,14 @@ const ProductCard = ({ product }) => {
               toast.success(`Added "${name}" to cart!`);
             }}
           >
+            <FiShoppingCart aria-hidden="true" />
             Add to Cart
           </button>
           <button
             className={styles.buyNowBtn}
             onClick={handleBuyNow}
           >
+            <FiZap aria-hidden="true" />
             Buy Now
           </button>
           <ThreeDotMenu

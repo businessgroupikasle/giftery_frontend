@@ -212,7 +212,7 @@ const PRODUCTS_LIST = [
 ];
 
 const CorporateGifts = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const routeQuery = searchParams.get('q') || '';
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -394,14 +394,8 @@ const CorporateGifts = () => {
   const categoriesForFilter = dynamicCategories;
 
   // Filter States
-<<<<<<< HEAD
-  const [searchParams, setSearchParams] = useSearchParams();
   const subCategoryParam = searchParams.get('subCategory') || searchParams.get('category');
-
-  const [searchQuery, setSearchQuery] = useState('');
-=======
-  const [searchQuery, setSearchQuery] = useState(routeQuery);
->>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
+  const [searchQuery, setSearchQuery] = useState(routeQuery || '');
   const [activeSubCategory, setActiveSubCategory] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [minPrice, setMinPrice] = useState('0');
@@ -412,7 +406,6 @@ const CorporateGifts = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
 
-<<<<<<< HEAD
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -490,6 +483,11 @@ const CorporateGifts = () => {
     }
   }, [subCategoryParam, categoriesForFilter]);
 
+  useEffect(() => {
+    setSearchQuery(routeQuery);
+    setCurrentPage(1);
+  }, [routeQuery]);
+
   const scrollToResults = () => {
     setTimeout(() => {
       if (resultsRef.current) {
@@ -518,16 +516,6 @@ const CorporateGifts = () => {
     }
     setSearchParams(nextParams, { replace: true });
     scrollToResults();
-=======
-  useEffect(() => {
-    setSearchQuery(routeQuery);
-    setCurrentPage(1);
-  }, [routeQuery]);
-
-  const handleCategorySelect = (catId) => {
-    setSelectedCategory(catId);
-    setActiveSubCategory(catId);
->>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
   };
 
   const toggleOccasion = (id) => {
@@ -883,14 +871,10 @@ const CorporateGifts = () => {
             {/* Top Toolbar */}
             <div className={styles.contentHeader}>
               <div className={styles.titleGroup}>
-<<<<<<< HEAD
-                <h2>{selectedCategory !== 'all' ? (categoriesForFilter.find(c => c.id === selectedCategory || c.slug === selectedCategory)?.name || selectedCategory) : 'All Products'}</h2>
-=======
                 <div className={styles.mobileTitleRow}>
-                  <h2>All Products</h2>
+                  <h2>{selectedCategory !== 'all' ? (categoriesForFilter.find(c => c.id === selectedCategory || c.slug === selectedCategory)?.name || selectedCategory) : 'All Products'}</h2>
                   <button type="button" className={styles.mobileFilterBtn} onClick={() => setMobileFiltersOpen((open) => !open)} aria-expanded={mobileFiltersOpen}>Filter <span>{mobileFiltersOpen ? '−' : '+'}</span></button>
                 </div>
->>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
                 <p>Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, displayProducts.length)} of {displayProducts.length} products</p>
               </div>
 
@@ -912,7 +896,7 @@ const CorporateGifts = () => {
                   />
                   {searchQuery && (
                     <button type="button" onClick={() => setSearchQuery('')} className={styles.clearSearchBtn} aria-label="Clear Search">
-                      ✕
+
                     </button>
                   )}
                 </div>
@@ -986,12 +970,12 @@ const CorporateGifts = () => {
         <div className={styles.modalOverlay} onClick={() => setShowQuoteModal(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
             <button className={styles.modalClose} onClick={() => setShowQuoteModal(false)}>
-              ✕
+
             </button>
 
             {quoteSubmitted ? (
               <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-                <span style={{ fontSize: '3rem' }}>🎉</span>
+                <span style={{ fontSize: '3rem' }}></span>
                 <h3 style={{ fontSize: '1.4rem', color: '#16a34a', marginTop: '1rem' }}>
                   Quote Request Submitted!
                 </h3>
@@ -1070,7 +1054,7 @@ const CorporateGifts = () => {
                   </div>
 
                   <button type="submit" className={styles.submitQuoteBtn}>
-                    SUBMIT QUOTE REQUEST ➔
+                    SUBMIT QUOTE REQUEST
                   </button>
                 </form>
               </>

@@ -29,6 +29,14 @@ const useAuth = () => {
     return data;
   }, [dispatch]);
 
+  const loginWithGoogle = useCallback(async (credential) => {
+    const data = await authService.googleLogin(credential);
+    dispatch(setCredentials({ user: data.user, token: data.token }));
+    dispatch(fetchCartAsync());
+    dispatch(fetchWishlistAsync());
+    return data;
+  }, [dispatch]);
+
   const register = useCallback(async (payload) => {
     const data = await authService.register(payload);
     dispatch(setCredentials({ user: data.user, token: data.token }));
@@ -54,7 +62,7 @@ const useAuth = () => {
     dispatch(clearCart());
   }, [dispatch]);
 
-  return { user, isAuthenticated, loading, login, register, logout: logoutUser };
+  return { user, isAuthenticated, loading, login, loginWithGoogle, register, logout: logoutUser };
 };
 
 export default useAuth;

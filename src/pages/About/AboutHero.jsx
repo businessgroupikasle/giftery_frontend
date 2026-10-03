@@ -6,7 +6,7 @@ const AboutHero = () => {
       {/* Full-bleed background hero image */}
       <img
         src="/images/about_hero_bg.png"
-        alt="Gifterys Luxury Corporate Gift Set"
+        alt="GIFTERY Luxury Corporate Gift Set"
         className={styles.heroBgImage}
       />
 
@@ -24,7 +24,7 @@ const AboutHero = () => {
           </h1>
 
           <p className={styles.heroDescription}>
-            At Gifterys, we help businesses build stronger connections
+            At GIFTERY, we help businesses build stronger connections
             through premium, customized gifting solutions that leave
             a lasting impression.
           </p>

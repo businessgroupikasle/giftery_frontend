@@ -21,7 +21,7 @@ const CorporateQuotesSection = ({
             className={styles.viewAllBtn}
             style={{ background: '#d99b26', color: '#fff', fontWeight: '700', border: 'none', cursor: 'pointer' }}
           >
-            📥 Export CSV
+             Export CSV
           </button>
           <span className={styles.viewAllBtn} style={{ background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0' }}>
             Total Requests: {corporateQuotes.length}
@@ -57,11 +57,11 @@ const CorporateQuotesSection = ({
                   </td>
                   <td>
                     <strong>{q.name}</strong>
-                    <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '600' }}>🏢 {q.company}</div>
+                    <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '600' }}> {q.company}</div>
                   </td>
                   <td>
-                    <div style={{ fontSize: '0.82rem' }}>✉️ {q.email}</div>
-                    <div style={{ fontSize: '0.78rem', color: '#64748b' }}>📞 {q.phone}</div>
+                    <div style={{ fontSize: '0.82rem' }}> {q.email}</div>
+                    <div style={{ fontSize: '0.78rem', color: '#64748b' }}> {q.phone}</div>
                   </td>
                   <td>
                     <span style={{ background: '#eff6ff', color: '#1d4ed8', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '700' }}>

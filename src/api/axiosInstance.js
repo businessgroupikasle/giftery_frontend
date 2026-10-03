@@ -12,6 +12,7 @@ import { getToken, clearAuth } from '@utils/storage';
 const axiosInstance = axios.create({
   baseURL: `${env.API_BASE_URL}/api/v1`,
   timeout: 15000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -51,7 +52,7 @@ axiosInstance.interceptors.response.use(
 
     // Forbidden on protected app routes
     if (status === 403 && !isAuthRoute) {
-      window.location.href = '/403';
+      window.location.assign('/403');
     }
 
     return Promise.reject({

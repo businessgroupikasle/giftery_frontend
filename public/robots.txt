@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /admin/*
+Disallow: /super-admin/*
+Disallow: /403
+
+Sitemap: https://gifterys.com/sitemap.xml

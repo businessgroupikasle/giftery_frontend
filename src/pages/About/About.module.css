@@ -12,7 +12,8 @@
 .heroSection {
   position: relative;
   overflow: hidden;
-  min-height: 320px;
+  min-height: 420px;
+  padding: 3.5rem 0 2.5rem 0;
   border-bottom: 1px solid rgba(229, 193, 88, 0.15);
   display: flex;
   align-items: center;
@@ -734,7 +735,8 @@
   border-radius: 14px;
   overflow: hidden;
   background: #111217;
-  height: 290px;
+  height: 100%;
+  min-height: 295px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.35s ease;
   cursor: pointer;
@@ -750,7 +752,7 @@
 .photoWrapper {
   position: relative;
   width: 100%;
-  height: 195px;
+  aspect-ratio: 1 / 1.15;
   overflow: hidden;
   background: #16181f;
   flex-shrink: 0;
@@ -830,13 +832,26 @@
 
 /* ── CTA Banner ─────────────────────────────────────────────── */
 .ctaSection {
-  padding: 6rem 0;
-  background: linear-gradient(135deg, #14151b 0%, #08090c 100%);
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 395px;
+  padding: 5rem 0;
+  background-image:
+    linear-gradient(rgba(7, 9, 13, 0.76), rgba(7, 9, 13, 0.84)),
+    url('/images/corporate_gifting_banner.png');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
   text-align: center;
-  border-top: 1px solid rgba(229, 193, 88, 0.2);
+  border-top: 1px solid rgba(229, 193, 88, 0.35);
+  border-bottom: 1px solid rgba(229, 193, 88, 0.2);
 }
 
 .ctaContainer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
   max-width: 850px;
   margin: 0 auto;
   padding: 0 2rem;
@@ -957,16 +972,16 @@
 }
 
 @media (max-width: 640px) {
-<<<<<<< HEAD
-  .storyCardsGrid,
-=======
   .ctaSection {
     position: relative;
     overflow: hidden;
     padding: 3rem 1rem;
-    background:
-      radial-gradient(circle at 50% 20%, rgba(229, 193, 88, 0.06), transparent 42%),
-      linear-gradient(145deg, #12141a 0%, #07080b 100%);
+    min-height: 340px;
+    background-image:
+      linear-gradient(rgba(7, 9, 13, 0.78), rgba(7, 9, 13, 0.88)),
+      url('/images/corporate_gifting_banner.png');
+    background-position: center;
+    background-size: cover;
   }
   .ctaContainer {
     max-width: 360px;
@@ -994,21 +1009,17 @@
     letter-spacing: 1px;
     border-radius: 8px;
   }
->>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
   .valuesGrid {
     grid-template-columns: 1fr;
   }
   .teamRowSingle {
-<<<<<<< HEAD
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-=======
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.6rem;
   }
   .teamCard {
     min-width: 0;
-    height: 180px;
+    height: 100%;
+    min-height: 200px;
     border-radius: 10px;
   }
   .numberBadge {
@@ -1063,7 +1074,6 @@
   .cardSubtitle {
     font-size: 0.58rem;
     line-height: 1.35;
->>>>>>> fe8b259a343e3a87e6fb5f96a1620d795e99ad76
   }
   .processStepsRow {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1098,7 +1108,9 @@
 
 @media (max-width: 480px) {
   .ctaSection {
+    min-height: 310px;
     padding: 2.5rem 1rem;
+    background-position: 58% center;
   }
   .ctaTitle {
     max-width: 240px;
@@ -1129,7 +1141,8 @@
     gap: 0.45rem;
   }
   .teamCard {
-    height: 155px;
+    height: 100%;
+    min-height: 175px;
     border-radius: 8px;
   }
   .memberName {
@@ -1160,8 +1173,8 @@
     font-size: 1.4rem;
   }
   .heroSection {
-    padding: 0;
-    min-height: 215px;
+    padding: 2.5rem 0 1rem 0;
+    min-height: 250px;
   }
   .heroContainer {
     min-height: 215px;

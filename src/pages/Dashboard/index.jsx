@@ -6,8 +6,9 @@ import useAuth from '@hooks/useAuth';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { ROUTES } from '@constants/routes';
-import { formatEnquiryId } from '@utils/formatters';
+import { formatCustomerId, formatEnquiryId, formatOrderId, filterByDateRange, filterByStatus } from '@utils/formatters';
 import styles from './Dashboard.module.css';
+import { normalizeStoreSettings, readStoreSettings } from '@hooks/useStoreSettings';
 
 // Modular Dashboard Subcomponents
 import DashboardSidebar from './components/DashboardSidebar';
@@ -87,6 +88,9 @@ const Dashboard = () => {
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('Last 30 Days');
   const [selectedStatus, setSelectedStatus] = useState('All');
+  const [showCustomDateInputs, setShowCustomDateInputs] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const filterWrapperRef = useRef(null);
 
@@ -135,17 +139,34 @@ const Dashboard = () => {
 
   const handleAddAdminUserSubmit = (e) => {
     e.preventDefault();
-    if (!roleForm.name || !roleForm.email) {
-      toast.error('Name and Email are required');
+    const cleanName = (roleForm.name || '').trim();
+    if (!cleanName) {
+      toast.error('Full Name is required');
       return;
     }
+    if (!/^[a-zA-Z\s.'-]+$/.test(cleanName) || cleanName.length < 2) {
+      toast.error('Full Name should contain valid alphabetic characters and spaces only (numbers not allowed)');
+      return;
+    }
+
+    const cleanEmail = (roleForm.email || '').trim().toLowerCase();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleanEmail)) {
+      toast.error('Please enter a valid work email address');
+      return;
+    }
+
+    if (!roleForm.role) {
+      toast.error('System Role is required');
+      return;
+    }
+
     const newAdmin = {
       id: 'adm-' + Math.floor(100 + Math.random() * 900),
-      name: roleForm.name,
-      email: roleForm.email,
+      name: cleanName,
+      email: cleanEmail,
       phone: roleForm.phone || '+91 98765 00000',
       role: roleForm.role,
-      permissions: roleForm.permissions,
+      permissions: roleForm.permissions && roleForm.permissions.length > 0 ? roleForm.permissions : ['Dashboard'],
       lastLogin: 'Just now',
       status: 'Active',
     };
@@ -153,23 +174,57 @@ const Dashboard = () => {
     const updated = [newAdmin, ...adminUsers];
     setAdminUsers(updated);
     localStorage.setItem('admin_users_roles', JSON.stringify(updated));
-    toast.success(`${roleForm.name} assigned ${roleForm.role} role & permissions!`);
+    toast.success(`${cleanName} assigned ${roleForm.role} role & permissions!`);
     setShowAddRoleModal(false);
     setRoleForm({ name: '', email: '', phone: '', role: 'STORE_ADMIN', permissions: ['Products', 'Orders', 'Quotes'] });
   };
 
-  const handleDeleteAdminUser = (id) => {
-    const updated = adminUsers.filter(a => a.id !== id);
+  const handleRevokeAdminAccess = (id) => {
+    const updated = adminUsers.map((a) => {
+      if (a.id === id) {
+        return {
+          ...a,
+          status: 'Revoked',
+          previousPermissions: a.permissions || [],
+          previousRole: a.role,
+          permissions: [],
+        };
+      }
+      return a;
+    });
     setAdminUsers(updated);
     localStorage.setItem('admin_users_roles', JSON.stringify(updated));
-    toast.success('Admin user access revoked!');
+    toast.success('User access revoked without deleting record (KAN-56)!');
+  };
+
+  const handleDeleteAdminUser = (id) => {
+    const updated = adminUsers.filter((a) => a.id !== id);
+    setAdminUsers(updated);
+    localStorage.setItem('admin_users_roles', JSON.stringify(updated));
+    toast.success('Admin user record deleted permanently!');
   };
 
   const handleToggleAdminStatus = (id) => {
-    const updated = adminUsers.map(a => a.id === id ? { ...a, status: a.status === 'Active' ? 'Inactive' : 'Active' } : a);
+    const updated = adminUsers.map((a) => {
+      if (a.id === id) {
+        const nextStatus = a.status === 'Active' ? 'Inactive' : 'Active';
+        const restoredPermissions =
+          nextStatus === 'Active' && (!a.permissions || a.permissions.length === 0)
+            ? a.previousPermissions && a.previousPermissions.length > 0
+              ? a.previousPermissions
+              : ['Dashboard', 'Products', 'Categories', 'Orders', 'Quotes']
+            : a.permissions;
+        return {
+          ...a,
+          status: nextStatus,
+          permissions: restoredPermissions,
+        };
+      }
+      return a;
+    });
     setAdminUsers(updated);
     localStorage.setItem('admin_users_roles', JSON.stringify(updated));
-    toast.success('Admin user access status updated!');
+    toast.success('Admin user status updated!');
   };
 
   const handlePermissionCheckboxToggle = (perm) => {
@@ -199,6 +254,7 @@ const Dashboard = () => {
         .filter(u => u.role === 'USER' || u.role === 'CUSTOMER')
         .map(u => ({
           id: u.id,
+          customerId: formatCustomerId(u.id, { customerId: u.customerId, createdAt: u.createdAt, email: u.email }),
           name: u.name,
           email: u.email,
           phone: u.phone || 'Not provided',
@@ -225,7 +281,10 @@ const Dashboard = () => {
     localUsers.forEach(lu => map.set(lu.email, lu));
     backendUsers.forEach(bu => map.set(bu.email, bu));
 
-    setCustomersList(Array.from(map.values()));
+    setCustomersList(Array.from(map.values()).map((customer) => ({
+      ...customer,
+      customerId: formatCustomerId(customer.id, { customerId: customer.customerId, createdAt: customer.createdAt, email: customer.email }),
+    }))); 
     setLoadingCustomers(false);
   };
 
@@ -262,7 +321,7 @@ const Dashboard = () => {
       if (stored) return JSON.parse(stored);
     } catch (e) { }
     return {
-      storeName: 'GIFTERYS',
+      storeName: 'GIFTERY',
       storeTagline: 'PREMIUM GIFTS, LASTING IMPRESSIONS',
       supportEmail: 'support@giftery.com',
       supportPhone: '+91 98765 43210',
@@ -278,7 +337,7 @@ const Dashboard = () => {
       sessionTimeout: '60',
       smtpHost: 'smtp.giftery.com',
       smtpPort: '587',
-      senderName: 'GIFTERYS Order Notifications',
+      senderName: 'GIFTERY Order Notifications',
     };
   });
   const [savingSettings, setSavingSettings] = useState(false);
@@ -290,34 +349,37 @@ const Dashboard = () => {
 
   const handleSaveSettings = async (e) => {
     e.preventDefault();
+    const normalizedSettings = normalizeStoreSettings(settingsForm, readStoreSettings());
+    const payload = {
+      ...normalizedSettings,
+      taxRate: normalizedSettings.taxPercentage,
+      shippingFee: normalizedSettings.standardShippingFee,
+      deliveryCharge: normalizedSettings.standardShippingFee,
+      require2FA: normalizedSettings.requireEmailOTP,
+    };
+
     setSavingSettings(true);
     try {
-      localStorage.setItem('store_basic_settings', JSON.stringify(settingsForm));
-      if (settingsForm.storeLogo) {
-        localStorage.setItem('giftery_store_logo', settingsForm.storeLogo);
-      } else {
-        localStorage.removeItem('giftery_store_logo');
-      }
-      // Dispatch events with slight delay to ensure DOM is updated
-      setTimeout(() => {
-        window.dispatchEvent(new Event('store_settings_updated'));
-        window.dispatchEvent(new Event('store_logo_updated'));
-      }, 50);
-
-      await axiosInstance.put(ENDPOINTS.SETTINGS.UPDATE || '/settings', settingsForm);
-      toast.success('Store Settings & Logo saved successfully!');
-    } catch {
-      localStorage.setItem('store_basic_settings', JSON.stringify(settingsForm));
-      if (settingsForm.storeLogo) {
-        localStorage.setItem('giftery_store_logo', settingsForm.storeLogo);
-      } else {
-        localStorage.removeItem('giftery_store_logo');
-      }
-      setTimeout(() => {
-        window.dispatchEvent(new Event('store_settings_updated'));
-        window.dispatchEvent(new Event('store_logo_updated'));
-      }, 50);
-      toast.success('Store Settings & Logo saved successfully!');
+      const response = await axiosInstance.put(ENDPOINTS.SETTINGS.UPDATE, payload);
+      const savedSettings = response?.data || response;
+      const mergedSettings = normalizeStoreSettings(
+        { ...normalizedSettings, ...(savedSettings && typeof savedSettings === 'object' ? savedSettings : {}) },
+        normalizedSettings,
+      );
+      setSettingsForm(mergedSettings);
+      localStorage.setItem('store_basic_settings', JSON.stringify(mergedSettings));
+      if (mergedSettings.storeLogo) localStorage.setItem('giftery_store_logo', mergedSettings.storeLogo);
+      else localStorage.removeItem('giftery_store_logo');
+      window.dispatchEvent(new Event('store_settings_updated'));
+      window.dispatchEvent(new Event('store_logo_updated'));
+      toast.success('Store settings applied successfully.');
+    } catch (error) {
+      localStorage.setItem('store_basic_settings', JSON.stringify(normalizedSettings));
+      setSettingsForm(normalizedSettings);
+      window.dispatchEvent(new Event('store_settings_updated'));
+      toast.warning(error?.message
+        ? 'Server save failed: ' + error.message + '. Applied in this browser only.'
+        : 'Server save failed. Applied in this browser only.');
     } finally {
       setSavingSettings(false);
     }
@@ -394,7 +456,7 @@ const Dashboard = () => {
       if (key) map.set(key, lo);
     });
 
-    // 2. Add / override with PostgreSQL DB orders (DB is single source of truth)
+    // 2. Add / override with PostgreSQL DB orders
     apiOrders.forEach((ao) => {
       const key = String(ao.id || ao.orderId || '');
       if (key) {
@@ -403,8 +465,8 @@ const Dashboard = () => {
           ...local,
           ...ao,
           id: ao.id,
-          orderId: ao.id,
-          status: (ao.status || local?.status || 'PENDING').toUpperCase(),
+          orderId: ao.orderNumber || ao.publicOrderId || local?.orderId || ao.orderId || ao.id,
+          status: (local?.status || ao.status || 'PENDING').toUpperCase(),
         });
       }
     });
@@ -442,8 +504,9 @@ const Dashboard = () => {
       }
 
       return {
+        ...o,
         id: o.id || o.orderId || `ORD-${Date.now()}`,
-        orderId: o.orderId || o.id,
+        orderId: o.orderNumber || o.publicOrderId || o.orderId || o.id,
         customer: customerName,
         customerEmail: o.customerEmail || o.user?.email || '',
         date: formattedDate,
@@ -494,7 +557,10 @@ const Dashboard = () => {
       const res = await axiosInstance.get(ENDPOINTS.SETTINGS.GET);
       const data = res.data?.data || res.data || res;
       if (data && typeof data === 'object') {
-        setSettingsForm(prev => ({ ...prev, ...data }));
+        const mergedSettings = normalizeStoreSettings(data, readStoreSettings());
+        setSettingsForm(mergedSettings);
+        localStorage.setItem('store_basic_settings', JSON.stringify(mergedSettings));
+        window.dispatchEvent(new Event('store_settings_updated'));
         // Sync logo to localStorage for Header & Footer
         if (data.storeLogo) {
           localStorage.setItem('giftery_store_logo', data.storeLogo);
@@ -990,15 +1056,38 @@ const Dashboard = () => {
   const [downloadModalData, setDownloadModalData] = useState(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
 
+  // Prevent background scrolling when export modal or role modal is open, and guarantee smooth restore
+  useEffect(() => {
+    if (downloadModalData || showAddRoleModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [downloadModalData, showAddRoleModal]);
+
+  // Ensure body scroll is never locked when navigating between tabs
+  useEffect(() => {
+    document.body.style.overflow = 'unset';
+  }, [activeTab]);
+
   // Executed when user clicks "Confirm & Download Now" inside the popup modal window
   const executeDownload = () => {
     if (!downloadModalData) return;
     const { filename, headers, rows } = downloadModalData;
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${(cell || '').toString().replace(/"/g, '""')}"`).join(','))
-    ].join('\n');
+    const escapeCell = (cell) => {
+      if (cell === null || cell === undefined) return '""';
+      const str = String(cell).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const headerLine = headers.map(escapeCell).join(',');
+    const dataLines = rows.map(row => row.map(escapeCell).join(','));
+    // Prepend UTF-8 BOM (\uFEFF) and use CRLF (\r\n) so Excel parses columns/currency symbols without collapsing (KAN-51, KAN-63)
+    const csvContent = '\uFEFF' + [headerLine, ...dataLines].join('\r\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -1027,12 +1116,14 @@ const Dashboard = () => {
 
   const handleExportOrdersCSV = () => {
     const headers = ['Order ID', 'Customer Name', 'Total Amount (INR)', 'Items Count', 'Order Date', 'Status'];
-    const rows = (ordersList || []).map(o => [
-      o.id,
-      o.customer || 'Customer',
+    // Filter records dynamically based on active dashboard date range & status (KAN-48)
+    const filteredOrders = filterByStatus(filterByDateRange(ordersList || [], selectedFilter, 'createdAt'), selectedStatus);
+    const rows = filteredOrders.map((o, idx) => [
+      formatOrderId(o.id || o.orderId, { prefix: '', index: idx, createdAt: o.createdAt }),
+      o.customer || o.customerName || o.user?.name || o.shippingAddress?.fullName || 'Customer',
       o.rawAmount || (o.amount || '0').replace(/[^0-9.]/g, ''),
-      o.itemsCount || 1,
-      o.date || '',
+      o.itemsCount || (Array.isArray(o.items) ? o.items.length : 1),
+      o.date || (o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-IN') : 'Recent'),
       o.status || 'Pending',
     ]);
     triggerDownloadConfirmation('Store_Orders_Sales_Report', 'Orders & Sales Report', headers, rows);
@@ -1048,8 +1139,16 @@ const Dashboard = () => {
 
   const handleExportQuotesCSV = () => {
     const headers = ['Quote ID', 'Customer Name', 'Company Name', 'Email', 'Phone', 'Quantity Requested', 'Submitted Date', 'Status'];
-    const rows = (corporateQuotes || []).map(q => [
-      q.id, q.name, q.company, q.email, q.phone, q.quantity, q.date, q.status,
+    const filteredQuotes = filterByStatus(filterByDateRange(corporateQuotes || [], selectedFilter, 'createdAt'), selectedStatus);
+    const rows = filteredQuotes.map((q, idx) => [
+      q.id ? (q.id.startsWith('QUO-') ? q.id : `QUO-2026-${String(idx + 1).padStart(4, '0')}`) : `QUO-2026-${String(idx + 1).padStart(4, '0')}`,
+      q.name || 'N/A',
+      q.company || 'N/A',
+      q.email || 'N/A',
+      q.phone || 'N/A',
+      q.quantity || 1,
+      q.date || (q.createdAt ? new Date(q.createdAt).toLocaleDateString('en-IN') : ''),
+      q.status || 'Pending',
     ]);
     triggerDownloadConfirmation('Corporate_Quotes_Report', 'Corporate Quotes Report', headers, rows);
   };
@@ -1057,14 +1156,15 @@ const Dashboard = () => {
   const handleExportCustomersCSV = () => {
     const headers = ['Customer ID', 'Customer Name', 'Email Address', 'Phone Number', 'Account Role', 'Total Orders', 'Total Spent (INR)', 'Joined Date', 'Status'];
     const rows = (customersList || []).map(c => [
-      c.id, c.name, c.email, c.phone || 'N/A', c.role || 'CUSTOMER', c.ordersCount || 0, c.totalSpent || 0, c.joinedDate || 'Recent', c.status || 'Active',
+      c.customerId || formatCustomerId(c.id, { email: c.email }), c.name, c.email, c.phone || 'N/A', c.role || 'CUSTOMER', c.ordersCount || 0, c.totalSpent || 0, c.joinedDate || 'Recent', c.status || 'Active',
     ]);
     triggerDownloadConfirmation('Customer_Database_Report', 'Customer Database Report', headers, rows);
   };
 
   const handleExportEnquiriesCSV = () => {
     const headers = ['Enquiry ID', 'Customer Name', 'Email Address', 'Phone Number', 'Category / Subject', 'Enquiry Message', 'Submitted Date', 'Status'];
-    const rows = (enquiriesList || []).map((e, index) => [
+    const filteredEnquiries = filterByStatus(filterByDateRange(enquiriesList || [], selectedFilter, 'createdAt'), selectedStatus);
+    const rows = filteredEnquiries.map((e, index) => [
       e.displayId || formatEnquiryId(e.id, e.createdAt, index),
       e.name,
       e.email,
@@ -1077,6 +1177,31 @@ const Dashboard = () => {
     triggerDownloadConfirmation('Customer_Enquiries_Report', 'Customer Enquiries Report', headers, rows);
   };
 
+  // Export Store Configuration Settings to CSV (KAN-55)
+  const handleExportSettingsCSV = () => {
+    const headers = ['Configuration Setting', 'Value', 'Category'];
+    const rows = [
+      ['Store Name', settingsForm.storeName || 'GIFTERY', 'General'],
+      ['Store Tagline', settingsForm.storeTagline || '', 'General'],
+      ['Support Email', settingsForm.supportEmail || '', 'Contact'],
+      ['Support Phone', settingsForm.supportPhone || '', 'Contact'],
+      ['Store Address', settingsForm.storeAddress || '', 'Contact'],
+      ['Store Currency', settingsForm.currency || 'INR (₹)', 'Finance'],
+      ['Free Shipping Threshold (INR)', settingsForm.freeShippingThreshold || '999', 'Shipping'],
+      ['Standard Shipping Fee (INR)', settingsForm.standardShippingFee || '99', 'Shipping'],
+      ['Tax Percentage (%)', settingsForm.taxPercentage || '18', 'Finance'],
+      ['Cash on Delivery (COD)', settingsForm.enableCOD ? 'Enabled' : 'Disabled', 'Payment'],
+      ['Require Email OTP Verification', settingsForm.requireEmailOTP ? 'Enabled' : 'Security'],
+      ['Allow Public Registrations', settingsForm.allowRegistrations ? 'Enabled' : 'Security'],
+      ['Maintenance Mode', settingsForm.maintenanceMode ? 'Active' : 'Inactive', 'System'],
+      ['Session Timeout (Minutes)', settingsForm.sessionTimeout || '60', 'Security'],
+      ['SMTP Mail Server Host', settingsForm.smtpHost || '', 'Email'],
+      ['SMTP Mail Port', settingsForm.smtpPort || '587', 'Email'],
+      ['Email Sender Name', settingsForm.senderName || '', 'Email'],
+    ];
+    triggerDownloadConfirmation('Store_Configuration_Settings', 'Store Configuration Settings Report', headers, rows);
+  };
+
   const handleHeaderExport = () => {
     if (activeTab === 'products') {
       handleExportProductsCSV();
@@ -1086,6 +1211,8 @@ const Dashboard = () => {
       handleExportQuotesCSV();
     } else if (activeTab === 'enquiries') {
       handleExportEnquiriesCSV();
+    } else if (activeTab === 'settings') {
+      handleExportSettingsCSV();
     } else {
       handleExportOrdersCSV();
     }
@@ -1157,12 +1284,12 @@ const Dashboard = () => {
               {/* Filter Dropdown */}
               <div className={styles.filterWrapper} ref={filterWrapperRef}>
                 <button
-                  className={`${styles.headerActionBtn} ${styles.filterBtn}`}
+                  className={`${styles.headerActionBtn} ${styles.filterBtn} ${selectedFilter !== 'Last 30 Days' || selectedStatus !== 'All' ? styles.filterBtnActive : ''}`}
                   onClick={() => setShowFilterMenu(!showFilterMenu)}
                   title="Filter data"
                 >
                   <FiFilter />
-                  <span>Filter</span>
+                  <span>{selectedFilter === 'Last 30 Days' && selectedStatus === 'All' ? 'Filter' : `${selectedFilter}${selectedStatus !== 'All' ? ` (${selectedStatus})` : ''}`}</span>
                   <FiChevronDown className={showFilterMenu ? styles.chevronUp : ''} />
                 </button>
                 {showFilterMenu && (
@@ -1172,12 +1299,62 @@ const Dashboard = () => {
                       <button
                         key={opt}
                         className={`${styles.filterMenuItem} ${selectedFilter === opt ? styles.filterMenuItemActive : ''}`}
-                        onClick={() => { setSelectedFilter(opt); setShowFilterMenu(false); toast.info(`Filter: ${opt}`); }}
+                        onClick={() => {
+                          if (opt === 'Custom Range') {
+                            setShowCustomDateInputs(prev => !prev);
+                          } else {
+                            setShowCustomDateInputs(false);
+                            setSelectedFilter(opt);
+                            setShowFilterMenu(false);
+                            toast.info(`Filter: ${opt}`);
+                          }
+                        }}
                       >
                         {opt}
-                        {selectedFilter === opt && <span className={styles.filterCheckmark}>✓</span>}
+                        {selectedFilter === opt && <span className={styles.filterCheckmark}></span>}
                       </button>
                     ))}
+
+                    {/* Custom Date Range Picker Inputs */}
+                    {showCustomDateInputs && (
+                      <div style={{ padding: '0.6rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.45rem', background: '#f8fafc', borderRadius: '8px', margin: '0.35rem 0', border: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>Start Date:</span>
+                          <input
+                            type="date"
+                            value={customStartDate}
+                            onChange={(e) => setCustomStartDate(e.target.value)}
+                            style={{ padding: '0.3rem 0.45rem', fontSize: '0.78rem', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#ffffff', color: '#0f172a' }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>End Date:</span>
+                          <input
+                            type="date"
+                            value={customEndDate}
+                            onChange={(e) => setCustomEndDate(e.target.value)}
+                            style={{ padding: '0.3rem 0.45rem', fontSize: '0.78rem', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#ffffff', color: '#0f172a' }}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!customStartDate) {
+                              toast.warning('Please select a start date');
+                              return;
+                            }
+                            const rangeStr = customEndDate ? `${customStartDate} - ${customEndDate}` : customStartDate;
+                            setSelectedFilter(rangeStr);
+                            setShowFilterMenu(false);
+                            toast.info(`Custom Filter: ${rangeStr}`);
+                          }}
+                          style={{ marginTop: '0.3rem', padding: '0.4rem 0.6rem', background: '#d99b26', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          Apply Custom Range
+                        </button>
+                      </div>
+                    )}
+
                     <div className={styles.filterMenuDivider} />
                     <p className={styles.filterMenuLabel}>Status</p>
                     {['All', 'Pending', 'Completed', 'Cancelled'].map((opt) => (
@@ -1187,7 +1364,7 @@ const Dashboard = () => {
                         onClick={() => { setSelectedStatus(opt); setShowFilterMenu(false); toast.info(`Status: ${opt}`); }}
                       >
                         {opt}
-                        {selectedStatus === opt && <span className={styles.filterCheckmark}>✓</span>}
+                        {selectedStatus === opt && <span className={styles.filterCheckmark}></span>}
                       </button>
                     ))}
                   </div>
@@ -1227,6 +1404,8 @@ const Dashboard = () => {
               customersList={customersList}
               ordersList={ordersList}
               backendStats={backendStats}
+              dateFilter={selectedFilter}
+              statusFilter={selectedStatus}
             />
           )}
 
@@ -1304,10 +1483,13 @@ const Dashboard = () => {
 
           {activeTab === 'reports' && (
             <ReportsSection
+              ordersList={ordersList}
               productsList={productsList}
               corporateQuotes={corporateQuotes}
               customersList={customersList}
               enquiriesList={enquiriesList}
+              dateFilter={selectedFilter}
+              statusFilter={selectedStatus}
               handleExportOrdersCSV={handleExportOrdersCSV}
               handleExportProductsCSV={handleExportProductsCSV}
               handleExportQuotesCSV={handleExportQuotesCSV}
@@ -1325,6 +1507,7 @@ const Dashboard = () => {
               roleForm={roleForm}
               setRoleForm={setRoleForm}
               handleAddAdminUserSubmit={handleAddAdminUserSubmit}
+              handleRevokeAdminAccess={handleRevokeAdminAccess}
               handleDeleteAdminUser={handleDeleteAdminUser}
               handleToggleAdminStatus={handleToggleAdminStatus}
               handlePermissionCheckboxToggle={handlePermissionCheckboxToggle}
@@ -1387,7 +1570,7 @@ const Dashboard = () => {
                 onClick={() => setDownloadModalData(null)}
                 style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', fontSize: '1rem', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                ✕
+
               </button>
             </div>
 
@@ -1515,7 +1698,7 @@ const Dashboard = () => {
                 boxShadow: '0 6px 16px rgba(220, 38, 38, 0.18)',
               }}
             >
-              ⚠️
+
             </div>
 
             <h3 style={{ margin: '0 0 0.6rem 0', fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>

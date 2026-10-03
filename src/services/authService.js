@@ -17,6 +17,25 @@ const authService = {
     return payload;
   },
 
+
+  /**
+   * Exchange a Google Identity credential for an application session.
+   */
+  googleLogin: async (credentialOrPayload) => {
+    const payloadData = typeof credentialOrPayload === 'string'
+      ? { credential: credentialOrPayload }
+      : credentialOrPayload;
+
+    const response = await axiosInstance.post(ENDPOINTS.AUTH.GOOGLE, payloadData);
+    const payload = response.data?.data || response.data || response;
+    if (!payload?.token || !payload?.user) {
+      throw new Error('Google authentication returned an invalid session.');
+    }
+    setToken(payload.token);
+    setUser(payload.user);
+    return payload;
+  },
+
   /**
    * Request Email Verification OTP inline
    */

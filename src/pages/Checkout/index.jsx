@@ -1,16 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { FiTrash2, FiX } from 'react-icons/fi';
 import Layout from '@components/layout/Layout';
-import { clearCart, updateQuantity, removeFromCart } from '@store/slices/cartSlice';
-import { formatCurrency } from '@utils/formatters';
+import { clearCartAsync, updateQuantity, removeFromCart } from '@store/slices/cartSlice';
+import { createPublicId, formatCurrency, formatOrderId } from '@utils/formatters';
 import { ROUTES } from '@constants/routes';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { addressService } from '@services/addressService';
 import { isValidMobile, isValidPincode, isValidFullName } from '@utils/validation';
+import { unwrapApiData } from '@utils/apiResponse';
 import { getStoredCoupons } from '@constants/coupons';
+import useStoreSettings from '@hooks/useStoreSettings';
 import styles from './Checkout.module.css';
 
 const Checkout = () => {
@@ -26,13 +29,15 @@ const Checkout = () => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   const cartItems = isBuyNow ? [buyNowItem] : reduxItems;
+  const [orderCompleted, setOrderCompleted] = useState(null);
+  const orderCompletedRef = useRef(false);
 
   useEffect(() => {
-    if (cartItems.length === 0) {
+    if (cartItems.length === 0 && !orderCompletedRef.current) {
       toast.info('Your cart is empty. Please add products to checkout.');
       navigate(ROUTES.CART);
     }
-  }, [cartItems.length, navigate]);
+  }, [cartItems.length, navigate, orderCompleted]);
 
   // Active step: 1 = Shopping Cart, 2 = Delivery, 3 = Payment (starts at 2 for Buy Now / direct delivery)
   const [currentStep, setCurrentStep] = useState(2);
@@ -135,22 +140,9 @@ const Checkout = () => {
   // Payment State
   const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay' | 'cod' | 'card'
   const [isProcessing, setIsProcessing] = useState(false);
-  const [orderCompleted, setOrderCompleted] = useState(null);
   const [paymentError, setPaymentError] = useState(null);
 
-  const [storeSettings] = useState(() => {
-    try {
-      const stored = localStorage.getItem('store_basic_settings');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return {
-          freeShippingThreshold: parsed.freeShippingThreshold !== undefined && parsed.freeShippingThreshold !== '' ? Number(parsed.freeShippingThreshold) : 5000,
-          standardShippingFee: parsed.standardShippingFee !== undefined && parsed.standardShippingFee !== '' ? Number(parsed.standardShippingFee) : 99,
-        };
-      }
-    } catch (e) {}
-    return { freeShippingThreshold: 5000, standardShippingFee: 99 };
-  });
+  const storeSettings = useStoreSettings();
 
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(() => {
@@ -205,17 +197,18 @@ const Checkout = () => {
     let type = 'percent';
     let val = 0;
 
-    if (matched.discount.includes('%')) {
+    const rawDiscount = String(matched.discount || matched.discountValue || '');
+    if (rawDiscount.includes('%') || matched.discountType === 'percent' || matched.discountType === 'percentage') {
       type = 'percent';
-      val = parseFloat(matched.discount.replace(/[^0-9.]/g, '')) || 0;
+      val = parseFloat(rawDiscount.replace(/[^0-9.]/g, '')) || 0;
     } else {
       type = 'fixed';
-      val = parseFloat(matched.discount.replace(/[^0-9.]/g, '')) || 0;
+      val = parseFloat(rawDiscount.replace(/[^0-9.]/g, '')) || 0;
     }
 
     const newApplied = {
       code: matched.code,
-      discountText: matched.discount,
+      discountText: matched.discount || (type === 'percent' ? `${val}% OFF` : `₹${val} OFF`),
       type,
       value: val,
     };
@@ -244,16 +237,27 @@ const Checkout = () => {
 
   let discountAmount = 0;
   if (appliedCoupon) {
-    if (appliedCoupon.type === 'percent') {
-      discountAmount = (subtotal * appliedCoupon.value) / 100;
-    } else if (appliedCoupon.type === 'fixed') {
-      discountAmount = Math.min(subtotal, appliedCoupon.value);
+    const rawType = String(appliedCoupon.type || appliedCoupon.discountType || '').toLowerCase();
+    const discountStr = String(appliedCoupon.discount || appliedCoupon.discountText || '');
+    const isPercent = rawType === 'percent' || rawType === 'percentage' || discountStr.includes('%');
+
+    let numVal = parseFloat(appliedCoupon.value ?? appliedCoupon.discountValue);
+    if (isNaN(numVal) || numVal <= 0) {
+      numVal = parseFloat(discountStr.replace(/[^0-9.]/g, '')) || 0;
+    }
+
+    if (isPercent) {
+      discountAmount = (subtotal * numVal) / 100;
+    } else {
+      discountAmount = Math.min(subtotal, numVal);
     }
   }
 
   const isFreeShipping = subtotal >= storeSettings.freeShippingThreshold;
   const shippingFee = (isFreeShipping || subtotal === 0) ? 0 : storeSettings.standardShippingFee;
-  const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
+  const taxableAmount = Math.max(0, subtotal - discountAmount);
+  const taxAmount = storeSettings.taxPercentage > 0 ? (taxableAmount * storeSettings.taxPercentage) / 100 : 0;
+  const grandTotal = taxableAmount + taxAmount + shippingFee;
 
   // Dynamically load Razorpay SDK script
   useEffect(() => {
@@ -337,13 +341,37 @@ const Checkout = () => {
   };
 
   // Complete Order Handler (Razorpay or COD)
+  const createConfirmedOrder = async (orderData, paymentId = null) => {
+    const response = await axiosInstance.post(ENDPOINTS.ORDERS.CREATE, {
+      items: orderData.items,
+      totalAmount: orderData.totalAmount,
+      subtotal: orderData.subtotal,
+      discountAmount: orderData.discountAmount,
+      shippingFee: orderData.shippingFee,
+      taxPercentage: orderData.taxPercentage,
+      taxAmount: orderData.taxAmount,
+      shippingAddress: orderData.shippingAddress,
+      paymentMethod: orderData.paymentMethod,
+      ...(paymentId ? { paymentId } : {}),
+    });
+    const payload = unwrapApiData(response);
+    return payload?.order || payload || {};
+  };
+
   const handleCompleteOrder = async () => {
     setIsProcessing(true);
     setPaymentError(null);
 
     const orderData = {
-      orderId: `ORD-${Date.now().toString().slice(-6)}`,
+      orderId: createPublicId('ORD'),
       items: cartItems,
+      subtotal,
+      discountAmount,
+      shippingFee,
+      taxPercentage: storeSettings.taxPercentage,
+      taxAmount: taxAmount,
+      freeShippingThreshold: storeSettings.freeShippingThreshold,
+      couponCode: appliedCoupon?.code || null,
       totalAmount: grandTotal,
       shippingAddress: {
         fullName: addressForm.fullName.trim(),
@@ -364,8 +392,7 @@ const Checkout = () => {
 
     if (paymentMethod === 'razorpay') {
       try {
-        // 1. Create Order via Backend Razorpay API
-        const res = await axiosInstance.post(ENDPOINTS.PAYMENTS.RAZORPAY_CREATE_ORDER, {
+        const createResponse = await axiosInstance.post(ENDPOINTS.PAYMENTS.RAZORPAY_CREATE_ORDER, {
           amount: grandTotal,
           currency: 'INR',
           notes: {
@@ -373,12 +400,19 @@ const Checkout = () => {
             customerEmail: addressForm.email,
           },
         });
+        const createPayload = unwrapApiData(createResponse);
+        const orderInfo = createPayload?.order || createPayload;
+        const razorpayOrderId = orderInfo?.orderId || orderInfo?.id;
+        const razorpayKey = orderInfo?.keyId || orderInfo?.key;
 
-        const orderInfo = res.data?.data || res.data;
-        const razorpayOrderId = orderInfo?.orderId || `order_${Date.now()}`;
-        const razorpayKey = orderInfo?.keyId || 'rzp_test_TLFIsTqKaVIKOY';
+        if (!razorpayOrderId || !razorpayKey) {
+          throw new Error('Payment gateway returned an invalid order. Please retry.');
+        }
 
-        // 2. Trigger Razorpay SDK Popup with robust options
+        if (!window.Razorpay) {
+          throw new Error('Razorpay payment gateway failed to load. Please check your network or try Cash on Delivery.');
+        }
+
         const cleanPhone = addressForm.phone ? addressForm.phone.replace(/[^0-9]/g, '').slice(-10) : '';
         const options = {
           key: razorpayKey,
@@ -387,152 +421,95 @@ const Checkout = () => {
           name: 'GIFTERY Store',
           description: `Order #${orderData.orderId} - Corporate & Personalized Gifts`,
           order_id: razorpayOrderId,
-          handler: async function (response) {
+          handler: async (response) => {
             try {
-              // 3. Verify Payment Signature with Backend
-              await axiosInstance.post(ENDPOINTS.PAYMENTS.RAZORPAY_VERIFY, {
-                razorpay_order_id: response.razorpay_order_id || razorpayOrderId,
-                razorpay_payment_id: response.razorpay_payment_id || `pay_${Date.now()}`,
-                razorpay_signature: response.razorpay_signature || '',
+              const verificationResponse = await axiosInstance.post(ENDPOINTS.PAYMENTS.RAZORPAY_VERIFY, {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
               });
+              const verification = unwrapApiData(verificationResponse);
+              if (verification?.verified === false || verification?.success === false) {
+                throw new Error(verification?.message || 'Payment signature verification failed.');
+              }
 
+              const confirmedOrder = await createConfirmedOrder(orderData, response.razorpay_payment_id);
+              await finishOrderSuccess(orderData, confirmedOrder, response.razorpay_payment_id);
+              toast.success(`Payment successful! Razorpay ID: ${response.razorpay_payment_id}`);
+            } catch (error) {
+              const message = error.message || 'Payment verification failed. Please contact support before retrying.';
               setIsProcessing(false);
-              setPaymentError(null);
-              toast.success(`Payment Successful! Razorpay ID: ${response.razorpay_payment_id || 'pay_verified'}`);
-              finishOrderSuccess({ ...orderData, paymentId: response.razorpay_payment_id });
-            } catch (verErr) {
-              console.warn('Backend payment verification fallback:', verErr);
-              setIsProcessing(false);
-              setPaymentError(null);
-              toast.success(`Payment Completed! Razorpay ID: ${response.razorpay_payment_id || 'pay_success'}`);
-              finishOrderSuccess({ ...orderData, paymentId: response.razorpay_payment_id });
+              setPaymentError({ title: 'Payment Verification Failed', message, code: 'VERIFY_FAILED' });
+              toast.error(message);
             }
           },
-          prefill: {
-            name: addressForm.fullName,
-            email: addressForm.email,
-            contact: cleanPhone,
-          },
-          theme: {
-            color: '#1b4d2e',
-          },
-          retry: {
-            enabled: true,
-            max_count: 3,
-          },
-          modal: {
-            ondismiss: function () {
-              setIsProcessing(false);
-            },
-            escape: true,
-            backdropclose: false,
-          },
+          prefill: { name: addressForm.fullName, email: addressForm.email, contact: cleanPhone },
+          theme: { color: '#1b4d2e' },
+          retry: { enabled: true, max_count: 3 },
+          modal: { ondismiss: () => setIsProcessing(false), escape: true, backdropclose: false },
         };
 
-        if (window.Razorpay) {
-          const rzp = new window.Razorpay(options);
-
-          // Listen for Razorpay failure event to capture exact failure reason and allow retry
-          rzp.on('payment.failed', function (failureResponse) {
-            setIsProcessing(false);
-            const errObj = failureResponse?.error || {};
-            const failureReason =
-              errObj.description ||
-              errObj.reason ||
-              'Payment failed or was declined by the bank. Please retry or choose Cash on Delivery.';
-
-            setPaymentError({
-              title: 'Payment Failed',
-              message: failureReason,
-              code: errObj.code || 'PAYMENT_FAILED',
-              orderId: errObj.metadata?.order_id || razorpayOrderId,
-              paymentId: errObj.metadata?.payment_id,
-            });
-
-            toast.error(`Payment Failed: ${failureReason}`);
-          });
-
-          rzp.open();
-        } else {
+        const razorpay = new window.Razorpay(options);
+        razorpay.on('payment.failed', (failureResponse) => {
           setIsProcessing(false);
-          const errMsg = 'Razorpay payment gateway failed to load. Please check your network or try Cash on Delivery.';
-          setPaymentError({ message: errMsg, code: 'SDK_NOT_LOADED' });
-          toast.error(errMsg);
-        }
-      } catch (err) {
-        setIsProcessing(false);
-        const errMsg = err.response?.data?.message || err.message || 'Failed to initialize payment gateway';
-        setPaymentError({
-          message: errMsg,
-          code: 'ORDER_INIT_FAILED',
+          const error = failureResponse?.error || {};
+          const message = error.description || error.reason || 'Payment failed or was declined by the bank.';
+          setPaymentError({
+            title: 'Payment Failed',
+            message,
+            code: error.code || 'PAYMENT_FAILED',
+            orderId: error.metadata?.order_id || razorpayOrderId,
+            paymentId: error.metadata?.payment_id,
+          });
+          toast.error(`Payment failed: ${message}`);
         });
-        toast.error(`Payment error: ${errMsg}`);
-      }
-    } else {
-      // COD or Card
-      setTimeout(() => {
+        razorpay.open();
+      } catch (error) {
         setIsProcessing(false);
-        finishOrderSuccess(orderData);
-      }, 1200);
+        const message = error.message || 'Failed to initialize payment gateway';
+        setPaymentError({ message, code: 'ORDER_INIT_FAILED' });
+        toast.error(`Payment error: ${message}`);
+      }
+      return;
+    }
+
+    try {
+      const confirmedOrder = await createConfirmedOrder(orderData);
+      await finishOrderSuccess(orderData, confirmedOrder);
+      toast.success('Order placed successfully!');
+    } catch (error) {
+      setIsProcessing(false);
+      const message = error.message || 'The order could not be saved. Please retry.';
+      setPaymentError({ title: 'Order Failed', message, code: 'ORDER_CREATE_FAILED' });
+      toast.error(message);
     }
   };
-
-  const simulatePaymentSuccess = (orderData) => {
-    setTimeout(() => {
-      toast.success('Order placed successfully!');
-      finishOrderSuccess(orderData);
-    }, 1000);
-  };
-
-  const finishOrderSuccess = (orderData) => {
+  const finishOrderSuccess = async (orderData, confirmedOrder = {}, paymentId = null) => {
     const storedUser = JSON.parse(localStorage.getItem('giftery_user') || '{}');
-    const userEmail = addressForm.email || storedUser.email || '';
-    const uniqueId = orderData.orderId || `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
-
+    const uniqueId = confirmedOrder.id || confirmedOrder.orderId || orderData.orderId;
     const newPlacedOrder = {
+      ...orderData,
+      ...confirmedOrder,
       id: uniqueId,
-      orderId: uniqueId,
-      createdAt: new Date().toISOString(),
-      status: 'PENDING',
-      items: orderData.items || cartItems.map(i => ({
-        id: i.id || `item-${Date.now()}-${Math.random()}`,
-        name: i.name,
-        price: i.price,
-        quantity: i.quantity,
-        image: i.image,
-      })),
-      totalAmount: orderData.totalAmount || grandTotal,
-      shippingAddress: orderData.shippingAddress || addressForm,
-      paymentMethod: orderData.paymentMethod || 'Online Payment',
+      orderId: confirmedOrder.orderNumber || confirmedOrder.publicOrderId || (/^ORD-/i.test(confirmedOrder.orderId || '') ? confirmedOrder.orderId : orderData.orderId),
+      createdAt: confirmedOrder.createdAt || new Date().toISOString(),
+      status: confirmedOrder.status || 'PENDING',
+      paymentId: confirmedOrder.paymentId || paymentId || null,
       customerName: addressForm.fullName || storedUser.name || 'Customer',
-      customerEmail: userEmail,
+      customerEmail: addressForm.email || storedUser.email || '',
       customerPhone: addressForm.phone || '',
     };
 
-    // Save to localStorage for instant user profile & dashboard order sync
     const existingOrders = JSON.parse(localStorage.getItem('giftery_orders') || '[]');
-    const updatedOrders = [newPlacedOrder, ...existingOrders.filter(o => o.id !== newPlacedOrder.id)];
-    localStorage.setItem('giftery_orders', JSON.stringify(updatedOrders));
-
-    // Emit live event
+    localStorage.setItem(
+      'giftery_orders',
+      JSON.stringify([newPlacedOrder, ...existingOrders.filter((order) => order.id !== newPlacedOrder.id)])
+    );
     window.dispatchEvent(new Event('orders_updated'));
 
-    // Post order to backend API with exact snapshot of shippingAddress
-    try {
-      axiosInstance.post(ENDPOINTS.ORDERS.CREATE, {
-        items: newPlacedOrder.items,
-        totalAmount: newPlacedOrder.totalAmount,
-        shippingAddress: newPlacedOrder.shippingAddress,
-        paymentMethod: newPlacedOrder.paymentMethod,
-      }).catch(e => console.warn('Order API sync warning:', e.message));
-    } catch (e) {
-      console.warn('Order post error:', e.message);
-    }
-
-    // If user requested to save address for future orders, save to DB via addressService
     if (addressForm.saveAddress && isAuthenticated) {
       try {
-        addressService.createAddress({
+        await addressService.createAddress({
           fullName: addressForm.fullName,
           phone: addressForm.phone,
           street: [addressForm.addressLine1, addressForm.landmark].filter(Boolean).join(', '),
@@ -541,34 +518,32 @@ const Checkout = () => {
           zip: addressForm.pincode,
           country: addressForm.country || 'India',
           isDefault: savedAddresses.length === 0,
-        }).catch(e => console.warn('Save address on checkout note:', e.message));
-      } catch (e) {}
+        });
+      } catch (error) {
+        toast.warning('Order placed, but the delivery address could not be saved to your profile.');
+      }
     }
 
+    orderCompletedRef.current = true;
     setOrderCompleted(newPlacedOrder);
-
-    // Only clear persistent Redux Cart if this was a cart checkout (NOT Buy Now)
     if (!isBuyNow) {
-      dispatch(clearCart());
+      await dispatch(clearCartAsync());
     }
     setIsProcessing(false);
   };
-
-  // ── ORDER SUCCESS MODAL SCREEN ──
   if (orderCompleted) {
     return (
       <Layout>
         <div className={styles.successWrapper}>
           <div className={styles.successCard}>
-            <div className={styles.successIconCircle}>✓</div>
             <h1 className={styles.successTitle}>Thank You For Your Order!</h1>
             <p className={styles.successSub}>
-              Order ID: <strong>{orderCompleted.orderId}</strong>
+              Order ID: <strong>{formatOrderId(orderCompleted.orderId || orderCompleted.id, { prefix: '', createdAt: orderCompleted.createdAt })}</strong>
             </p>
             <div className={styles.successInfoBox}>
-              <p>📍 <strong>Delivering To:</strong> {orderCompleted.shippingAddress.fullName}, {orderCompleted.shippingAddress.addressLine1}, {orderCompleted.shippingAddress.city} - {orderCompleted.shippingAddress.pincode}</p>
-              <p>💳 <strong>Payment Method:</strong> {orderCompleted.paymentMethod.toUpperCase()}</p>
-              <p>💰 <strong>Total Paid:</strong> ₹{orderCompleted.totalAmount.toLocaleString('en-IN')}.00</p>
+              <p> <strong>Delivering To:</strong> {orderCompleted.shippingAddress.fullName}, {orderCompleted.shippingAddress.addressLine1}, {orderCompleted.shippingAddress.city} - {orderCompleted.shippingAddress.pincode}</p>
+              <p> <strong>Payment Method:</strong> {orderCompleted.paymentMethod.toUpperCase()}</p>
+              <p> <strong>Total Paid:</strong> ₹{orderCompleted.totalAmount.toLocaleString('en-IN')}.00</p>
             </div>
             <div className={styles.successActions}>
               <Link to={ROUTES.HOME} className={styles.successHomeBtn}>
@@ -642,7 +617,7 @@ const Checkout = () => {
                           <span>{item.quantity}</span>
                           <button type="button" onClick={() => handleQtyChange(item.id, item.quantity + 1)}>+</button>
                         </div>
-                        <button type="button" className={styles.deleteMiniBtn} onClick={() => handleRemoveItem(item.id, item.name)}>🗑️</button>
+                        <button type="button" className={styles.deleteMiniBtn} onClick={() => handleRemoveItem(item.id, item.name)} aria-label={`Remove ${item.name}`}><FiTrash2 aria-hidden="true" /></button>
                       </div>
                     ))}
                   </div>
@@ -679,7 +654,7 @@ const Checkout = () => {
                             >
                               <div className={styles.addrCardHeader}>
                                 <span className={styles.addrCardName}>
-                                  {isSelected ? '✓ ' : ''}{addr.fullName}
+                                  {isSelected ? ' ' : ''}{addr.fullName}
                                 </span>
                                 {addr.isDefault && <span className={styles.defaultBadge}>Default</span>}
                               </div>
@@ -689,7 +664,7 @@ const Checkout = () => {
                                 {addr.state ? `, ${addr.state}` : ''}
                                 {addr.zip || addr.pincode ? ` - ${addr.zip || addr.pincode}` : ''}
                               </p>
-                              {addr.phone && <div className={styles.addrCardPhone}>📞 {addr.phone}</div>}
+                              {addr.phone && <div className={styles.addrCardPhone}> {addr.phone}</div>}
                             </div>
                           );
                         })}
@@ -904,7 +879,6 @@ const Checkout = () => {
                   {paymentError && (
                     <div className={styles.paymentErrorCard}>
                       <div className={styles.paymentErrorHeader}>
-                        <span className={styles.paymentErrorIcon}>⚠️</span>
                         <div className={styles.paymentErrorTextGroup}>
                           <strong className={styles.paymentErrorTitle}>Payment Failed</strong>
                           <p className={styles.paymentErrorReason}>{paymentError.message}</p>
@@ -919,7 +893,7 @@ const Checkout = () => {
                           className={styles.retryPaymentBtn}
                           onClick={handleCompleteOrder}
                         >
-                          🔄 Retry Payment
+                           Retry Payment
                         </button>
                         <button
                           type="button"
@@ -929,40 +903,9 @@ const Checkout = () => {
                             setPaymentError(null);
                           }}
                         >
-                          📦 Switch to Cash on Delivery (COD)
+                           Switch to Cash on Delivery (COD)
                         </button>
-                        {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
-                          <button
-                            type="button"
-                            className={styles.devSimulateBtn}
-                            onClick={() => {
-                              setPaymentError(null);
-                              setIsProcessing(true);
-                              simulatePaymentSuccess({
-                                orderId: `ORD-${Date.now().toString().slice(-6)}`,
-                                items: cartItems,
-                                totalAmount: grandTotal,
-                                shippingAddress: {
-                                  fullName: addressForm.fullName.trim(),
-                                  email: addressForm.email.trim(),
-                                  phone: addressForm.phone.trim(),
-                                  street: [addressForm.addressLine1.trim(), addressForm.landmark?.trim()].filter(Boolean).join(', '),
-                                  addressLine1: addressForm.addressLine1.trim(),
-                                  landmark: addressForm.landmark ? addressForm.landmark.trim() : '',
-                                  city: addressForm.city.trim(),
-                                  state: addressForm.state.trim(),
-                                  zip: addressForm.pincode.trim(),
-                                  pincode: addressForm.pincode.trim(),
-                                  country: addressForm.country || 'India',
-                                },
-                                paymentMethod: 'razorpay',
-                              });
-                            }}
-                            title="Complete order simulation for development testing"
-                          >
-                            ✓ Complete Test Order (Dev Mode)
-                          </button>
-                        )}
+
                       </div>
                     </div>
                   )}
@@ -982,8 +925,8 @@ const Checkout = () => {
                       {isProcessing
                         ? 'Processing Payment...'
                         : paymentMethod === 'razorpay'
-                        ? `Pay ₹${grandTotal.toLocaleString('en-IN')}.00 via Razorpay 🔒`
-                        : `Place Order via COD 📦`}
+                        ? `Pay ₹${grandTotal.toLocaleString('en-IN')}.00 via Razorpay `
+                        : `Place Order via COD `}
                     </button>
                   </div>
                 </div>
@@ -1017,7 +960,7 @@ const Checkout = () => {
                   {appliedCoupon ? (
                     <div className={styles.appliedCouponPill}>
                       <div className={styles.appliedCouponInfo}>
-                        <span className={styles.appliedCouponCode}>🎟️ {appliedCoupon.code}</span>
+                        <span className={styles.appliedCouponCode}> {appliedCoupon.code}</span>
                         <span className={styles.appliedCouponDesc}>({appliedCoupon.discountText})</span>
                       </div>
                       <button
@@ -1026,13 +969,12 @@ const Checkout = () => {
                         className={styles.removeCouponBtn}
                         title="Remove coupon"
                       >
-                        ✕
+                        <FiX aria-hidden="true" />
                       </button>
                     </div>
                   ) : (
                     <form onSubmit={handleApplyCoupon} className={styles.sidebarCouponForm}>
                       <div className={styles.sidebarCouponInputWrapper}>
-                        <span className={styles.couponTagIcon}>🏷️</span>
                         <input
                           type="text"
                           placeholder="Promo / Coupon code"
@@ -1054,10 +996,12 @@ const Checkout = () => {
                     <span>Subtotal ({itemCount} items)</span>
                     <span>₹{subtotal.toLocaleString('en-IN')}.00</span>
                   </div>
-                  {appliedCoupon && discountAmount > 0 && (
+                  {appliedCoupon && (
                     <div className={styles.sidebarRow}>
-                      <span>Discount ({appliedCoupon.code} - {appliedCoupon.discountText})</span>
-                      <span style={{ color: '#16a34a', fontWeight: 700 }}>-₹{discountAmount.toLocaleString('en-IN')}.00</span>
+                      <span>Discount ({appliedCoupon.code}{appliedCoupon.discountText ? ` - ${appliedCoupon.discountText}` : ''})</span>
+                      <span style={{ color: '#16a34a', fontWeight: 700 }}>
+                        -₹{discountAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
                     </div>
                   )}
                   <div className={styles.sidebarRow}>
@@ -1066,16 +1010,20 @@ const Checkout = () => {
                       {shippingFee === 0 ? 'FREE' : `₹${shippingFee}`}
                     </span>
                   </div>
+                  <div className={styles.sidebarRow}>
+                    <span>GST ({storeSettings.taxPercentage}%)</span>
+                    <span>₹{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
                   <div className={styles.sidebarDivider} />
                   <div className={styles.sidebarTotalRow}>
                     <strong>Total Amount</strong>
-                    <strong className={styles.totalGoldText}>₹{grandTotal.toLocaleString('en-IN')}.00</strong>
+                    <strong className={styles.totalGoldText}>₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                   </div>
                 </div>
 
                 {/* Security Badge Footer */}
                 <div className={styles.sidebarSecurityFooter}>
-                  <span>🔒 256-bit Bank Grade SSL Security</span>
+                  <span> 256-bit Bank Grade SSL Security</span>
                 </div>
               </div>
             </div>

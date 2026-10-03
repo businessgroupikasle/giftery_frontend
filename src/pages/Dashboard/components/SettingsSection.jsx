@@ -322,7 +322,7 @@ const SettingsSection = ({ onClearCache,
               className={styles.modalSaveBtn}
               style={{ padding: '0.75rem 2rem', fontSize: '0.95rem' }}
             >
-              {savingSettings ? 'Saving Settings...' : '💾 Save Settings'}
+              {savingSettings ? 'Saving Settings...' : ' Save Settings'}
             </button>
             {onClearCache && (
               <button
@@ -332,7 +332,7 @@ const SettingsSection = ({ onClearCache,
                 style={{ padding: '0.75rem 1.5rem', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontWeight: '700', borderRadius: '8px', cursor: 'pointer' }}
                 title="Wipe stale local browser cache and re-sync all live data from Database"
               >
-                🧹 Sync Live Database & Clear Cache
+                 Sync Live Database & Clear Cache
               </button>
             )}
           </div>

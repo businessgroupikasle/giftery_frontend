@@ -1,17 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { 
-  FiShield, 
-  FiTag, 
-  FiPackage, 
-  FiTruck, 
-  FiHeart, 
-  FiArrowRight, 
-  FiStar, 
-  FiTrendingUp, 
-  FiAward, 
-  FiZap, 
+import {
+  FiShield,
+  FiTag,
+  FiPackage,
+  FiTruck,
+  FiHeart,
+  FiShoppingCart,
+  FiArrowRight,
+  FiStar,
+  FiTrendingUp,
+  FiAward,
+  FiZap,
   FiGift,
   FiChevronLeft,
   FiChevronRight
@@ -209,7 +210,7 @@ const ShopByCategory = () => {
 
     dispatch(addItem(cartPayload));
     if (openCart) openCart();
-    toast.success(`🛒 ${product.name} added to cart! Proceed to Checkout!`);
+    toast.success(` ${product.name} added to cart! Proceed to Checkout!`);
   };
 
   const handleToggleWishlist = (product) => {
@@ -233,7 +234,7 @@ const ShopByCategory = () => {
           slug: product.slug || '',
         })
       );
-      toast.success(`💖 ${product.name} added to Wishlist!`);
+      toast.success(` ${product.name} added to Wishlist!`);
     }
   };
 
@@ -344,6 +345,7 @@ const ShopByCategory = () => {
                     onClick={(e) => handleAddToCart(e, product)}
                     className={styles.addToCartBtn}
                   >
+                    <FiShoppingCart aria-hidden="true" />
                     Add to Cart
                   </button>
                 </div>

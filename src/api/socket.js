@@ -18,11 +18,11 @@ export const getSocket = () => {
     });
 
     socket.on('connect', () => {
-      console.log('🔌 Connected to live notifications socket:', socket.id);
+      console.log(' Connected to live notifications socket:', socket.id);
     });
 
     socket.on('connect_error', (err) => {
-      console.warn('⚠️ Notification socket connection error:', err.message);
+      console.warn(' Notification socket connection error:', err.message);
     });
   }
   return socket;

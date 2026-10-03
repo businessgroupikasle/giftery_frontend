@@ -6,14 +6,13 @@ const Maintenance = () => {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.brandBadge}>
-          <span className={styles.brandEmoji}>🎁</span>
           <span className={styles.brandName}>GIFTERY</span>
         </div>
 
         <div className={styles.iconWrapper}>
-          <span style={{ fontSize: '2.5rem' }}>🛠️</span>
+          <span style={{ fontSize: '2.5rem' }}></span>
         </div>
-        
+
         <h1 className={styles.title}>We're Under Maintenance</h1>
         <p className={styles.message}>
           We're currently making some improvements to give you a better shopping experience.

@@ -82,7 +82,7 @@ const AdminLogin = () => {
 
         {/* Quick Fill Tool */}
         <div className={styles.quickFillBar}>
-          <span className={styles.quickFillText}>⚡ Store Admin Credentials</span>
+          <span className={styles.quickFillText}> Store Admin Credentials</span>
           <button type="button" className={styles.quickFillBtn} onClick={handleQuickFill}>
             Auto Fill
           </button>
@@ -150,10 +150,10 @@ const AdminLogin = () => {
         {/* Switch Portal Navigation */}
         <div className={styles.otherPortals}>
           <Link to={ROUTES.SUPER_ADMIN_LOGIN} className={styles.portalLink}>
-            👑 Super Admin Portal
+             Super Admin Portal
           </Link>
           <Link to={ROUTES.LOGIN} style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600 }}>
-            👤 Customer Login
+             Customer Login
           </Link>
         </div>
       </div>

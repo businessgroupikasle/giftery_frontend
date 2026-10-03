@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import axiosInstance from '@api/axiosInstance';
 import { formatOrderId } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
+import InvoiceModal from '../../Orders/InvoiceModal';
 
 const INITIAL_ORDERS = [];
 
@@ -71,7 +72,22 @@ const OrdersSection = ({ ordersList = [] }) => {
       }
     }
 
-    toast.success(`Order status updated to "${displayStatus}"`);
+    if (orderFilter !== 'ALL' && orderFilter !== uppercaseStatus) {
+      setOrderFilter(uppercaseStatus);
+      toast.success(`Order moved to ${displayStatus} tab`);
+    } else {
+      toast.success(`Order status updated to "${displayStatus}"`);
+    }
+  };
+
+  const statusCounts = {
+    ALL: orders.length,
+    PENDING: orders.filter((o) => (o.status || '').toUpperCase() === 'PENDING').length,
+    CONFIRMED: orders.filter((o) => (o.status || '').toUpperCase() === 'CONFIRMED').length,
+    PROCESSING: orders.filter((o) => (o.status || '').toUpperCase() === 'PROCESSING').length,
+    SHIPPED: orders.filter((o) => (o.status || '').toUpperCase() === 'SHIPPED').length,
+    DELIVERED: orders.filter((o) => (o.status || '').toUpperCase() === 'DELIVERED').length,
+    CANCELLED: orders.filter((o) => (o.status || '').toUpperCase() === 'CANCELLED').length,
   };
 
   const filteredOrders = orders.filter((o) => {
@@ -144,7 +160,7 @@ const OrdersSection = ({ ordersList = [] }) => {
                 transition: 'all 0.15s ease',
               }}
             >
-              {status}
+              {status} ({statusCounts[status] ?? 0})
             </button>
           ))}
         </div>
@@ -289,48 +305,11 @@ const OrdersSection = ({ ordersList = [] }) => {
         </table>
       </div>
 
-      {/* Admin Order Details Modal */}
-      {selectedOrder && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }} onClick={() => setSelectedOrder(null)}>
-          <div style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '550px', width: '100%', padding: '1.75rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
-            <button type="button" style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }} onClick={() => setSelectedOrder(null)}>
-              <FiX />
-            </button>
-            <h3 style={{ margin: '0 0 0.5rem 0', color: '#0f172a', fontSize: '1.25rem', fontWeight: '800' }}>
-              Order {formatOrderId(selectedOrder.id || selectedOrder.orderId)}
-            </h3>
-            <p style={{ margin: '0 0 1rem 0', color: '#64748b', fontSize: '0.85rem' }}>
-              Customer: <strong>{selectedOrder.customer || selectedOrder.customerName || 'Customer'}</strong> ({selectedOrder.date || 'Recent'})
-            </p>
-
-            <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '10px', marginBottom: '1.25rem' }}>
-              <div style={{ fontWeight: '700', fontSize: '0.9rem', marginBottom: '0.5rem', color: '#1e293b' }}>Purchased Products ({selectedOrder.itemsCount || 1} Items):</div>
-              <div style={{ fontSize: '0.88rem', color: '#334155', lineHeight: '1.5' }}>
-                {selectedOrder.itemsDetails || (Array.isArray(selectedOrder.items) ? selectedOrder.items.map(i => `${i.name || i.product?.name || 'Item'} ×${i.quantity || 1}`).join(', ') : '1 Item')}
-              </div>
-            </div>
-
-            {selectedOrder.shippingAddress && (
-              <div style={{ marginBottom: '1.25rem' }}>
-                <div style={{ fontWeight: '700', fontSize: '0.88rem', color: '#1e293b', marginBottom: '0.25rem' }}>Shipping Address:</div>
-                <div style={{ fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
-                  {selectedOrder.shippingAddress.fullName || selectedOrder.shippingAddress.name}<br />
-                  {selectedOrder.shippingAddress.addressLine1 || selectedOrder.shippingAddress.address}<br />
-                  {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} {selectedOrder.shippingAddress.pincode || selectedOrder.shippingAddress.zip}<br />
-                  Phone: {selectedOrder.shippingAddress.phone || 'N/A'}
-                </div>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '1rem', marginTop: '1rem' }}>
-              <span style={{ fontWeight: '700', color: '#0f172a' }}>Total Amount:</span>
-              <span style={{ fontWeight: '800', fontSize: '1.2rem', color: '#d99b26' }}>
-                {selectedOrder.amount || `₹${(Number(selectedOrder.rawAmount || selectedOrder.totalAmount || 0)).toLocaleString('en-IN')}`}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+      <InvoiceModal
+        order={selectedOrder}
+        user={selectedOrder?.user}
+        onClose={() => setSelectedOrder(null)}
+      />
     </div>
   );
 };

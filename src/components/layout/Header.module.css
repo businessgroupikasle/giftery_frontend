@@ -34,6 +34,19 @@
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
 
+.headerLogo {
+  height: 70px;
+  max-width: 320px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6)) contrast(1.1) brightness(1.05);
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.headerLogo:hover {
+  transform: scale(1.02);
+  filter: drop-shadow(0 4px 12px rgba(229, 193, 88, 0.35)) contrast(1.15) brightness(1.1);
+}
+
 .brandText {
   display: flex;
   flex-direction: column;

@@ -99,20 +99,48 @@ const CouponsSection = ({ initialCoupons }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.code.trim()) {
+    const cleanCode = form.code.trim().toUpperCase();
+    if (!cleanCode) {
       toast.error('Please enter a coupon code');
       return;
     }
-    if (!form.discountValue || isNaN(form.discountValue) || Number(form.discountValue) <= 0) {
+    if (cleanCode.length < 3 || cleanCode.length > 16) {
+      toast.error('Coupon code must be between 3 and 16 characters');
+      return;
+    }
+    if (!/^[A-Z0-9_-]+$/.test(cleanCode)) {
+      toast.error('Coupon code can only contain letters, numbers, hyphens, and underscores');
+      return;
+    }
+    if (/^\d+$/.test(cleanCode)) {
+      toast.error('Coupon code must contain letters (cannot be only numbers, e.g. FESTIVE20, SAVE100)');
+      return;
+    }
+
+    const numVal = parseFloat(form.discountValue);
+    if (!form.discountValue || isNaN(numVal) || numVal <= 0) {
       toast.error('Please enter a valid positive discount value');
       return;
     }
 
-    const formattedCode = form.code.trim().toUpperCase();
+    if (form.discountType === 'percent') {
+      if (numVal < 1 || numVal > 100) {
+        toast.error('Percentage discount must be between 1% and 100%');
+        return;
+      }
+    } else {
+      if (numVal <= 0) {
+        toast.error('Fixed discount amount must be greater than ₹0');
+        return;
+      }
+    }
+
+    const formattedCode = cleanCode;
+    const cleanNum = Number(numVal.toFixed(2));
     const formattedDiscount =
       form.discountType === 'percent'
-        ? `${form.discountValue}% OFF`
-        : `₹${form.discountValue} OFF`;
+        ? `${cleanNum}% OFF`
+        : `₹${cleanNum.toLocaleString('en-IN')} OFF`;
 
     if (editingCoupon) {
       const updated = coupons.map((c) =>
@@ -263,7 +291,7 @@ const CouponsSection = ({ initialCoupons }) => {
                 onClick={() => setShowModal(false)}
                 style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', fontWeight: 'bold' }}
               >
-                ✕
+
               </button>
             </div>
 
@@ -274,12 +302,16 @@ const CouponsSection = ({ initialCoupons }) => {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. FESTIVE20 or SAVE500"
+                  placeholder="e.g. FESTIVE20, SAVE500"
                   value={form.code}
-                  onChange={(e) => setForm({ ...form, code: e.target.value })}
+                  maxLength={16}
+                  onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '') })}
                   style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', textTransform: 'uppercase', fontFamily: 'monospace' }}
                   required
                 />
+                <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.3rem', display: 'block' }}>
+                  Enter 3–16 alphanumeric characters. Must include letters (e.g. FESTIVE20).
+                </span>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
@@ -290,7 +322,7 @@ const CouponsSection = ({ initialCoupons }) => {
                   <select
                     value={form.discountType}
                     onChange={(e) => setForm({ ...form, discountType: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', background: '#ffffff' }}
                   >
                     <option value="percent">Percentage (%)</option>
                     <option value="fixed">Fixed Amount (₹)</option>
@@ -299,41 +331,66 @@ const CouponsSection = ({ initialCoupons }) => {
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: '#475569', marginBottom: '0.35rem' }}>
-                    Discount Value *
+                    Discount Value {form.discountType === 'percent' ? '(%) *' : '(₹) *'}
                   </label>
                   <input
                     type="number"
-                    placeholder={form.discountType === 'percent' ? 'e.g. 20 (for 20%)' : 'e.g. 100 (for ₹100)'}
-                    value={form.discountValue}
-                    onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
+                    step={form.discountType === 'percent' ? '0.1' : '1'}
                     min="1"
+                    max={form.discountType === 'percent' ? '100' : undefined}
+                    placeholder={form.discountType === 'percent' ? 'e.g. 15 (1% to 100%)' : 'e.g. 150 (₹)'}
+                    value={form.discountValue}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (form.discountType === 'percent' && Number(val) > 100) {
+                        toast.warning('Percentage discount cannot exceed 100%');
+                        setForm({ ...form, discountValue: '100' });
+                        return;
+                      }
+                      setForm({ ...form, discountValue: val });
+                    }}
                     style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
                     required
                   />
+                  <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.3rem', display: 'block' }}>
+                    {form.discountType === 'percent'
+                      ? 'Valid percentage: 1% to 100%'
+                      : 'Enter fixed discount amount in ₹ (e.g. 50, 100, 250)'}
+                  </span>
                 </div>
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: '#475569', marginBottom: '0.35rem' }}>
-                  Applies To / Category
+                  Applies To / Category *
                 </label>
-                <input
-                  type="text"
-                  placeholder="e.g. All Products, Corporate Gifts"
+                <select
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
-                />
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', background: '#ffffff' }}
+                  required
+                >
+                  <option value="All Products">All Products</option>
+                  <option value="Corporate Gifts">Corporate Gifts</option>
+                  <option value="Personalized Gifts">Personalized Gifts</option>
+                  <option value="Toys & Games">Toys & Games</option>
+                  <option value="Luxury Hampers">Luxury Hampers</option>
+                  <option value="Office Essentials">Office Essentials</option>
+                </select>
+                <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.3rem', display: 'block' }}>
+                  Select the product collection or department this coupon targets.
+                </span>
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: '#475569', marginBottom: '0.35rem' }}>
-                  Status
+                  Status *
                 </label>
                 <select
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', background: '#ffffff' }}
+                  required
                 >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
@@ -407,7 +464,7 @@ const CouponsSection = ({ initialCoupons }) => {
                 boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
               }}
             >
-              ⚠️
+
             </div>
 
             <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>

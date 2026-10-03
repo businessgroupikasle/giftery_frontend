@@ -1,17 +1,17 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '@components/layout/Layout';
-import { 
-  FiSearch, 
-  FiChevronDown, 
-  FiHelpCircle, 
-  FiBriefcase, 
-  FiGift, 
-  FiTruck, 
-  FiCreditCard, 
-  FiRefreshCw, 
-  FiPhoneCall, 
-  FiMail, 
+import {
+  FiSearch,
+  FiChevronDown,
+  FiHelpCircle,
+  FiBriefcase,
+  FiGift,
+  FiTruck,
+  FiCreditCard,
+  FiRefreshCw,
+  FiPhoneCall,
+  FiMail,
   FiMessageSquare,
   FiSmile,
   FiArrowLeft
@@ -20,7 +20,7 @@ import { ROUTES } from '@constants/routes';
 import styles from './FAQ.module.css';
 
 const FAQ_DATA = [
-  // 🏢 Corporate & Bulk Gifts
+  //  Corporate & Bulk Gifts
   {
     id: 'corp-1',
     category: 'corporate',
@@ -54,7 +54,7 @@ const FAQ_DATA = [
     answer: `Standard production for customized corporate gifts takes 5 to 7 business days after mock-up approval. Express dispatch (3-4 days) is available for urgent events, product launches, or work anniversaries.`,
   },
 
-  // 🎨 Custom Personalization
+  //  Custom Personalization
   {
     id: 'pers-1',
     category: 'personalized',
@@ -80,7 +80,7 @@ const FAQ_DATA = [
     answer: `Yes! For team hampers, onboarding kits, or work anniversary gifts, each item can be individually personalized with the employee's full name, designation, or custom message.`,
   },
 
-  // 🧸 Toys & Kids Products
+  //  Toys & Kids Products
   {
     id: 'toys-1',
     category: 'toys',
@@ -90,7 +90,7 @@ const FAQ_DATA = [
     answer: `Yes! All our toys, educational kits, soft plushies, and building blocks comply strictly with BIS (Bureau of Indian Standards) quality norms, using non-toxic, BPA-free, child-safe materials.`,
   },
 
-  // 🚚 Shipping & Delivery
+  //  Shipping & Delivery
   {
     id: 'ship-1',
     category: 'shipping',
@@ -108,7 +108,7 @@ const FAQ_DATA = [
     answer: `Yes! We offer Multi-Address Direct Employee Shipping. Simply provide us your address Excel sheet, and we will package, label, and deliver individual hampers directly to your remote team members' doorsteps anywhere in India.`,
   },
 
-  // 💳 Payments & Invoicing
+  //  Payments & Invoicing
   {
     id: 'pay-1',
     category: 'payments',
@@ -118,7 +118,7 @@ const FAQ_DATA = [
     answer: `We accept Credit/Debit Cards (Visa, MasterCard, Amex, Discover), UPI (Google Pay, PhonePe, Paytm), Net Banking, Razorpay, Cash on Delivery (COD for select retail orders), and Direct NEFT/RTGS Bank Transfers for corporate Purchase Orders (POs).`,
   },
 
-  // 🔄 Returns & Replacements
+  //  Returns & Replacements
   {
     id: 'ret-1',
     category: 'returns',
@@ -197,12 +197,12 @@ const FAQ = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             {searchQuery && (
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className={styles.clearSearchBtn}
                 onClick={() => setSearchQuery('')}
               >
-                ✕
+
               </button>
             )}
           </div>
@@ -247,8 +247,8 @@ const FAQ = () => {
               const IconComp = faq.icon;
 
               return (
-                <div 
-                  key={faq.id} 
+                <div
+                  key={faq.id}
                   className={`${styles.accordionItem} ${isOpen ? styles.itemOpen : ''}`}
                 >
                   <button

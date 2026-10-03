@@ -140,7 +140,7 @@ const NotFound = () => (
 
         <div className={styles.noteCard}>
           <p>Let's find the <em>perfect gift</em> instead!</p>
-          <span className={styles.heart}>❤️</span>
+          <span className={styles.heart}></span>
         </div>
       </div>
     </div>

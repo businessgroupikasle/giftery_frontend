@@ -19,7 +19,6 @@ export const ROUTES = {
   LOGIN: '/login',
   FORGOT_PASSWORD: '/forgot-password',
   REGISTER: '/register',
-  REGISTER: '/register',
   RESET_PASSWORD: '/reset-password/:token',
   RESET_PASSWORD_PATH: (token) => `/reset-password/${token}`,
   ORDERS: '/orders',
@@ -32,6 +31,7 @@ export const ROUTES = {
   TERMS: '/terms-and-conditions',
   TERMS_AND_CONDITIONS: '/terms-and-conditions',
   PRIVACY: '/privacy-policy',
+  FORBIDDEN: '/403',
   NOT_FOUND: '*',
 
   // Admin & Super Admin

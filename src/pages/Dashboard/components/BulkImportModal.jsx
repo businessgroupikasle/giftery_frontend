@@ -243,14 +243,14 @@ const BulkImportModal = ({ isOpen = true, onClose, categories = [], onImportSucc
         <div className={styles.modalHeader}>
           <div>
             <h4 className={styles.modalTitle}>
-              <span>📥</span> Bulk Import Products
+              <span></span> Bulk Import Products
             </h4>
             <p className={styles.modalSubtitle}>
               Upload an Excel (.xlsx) spreadsheet or ZIP archive with product images
             </p>
           </div>
           <button type="button" onClick={onClose} className={styles.closeButton} title="Close">
-            ✕
+            <FiX aria-hidden="true" />
           </button>
         </div>
 
@@ -261,7 +261,7 @@ const BulkImportModal = ({ isOpen = true, onClose, categories = [], onImportSucc
           {importSummary ? (
             <div style={{ padding: '2rem 1rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
               <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>
-                ✓
+
               </div>
               <div>
                 <h3 style={{ margin: 0, fontSize: '1.4rem', color: '#0f172a', fontWeight: 800 }}>
@@ -275,18 +275,18 @@ const BulkImportModal = ({ isOpen = true, onClose, categories = [], onImportSucc
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '0.5rem' }}>
                 <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '0.75rem 1.5rem', borderRadius: '10px' }}>
                   <span style={{ fontSize: '0.78rem', color: '#166534', fontWeight: 700, display: 'block' }}>New Products Created</span>
-                  <strong style={{ fontSize: '1.3rem', color: '#16a34a' }}>✓ {importSummary.importedCount || 0}</strong>
+                  <strong style={{ fontSize: '1.3rem', color: '#16a34a' }}> {importSummary.importedCount || 0}</strong>
                 </div>
 
                 <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: '0.75rem 1.5rem', borderRadius: '10px' }}>
                   <span style={{ fontSize: '0.78rem', color: '#1e40af', fontWeight: 700, display: 'block' }}>Products Updated</span>
-                  <strong style={{ fontSize: '1.3rem', color: '#2563eb' }}>✓ {importSummary.updatedCount || 0}</strong>
+                  <strong style={{ fontSize: '1.3rem', color: '#2563eb' }}> {importSummary.updatedCount || 0}</strong>
                 </div>
 
                 {importSummary.failedCount > 0 && (
                   <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '0.75rem 1.5rem', borderRadius: '10px' }}>
                     <span style={{ fontSize: '0.78rem', color: '#991b1b', fontWeight: 700, display: 'block' }}>Failed Products</span>
-                    <strong style={{ fontSize: '1.3rem', color: '#dc2626' }}>✕ {importSummary.failedCount}</strong>
+                    <strong style={{ fontSize: '1.3rem', color: '#dc2626' }}> {importSummary.failedCount}</strong>
                   </div>
                 )}
               </div>
@@ -384,7 +384,7 @@ const BulkImportModal = ({ isOpen = true, onClose, categories = [], onImportSucc
                 </div>
                 <div className={`${styles.statCard} ${styles.statCardCreate}`}>
                   <span className={styles.statLabel}>New (CREATE)</span>
-                  <span className={`${styles.statValue} ${styles.statValueCreate}`}>✓ {validationData.summary?.newCount || 0}</span>
+                  <span className={`${styles.statValue} ${styles.statValueCreate}`}> {validationData.summary?.newCount || 0}</span>
                 </div>
                 <div className={`${styles.statCard} ${styles.statCardUpdate}`}>
                   <span className={styles.statLabel}>Update (UPDATE)</span>
@@ -392,7 +392,7 @@ const BulkImportModal = ({ isOpen = true, onClose, categories = [], onImportSucc
                 </div>
                 <div className={`${styles.statCard} ${styles.statCardInvalid}`}>
                   <span className={styles.statLabel}>Invalid (ERROR)</span>
-                  <span className={`${styles.statValue} ${styles.statValueInvalid}`}>✕ {validationData.summary?.invalid || 0}</span>
+                  <span className={`${styles.statValue} ${styles.statValueInvalid}`}> {validationData.summary?.invalid || 0}</span>
                 </div>
               </div>
 
@@ -510,7 +510,7 @@ const BulkImportModal = ({ isOpen = true, onClose, categories = [], onImportSucc
                           <td>
                             {r.data?.images?.length > 0 ? (
                               <span style={{ fontSize: '0.74rem', color: '#166534', background: '#f0fdf4', padding: '0.15rem 0.45rem', borderRadius: '6px', fontWeight: 600 }}>
-                                🖼️ {r.data.images.length} {r.data.images.length === 1 ? 'img' : 'imgs'}
+                                 {r.data.images.length} {r.data.images.length === 1 ? 'img' : 'imgs'}
                               </span>
                             ) : (
                               <span style={{ fontSize: '0.74rem', color: '#64748b', background: '#f1f5f9', padding: '0.15rem 0.45rem', borderRadius: '6px' }}>
@@ -520,10 +520,10 @@ const BulkImportModal = ({ isOpen = true, onClose, categories = [], onImportSucc
                           </td>
                           <td>
                             {isValid ? (
-                              <span className={styles.statusPillValid}>✓ Valid</span>
+                              <span className={styles.statusPillValid}> Valid</span>
                             ) : (
                               <div>
-                                <span className={styles.statusPillInvalid}>✕ Error</span>
+                                <span className={styles.statusPillInvalid}> Error</span>
                                 <ul className={styles.errorList}>
                                   {r.errors.map((err, errIdx) => (
                                     <li key={errIdx}>{err}</li>

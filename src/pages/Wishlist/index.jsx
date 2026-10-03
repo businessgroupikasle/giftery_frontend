@@ -12,6 +12,7 @@ import { addToCart } from '@store/slices/cartSlice';
 import { removeFromWishlist, clearWishlistAsync } from '@store/slices/wishlistSlice';
 import { formatCurrency } from '@utils/formatters';
 import { getImageUrl } from '@utils/imageUrl';
+import { FiHeart, FiShoppingCart, FiX, FiZap } from 'react-icons/fi';
 import styles from './Wishlist.module.css';
 
 const Wishlist = () => {
@@ -179,7 +180,7 @@ const Wishlist = () => {
           <div className={`${styles.mainCard} ${styles.populatedCard}`}>
             <div className={styles.cardTopRow}>
               <div className={styles.cardTopTitle}>
-                <span>❤️ Saved Wishlist Products</span>
+                <span> Saved Wishlist Products</span>
               </div>
               {wishlistItems.length > 0 && (
                 <button onClick={handleClearWishlist} className={styles.clearAllBtn}>
@@ -191,7 +192,7 @@ const Wishlist = () => {
             {/* Product Grid or Empty State */}
             {wishlistItems.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💔</div>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}></div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>
                   Your Wishlist is Empty
                 </h3>
@@ -234,7 +235,7 @@ const Wishlist = () => {
                         title="Remove from wishlist"
                         aria-label="Remove item"
                       >
-                        ✕
+                        <FiX aria-hidden="true" />
                       </button>
                     </div>
 
@@ -260,12 +261,14 @@ const Wishlist = () => {
                           className={styles.buyNowBtn}
                           onClick={() => handleBuyNow(item)}
                         >
+                          <FiZap aria-hidden="true" />
                           BUY NOW
                         </button>
                         <button
                           className={styles.addToCartOutlineBtn}
                           onClick={() => handleAddToCart(item)}
                         >
+                          <FiShoppingCart aria-hidden="true" />
                           Add to Cart
                         </button>
                       </div>
@@ -300,7 +303,8 @@ const Wishlist = () => {
                         onClick={() => handleAddRecommendedToWishlist(item)}
                         style={{ width: '100%', marginTop: '0.75rem' }}
                       >
-                        ❤️ Save to Wishlist
+                        <FiHeart aria-hidden="true" />
+                        Save to Wishlist
                       </button>
                     </div>
                   </div>

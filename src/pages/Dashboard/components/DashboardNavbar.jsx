@@ -1,54 +1,40 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { FiSearch, FiBell, FiX, FiPackage, FiShoppingBag, FiUsers, FiFolder, FiMessageSquare, FiFileText } from 'react-icons/fi';
-import { getProductThumbnail } from '@utils/imageUrl';
+import { FiBell, FiX, FiShoppingBag, FiMessageSquare } from 'react-icons/fi';
 import styles from '../Dashboard.module.css';
 
 const DashboardNavbar = ({
-  onClearCache,
-  notifications = [],
-  setNotifications = () => {},
-  searchQuery,
-  setSearchQuery,
   user,
   handleLogout,
   setActiveTab,
   ordersList = [],
   enquiriesList = [],
-  corporateQuotes = [],
-  customersList = [],
-  productsList = [],
-  categories = [],
   sidebarOpen = false,
   setSidebarOpen = () => {},
 }) => {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const searchInputRef = useRef(null);
-  const searchContainerRef = useRef(null);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const [notifFilter, setNotifFilter] = useState('all');
   const notifRef = useRef(null);
 
-  // 1. Keyboard Shortcut Listener (Ctrl + / or Cmd + /)
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && (e.key === '/' || e.code === 'Slash')) {
-        e.preventDefault();
-        if (searchInputRef.current) {
-          searchInputRef.current.focus();
-          setIsSearchOpen(true);
-        }
-      } else if (e.key === 'Escape') {
-        setIsSearchOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // Persistent tracking for read and dismissed notifications
+  const [readIds, setReadIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('giftery_read_notif_ids') || '[]');
+    } catch (e) {
+      return [];
+    }
+  });
 
-  // 2. Click Outside Listener for Search & Notifications Dropdowns
+  const [dismissedIds, setDismissedIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('giftery_dismissed_notif_ids') || '[]');
+    } catch (e) {
+      return [];
+    }
+  });
+
+  // Click outside to close notification dropdown
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
-        setIsSearchOpen(false);
-      }
       if (notifRef.current && !notifRef.current.contains(e.target)) {
         setShowNotifDropdown(false);
       }
@@ -57,95 +43,80 @@ const DashboardNavbar = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // 3. Live Categorized Search Results Computation
-  const searchResults = useMemo(() => {
-    if (!searchQuery || !searchQuery.trim()) return null;
-    const q = searchQuery.toLowerCase().trim();
+  // Compute live notifications from incoming enquiries and orders
+  const liveNotifications = useMemo(() => {
+    const list = [];
 
-    const matchedProducts = (productsList || []).filter(p =>
-      p.name?.toLowerCase().includes(q) ||
-      p.sku?.toLowerCase().includes(q) ||
-      p.category?.name?.toLowerCase().includes(q)
-    ).slice(0, 4);
+    // 1. Customer Enquiries
+    (enquiriesList || []).forEach((enq, idx) => {
+      const id = `enq-${enq.id || enq.displayId || idx}`;
+      if (dismissedIds.includes(id)) return;
+      const isNew = String(enq.status || 'NEW').toUpperCase() === 'NEW';
+      list.push({
+        id,
+        title: `New Enquiry from ${enq.name || 'Customer'}`,
+        message: `${enq.subject || enq.category || 'General Message'}: "${(enq.message || '').slice(0, 50)}${(enq.message || '').length > 50 ? '...' : ''}"`,
+        time: enq.date || 'Recent',
+        targetTab: 'enquiries',
+        read: readIds.includes(id) || !isNew,
+        icon: <FiMessageSquare style={{ color: '#d99b26' }} />,
+        bg: 'rgba(217, 155, 38, 0.12)',
+      });
+    });
 
-    const matchedOrders = (ordersList || []).filter(o =>
-      String(o.id || o.orderId)?.toLowerCase().includes(q) ||
-      o.customer?.toLowerCase().includes(q) ||
-      o.status?.toLowerCase().includes(q)
-    ).slice(0, 4);
+    // 2. Orders
+    (ordersList || []).forEach((ord, idx) => {
+      const id = `ord-${ord.id || ord.orderId || idx}`;
+      if (dismissedIds.includes(id)) return;
+      const isPending = String(ord.status || 'PENDING').toUpperCase() === 'PENDING';
+      list.push({
+        id,
+        title: `Order #${ord.id || ord.orderId || idx + 1}`,
+        message: `${ord.customer || 'Customer'} placed an order (${ord.amount || '₹0'})`,
+        time: ord.date || 'Recent',
+        targetTab: 'orders',
+        read: readIds.includes(id) || !isPending,
+        icon: <FiShoppingBag style={{ color: '#2563eb' }} />,
+        bg: 'rgba(37, 99, 235, 0.12)',
+      });
+    });
 
-    const matchedCustomers = (customersList || []).filter(c =>
-      c.name?.toLowerCase().includes(q) ||
-      c.email?.toLowerCase().includes(q) ||
-      c.phone?.includes(q)
-    ).slice(0, 4);
+    return list;
+  }, [enquiriesList, ordersList, readIds, dismissedIds]);
 
-    const matchedCategories = (categories || []).filter(cat =>
-      cat.name?.toLowerCase().includes(q)
-    ).slice(0, 4);
-
-    const matchedQuotes = (corporateQuotes || []).filter(quote =>
-      quote.name?.toLowerCase().includes(q) ||
-      quote.company?.toLowerCase().includes(q) ||
-      quote.email?.toLowerCase().includes(q)
-    ).slice(0, 3);
-
-    const matchedEnquiries = (enquiriesList || []).filter(enq =>
-      enq.name?.toLowerCase().includes(q) ||
-      enq.subject?.toLowerCase().includes(q) ||
-      enq.category?.toLowerCase().includes(q) ||
-      enq.displayId?.toLowerCase().includes(q) ||
-      enq.id?.toLowerCase().includes(q)
-    ).slice(0, 3);
-
-    const totalMatches =
-      matchedProducts.length +
-      matchedOrders.length +
-      matchedCustomers.length +
-      matchedCategories.length +
-      matchedQuotes.length +
-      matchedEnquiries.length;
-
-    return {
-      products: matchedProducts,
-      orders: matchedOrders,
-      customers: matchedCustomers,
-      categories: matchedCategories,
-      quotes: matchedQuotes,
-      enquiries: matchedEnquiries,
-      totalMatches,
-    };
-  }, [searchQuery, productsList, ordersList, customersList, categories, corporateQuotes, enquiriesList]);
-
-  // Handle clicking a search result item
-  const handleSelectSearchResult = (targetTab) => {
-    setIsSearchOpen(false);
-    if (setActiveTab && targetTab) {
-      setActiveTab(targetTab);
-    }
-  };
-
-  // Unread count calculated from live props
-  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
-  const [notifFilter, setNotifFilter] = useState('all');
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = liveNotifications.filter((n) => !n.read).length;
 
   const displayNotifications =
-    notifFilter === 'unread' ? notifications.filter((n) => !n.read) : notifications;
+    notifFilter === 'unread'
+      ? liveNotifications.filter((n) => !n.read)
+      : liveNotifications;
 
   const handleMarkAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    const allIds = liveNotifications.map((n) => n.id);
+    const updated = Array.from(new Set([...readIds, ...allIds]));
+    setReadIds(updated);
+    try {
+      localStorage.setItem('giftery_read_notif_ids', JSON.stringify(updated));
+    } catch (e) {}
   };
 
   const handleClearAll = () => {
-    setNotifications([]);
+    const allIds = liveNotifications.map((n) => n.id);
+    const updated = Array.from(new Set([...dismissedIds, ...allIds]));
+    setDismissedIds(updated);
+    try {
+      localStorage.setItem('giftery_dismissed_notif_ids', JSON.stringify(updated));
+    } catch (e) {}
   };
 
   const handleNotificationClick = (notif) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
-    );
+    if (!readIds.includes(notif.id)) {
+      const updated = [...readIds, notif.id];
+      setReadIds(updated);
+      try {
+        localStorage.setItem('giftery_read_notif_ids', JSON.stringify(updated));
+      } catch (e) {}
+    }
     setShowNotifDropdown(false);
     if (setActiveTab && notif.targetTab) {
       setActiveTab(notif.targetTab);
@@ -154,348 +125,279 @@ const DashboardNavbar = ({
 
   const handleDeleteSingleNotif = (e, id) => {
     e.stopPropagation();
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    const updated = [...dismissedIds, id];
+    setDismissedIds(updated);
+    try {
+      localStorage.setItem('giftery_dismissed_notif_ids', JSON.stringify(updated));
+    } catch (e) {}
   };
 
   return (
-    <header className={styles.topNavbar}>
-      <button
-        type="button"
-        className={styles.navToggleBtn}
-        title="Toggle Sidebar"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>☰</span>
-      </button>
-
-      {/* Center Global Interactive Search Bar */}
-      <div className={styles.searchWrapper} ref={searchContainerRef} style={{ position: 'relative' }}>
-        <FiSearch className={styles.searchIcon} />
-        <input
-          ref={searchInputRef}
-          type="text"
-          placeholder="Search products, orders, customers, categories..."
-          value={searchQuery}
-          onFocus={() => setIsSearchOpen(true)}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setIsSearchOpen(true);
+    <header className={styles.topNavbar} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1.5rem', background: '#ffffff', borderBottom: '1px solid #e2e8f0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+        <button
+          type="button"
+          className={styles.navToggleBtn}
+          title="Toggle Sidebar"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '1.25rem',
+            color: '#475569',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0.25rem',
           }}
-          className={styles.searchInput}
-          style={{ paddingRight: searchQuery ? '4.5rem' : '4rem' }}
-        />
-
-        {searchQuery ? (
-          <button
-            type="button"
-            onClick={() => {
-              setSearchQuery('');
-              setIsSearchOpen(false);
-            }}
-            style={{
-              position: 'absolute',
-              right: '3rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'none',
-              border: 'none',
-              color: '#94a3b8',
-              cursor: 'pointer',
-              fontSize: '0.85rem',
-              fontWeight: 'bold',
-            }}
-            title="Clear Search"
-          >
-            ✕
-          </button>
-        ) : null}
-
-        <span className={styles.searchShortcut}>Ctrl + /</span>
-
-        {/* Global Live Search Results Dropdown */}
-        {isSearchOpen && searchResults && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 'calc(100% + 8px)',
-              left: 0,
-              right: 0,
-              background: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              boxShadow: '0 20px 30px -10px rgba(15, 23, 42, 0.2)',
-              zIndex: 9999,
-              maxHeight: '420px',
-              overflowY: 'auto',
-              padding: '0.75rem 0',
-            }}
-          >
-            {searchResults.totalMatches === 0 ? (
-              <div style={{ padding: '1.5rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem' }}>
-                No results found matching "<strong>{searchQuery}</strong>"
-              </div>
-            ) : (
-              <>
-                {/* 1. Products Section */}
-                {searchResults.products.length > 0 && (
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <div style={{ padding: '0.4rem 1rem', fontSize: '0.72rem', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <FiPackage style={{ color: '#d99b26' }} /> Products ({searchResults.products.length})
-                    </div>
-                    {searchResults.products.map(p => (
-                      <div
-                        key={p.id}
-                        onClick={() => handleSelectSearchResult('products')}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          cursor: 'pointer',
-                          transition: 'background 0.15s ease',
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                          <img
-                            src={getProductThumbnail(p)}
-                            alt={p.name}
-                            style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover' }}
-                            onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
-                          />
-                          <span style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: 600 }}>{p.name}</span>
-                        </div>
-                        <span style={{ fontSize: '0.8rem', color: '#d99b26', fontWeight: 700 }}>₹{p.price?.toLocaleString('en-IN')}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* 2. Orders Section */}
-                {searchResults.orders.length > 0 && (
-                  <div style={{ marginBottom: '0.5rem', borderTop: '1px solid #f1f5f9', paddingTop: '0.4rem' }}>
-                    <div style={{ padding: '0.4rem 1rem', fontSize: '0.72rem', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <FiShoppingBag style={{ color: '#2563eb' }} /> Orders ({searchResults.orders.length})
-                    </div>
-                    {searchResults.orders.map(o => (
-                      <div
-                        key={o.id}
-                        onClick={() => handleSelectSearchResult('orders')}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justify: 'space-between',
-                          cursor: 'pointer',
-                          transition: 'background 0.15s ease',
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <div>
-                          <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block' }}>#{o.id}</strong>
-                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{o.customer}</span>
-                        </div>
-                        <span style={{ fontSize: '0.78rem', color: '#059669', fontWeight: 700 }}>{o.amount || o.status}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* 3. Customers Section */}
-                {searchResults.customers.length > 0 && (
-                  <div style={{ marginBottom: '0.5rem', borderTop: '1px solid #f1f5f9', paddingTop: '0.4rem' }}>
-                    <div style={{ padding: '0.4rem 1rem', fontSize: '0.72rem', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <FiUsers style={{ color: '#0284c7' }} /> Customers ({searchResults.customers.length})
-                    </div>
-                    {searchResults.customers.map(c => (
-                      <div
-                        key={c.id}
-                        onClick={() => handleSelectSearchResult('customers')}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justify: 'space-between',
-                          cursor: 'pointer',
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <div>
-                          <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block' }}>{c.name}</strong>
-                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{c.email}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* 4. Categories Section */}
-                {searchResults.categories.length > 0 && (
-                  <div style={{ marginBottom: '0.5rem', borderTop: '1px solid #f1f5f9', paddingTop: '0.4rem' }}>
-                    <div style={{ padding: '0.4rem 1rem', fontSize: '0.72rem', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <FiFolder style={{ color: '#d97706' }} /> Categories ({searchResults.categories.length})
-                    </div>
-                    {searchResults.categories.map(cat => (
-                      <div
-                        key={cat.id}
-                        onClick={() => handleSelectSearchResult('categories')}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justify: 'space-between',
-                          cursor: 'pointer',
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <span style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: 600 }}>{cat.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* 5. Enquiries & Quotes Section */}
-                {(searchResults.enquiries.length > 0 || searchResults.quotes.length > 0) && (
-                  <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '0.4rem' }}>
-                    <div style={{ padding: '0.4rem 1rem', fontSize: '0.72rem', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <FiMessageSquare style={{ color: '#9333ea' }} /> Messages & Quotes
-                    </div>
-                    {searchResults.quotes.map(q => (
-                      <div
-                        key={q.id}
-                        onClick={() => handleSelectSearchResult('corporate-quotes')}
-                        style={{ padding: '0.5rem 1rem', cursor: 'pointer' }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block' }}>Quote: {q.company || q.name}</strong>
-                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{q.name} ({q.quantity})</span>
-                      </div>
-                    ))}
-                    {searchResults.enquiries.map(enq => (
-                      <div
-                        key={enq.id}
-                        onClick={() => handleSelectSearchResult('enquiries')}
-                        style={{ padding: '0.5rem 1rem', cursor: 'pointer' }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                          {enq.displayId && (
-                            <code style={{ background: '#fef3c7', color: '#b45309', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: '700' }}>
-                              {enq.displayId}
-                            </code>
-                          )}
-                          <strong style={{ fontSize: '0.85rem', color: '#0f172a' }}>{enq.name}</strong>
-                        </div>
-                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{enq.subject || enq.category}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
+        >
+          <span></span>
+        </button>
+        <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#64748b' }}>
+          GIFTERY Admin Management
+        </span>
       </div>
 
       {/* Right Action Badges */}
-      <div className={styles.topActions}>
+      <div className={styles.topActions} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         {/* ── NOTIFICATIONS BELL BUTTON & DROPDOWN ── */}
-        <div className={styles.notifDropdownWrapper} ref={notifRef}>
+        <div className={styles.notifDropdownWrapper} ref={notifRef} style={{ position: 'relative' }}>
           <div
             className={styles.iconBtnWithBadge}
             onClick={() => setShowNotifDropdown(!showNotifDropdown)}
             title="Notifications"
             role="button"
             tabIndex={0}
+            style={{
+              position: 'relative',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '40px',
+              height: '40px',
+              borderRadius: '8px',
+              background: showNotifDropdown ? '#f1f5f9' : '#f8fafc',
+              border: '1px solid #e2e8f0',
+              color: '#334155',
+              fontSize: '1.15rem',
+              transition: 'all 0.15s ease',
+            }}
           >
             <FiBell />
-            {unreadCount > 0 && <span className={styles.topBadge}>{unreadCount}</span>}
+            {unreadCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  right: '-4px',
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  fontSize: '0.68rem',
+                  fontWeight: '800',
+                  minWidth: '18px',
+                  height: '18px',
+                  borderRadius: '999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 4px',
+                  border: '2px solid #ffffff',
+                }}
+              >
+                {unreadCount}
+              </span>
+            )}
           </div>
 
           {showNotifDropdown && (
-            <div className={styles.notificationDropdown}>
-              <div className={styles.notifHeader}>
-                <div className={styles.notifTitleRow}>
-                  <h4 className={styles.notifTitle}>Notifications</h4>
+            <div
+              className={styles.notificationDropdown}
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 8px)',
+                right: 0,
+                width: '360px',
+                maxWidth: '90vw',
+                background: '#ffffff',
+                borderRadius: '12px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                border: '1px solid #e2e8f0',
+                zIndex: 1000,
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                className={styles.notifHeader}
+                style={{
+                  padding: '1rem',
+                  borderBottom: '1px solid #f1f5f9',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: '#f8fafc',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: '#0f172a' }}>
+                    Notifications
+                  </h4>
                   {unreadCount > 0 && (
-                    <span className={styles.notifCountBadge}>{unreadCount} New</span>
+                    <span
+                      style={{
+                        background: '#fee2e2',
+                        color: '#dc2626',
+                        fontSize: '0.72rem',
+                        fontWeight: '700',
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: '999px',
+                      }}
+                    >
+                      {unreadCount} New
+                    </span>
                   )}
                 </div>
-                <div className={styles.notifHeaderActions}>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
                   {unreadCount > 0 && (
                     <button
                       type="button"
                       onClick={handleMarkAllRead}
-                      className={styles.notifActionBtn}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#d99b26',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        padding: 0,
+                      }}
                     >
-                      Mark all as read
+                      Mark all read
                     </button>
                   )}
-                  {notifications.length > 0 && (
+                  {liveNotifications.length > 0 && (
                     <button
                       type="button"
                       onClick={handleClearAll}
-                      className={styles.notifActionBtn}
-                      style={{ color: '#ef4444' }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#94a3b8',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                        padding: 0,
+                      }}
                     >
-                      Clear all
+                      Clear
                     </button>
                   )}
                 </div>
               </div>
 
-              <div className={styles.notifTabsRow}>
+              <div
+                style={{
+                  display: 'flex',
+                  padding: '0.5rem 1rem',
+                  gap: '0.5rem',
+                  borderBottom: '1px solid #f1f5f9',
+                }}
+              >
                 <button
                   type="button"
-                  className={`${styles.notifTabBtn} ${notifFilter === 'all' ? styles.notifTabActive : ''}`}
                   onClick={() => setNotifFilter('all')}
+                  style={{
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '20px',
+                    border: 'none',
+                    background: notifFilter === 'all' ? '#d99b26' : 'transparent',
+                    color: notifFilter === 'all' ? '#ffffff' : '#64748b',
+                    fontSize: '0.78rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
                 >
-                  All ({notifications.length})
+                  All ({liveNotifications.length})
                 </button>
                 <button
                   type="button"
-                  className={`${styles.notifTabBtn} ${notifFilter === 'unread' ? styles.notifTabActive : ''}`}
                   onClick={() => setNotifFilter('unread')}
+                  style={{
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '20px',
+                    border: 'none',
+                    background: notifFilter === 'unread' ? '#d99b26' : 'transparent',
+                    color: notifFilter === 'unread' ? '#ffffff' : '#64748b',
+                    fontSize: '0.78rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
                 >
                   Unread ({unreadCount})
                 </button>
               </div>
 
-              <div className={styles.notifList}>
+              <div style={{ maxHeight: '340px', overflowY: 'auto' }}>
                 {displayNotifications.length === 0 ? (
-                  <div className={styles.notifEmptyState}>
-                    <p style={{ margin: 0, fontWeight: "600", color: "#64748b" }}>No new notifications</p>
+                  <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+                    No notifications
                   </div>
                 ) : (
                   displayNotifications.map((notif) => (
                     <div
                       key={notif.id}
-                      className={`${styles.notifItem} ${!notif.read ? styles.notifUnread : ''}`}
                       onClick={() => handleNotificationClick(notif)}
+                      style={{
+                        padding: '0.75rem 1rem',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '0.75rem',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #f8fafc',
+                        background: notif.read ? '#ffffff' : '#fffbeb',
+                        transition: 'background 0.15s ease',
+                      }}
                     >
-                      <div className={styles.notifIconBox} style={{ background: notif.bg || '#f1f5f9' }}>
+                      <div
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '8px',
+                          background: notif.bg,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          fontSize: '1rem',
+                        }}
+                      >
                         {notif.icon}
                       </div>
 
-                      <div className={styles.notifContent}>
-                        <div className={styles.notifRowTop}>
-                          <h5 className={styles.notifItemTitle}>{notif.title}</h5>
-                          <span className={styles.notifTime}>{notif.time}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.2rem' }}>
+                          <h5 style={{ margin: 0, fontSize: '0.82rem', fontWeight: notif.read ? '600' : '700', color: '#0f172a' }}>
+                            {notif.title}
+                          </h5>
+                          <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{notif.time}</span>
                         </div>
-                        <p className={styles.notifMsg}>{notif.message}</p>
+                        <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b', lineHeight: 1.35, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {notif.message}
+                        </p>
                       </div>
 
                       <button
                         type="button"
-                        className={styles.notifDeleteBtn}
                         onClick={(e) => handleDeleteSingleNotif(e, notif.id)}
-                        title="Dismiss notification"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#cbd5e1',
+                          cursor: 'pointer',
+                          padding: '0.2rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}
+                        title="Dismiss"
                       >
                         <FiX />
                       </button>

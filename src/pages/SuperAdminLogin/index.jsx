@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { 
-  FiShield, 
-  FiLock, 
-  FiMail, 
-  FiEye, 
-  FiEyeOff, 
-  FiArrowRight, 
+import {
+  FiShield,
+  FiLock,
+  FiMail,
+  FiEye,
+  FiEyeOff,
+  FiArrowRight,
   FiArrowLeft,
   FiKey,
   FiCheckCircle
@@ -76,7 +76,7 @@ const SuperAdminLogin = () => {
           <div className={styles.shieldBadge}>
             <FiShield />
           </div>
-          <h2 className={styles.brandTitle}>GIFTERYS</h2>
+          <h2 className={styles.brandTitle}>GIFTERY</h2>
           <span className={styles.brandSub}>SUPER ADMIN ACCESS PORTAL</span>
         </div>
 
@@ -96,7 +96,7 @@ const SuperAdminLogin = () => {
 
         {/* Quick Fill Tool */}
         <div className={styles.quickFillBar}>
-          <span className={styles.quickFillText}>⚡ Super Admin Credentials</span>
+          <span className={styles.quickFillText}> Super Admin Credentials</span>
           <button type="button" className={styles.quickFillBtn} onClick={handleQuickFill}>
             Auto Fill
           </button>
@@ -107,12 +107,11 @@ const SuperAdminLogin = () => {
           {/* Validation Error Alert Banner */}
           {authError && (
             <div className={styles.errorAlertBanner}>
-              <span className={styles.errorAlertIcon}>⚠️</span>
               <div className={styles.errorAlertText}>
                 <strong>Authentication Failed</strong>
                 <p>{authError}</p>
               </div>
-              <button type="button" onClick={() => setAuthError('')} className={styles.errorAlertClose}>✕</button>
+              <button type="button" onClick={() => setAuthError('')} className={styles.errorAlertClose}></button>
             </div>
           )}
           <div className={styles.inputGroup}>
@@ -175,10 +174,10 @@ const SuperAdminLogin = () => {
         {/* Switch Portal Navigation */}
         <div className={styles.otherPortals}>
           <Link to={ROUTES.ADMIN_LOGIN} className={styles.portalLink}>
-            💼 Store Admin Portal
+             Store Admin Portal
           </Link>
           <Link to={ROUTES.LOGIN} className={styles.portalLink}>
-            👤 Customer Login
+             Customer Login
           </Link>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { FiTrash2, FiX } from 'react-icons/fi';
 import Layout from '@components/layout/Layout';
 import { removeFromCart, updateQuantity, clearCartAsync, addToCart } from '@store/slices/cartSlice';
 import { formatCurrency } from '@utils/formatters';
@@ -10,6 +11,7 @@ import { ROUTES } from '@constants/routes';
 import { getStoredCoupons, DEFAULT_COUPONS } from '@constants/coupons';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
+import useStoreSettings from '@hooks/useStoreSettings';
 import styles from './Cart.module.css';
 
 const Cart = () => {
@@ -82,24 +84,12 @@ const Cart = () => {
     };
   }, []);
 
-  const [storeSettings] = useState(() => {
-    try {
-      const stored = localStorage.getItem('store_basic_settings');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return {
-          freeShippingThreshold: parsed.freeShippingThreshold !== undefined && parsed.freeShippingThreshold !== '' ? Number(parsed.freeShippingThreshold) : 5000,
-          standardShippingFee: parsed.standardShippingFee !== undefined && parsed.standardShippingFee !== '' ? Number(parsed.standardShippingFee) : 99,
-        };
-      }
-    } catch (e) {}
-    return { freeShippingThreshold: 5000, standardShippingFee: 99 };
-  });
+  const storeSettings = useStoreSettings();
 
   // Calculations
   const itemCount = cartItems.length;
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0);
-  
+
   let discountAmount = 0;
   if (appliedCoupon) {
     if (appliedCoupon.type === 'percent') {
@@ -116,7 +106,9 @@ const Cart = () => {
   const progressPercent = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
 
   const shippingFee = (isFreeShipping || subtotal === 0) ? 0 : storeSettings.standardShippingFee;
-  const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
+  const taxableAmount = Math.max(0, subtotal - discountAmount);
+  const taxAmount = storeSettings.taxPercentage > 0 ? (taxableAmount * storeSettings.taxPercentage) / 100 : 0;
+  const grandTotal = taxableAmount + taxAmount + shippingFee;
 
   const handleQtyChange = (id, newQty) => {
     if (newQty < 1) return;
@@ -253,7 +245,7 @@ const Cart = () => {
                 {isFreeShipping ? (
                   <>
                     <div className={styles.eligibleBadge}>
-                      <span className={styles.greenCheck}>✓</span>
+                      <span className={styles.greenCheck}></span>
                       <span>You are eligible for free shipping!</span>
                     </div>
                     <div className={styles.progressBarWrapper}>
@@ -290,7 +282,6 @@ const Cart = () => {
             /* Empty Cart View */
             <div className={styles.emptyCartCard}>
               <div className={styles.emptyCartContent}>
-                <span className={styles.emptyCartIcon}>🛒</span>
                 <h2>Your Cart is Empty</h2>
                 <p>Explore our luxury corporate and personalized gift collections to add items to your cart.</p>
                 <Link to={ROUTES.CORPORATE_GIFTS} className={styles.exploreBtn}>
@@ -364,7 +355,7 @@ const Cart = () => {
                               onClick={() => handleRemoveItem(item.id, item.name)}
                               title="Remove item"
                             >
-                              🗑️
+                              <FiTrash2 aria-hidden="true" />
                             </button>
                           </div>
                         </div>
@@ -419,7 +410,7 @@ const Cart = () => {
                           style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
                           title="Remove Coupon"
                         >
-                          ✕
+                          <FiX aria-hidden="true" />
                         </button>
                       </div>
                     )}
@@ -438,12 +429,17 @@ const Cart = () => {
                       </span>
                     </div>
 
+                    <div className={styles.summaryRow}>
+                      <span>GST ({storeSettings.taxPercentage}%)</span>
+                      <span className={styles.rowValBold}>₹{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+
                     <div className={styles.dividerLine} />
 
                     <div className={styles.totalSummaryRow}>
                       <div>
                         <strong className={styles.totalLabel}>Total</strong>
-                        <p className={styles.taxesSubtext}>(Inclusive of all taxes)</p>
+                        <p className={styles.taxesSubtext}>(Includes GST & Shipping)</p>
                       </div>
                       <span className={styles.grandTotalText}>₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
@@ -469,21 +465,18 @@ const Cart = () => {
           {/* ── 3. TRUST & FEATURE HIGHLIGHTS BANNER ── */}
           <div className={styles.featureHighlightsBanner}>
             <div className={styles.featureCard}>
-              <span className={styles.featureIcon}>🚚</span>
               <div>
                 <strong>Free Shipping</strong>
                 <p>On orders above ₹{freeShippingThreshold.toLocaleString('en-IN')}</p>
               </div>
             </div>
             <div className={styles.featureCard}>
-              <span className={styles.featureIcon}>🛡️</span>
               <div>
                 <strong>Secure Payment</strong>
                 <p>100% safe & secure</p>
               </div>
             </div>
             <div className={styles.featureCard}>
-              <span className={styles.featureIcon}>🔄</span>
               <div>
                 <strong>Easy Returns</strong>
                 <p>7-day return policy</p>
@@ -508,7 +501,7 @@ const Cart = () => {
 
               <div className={styles.suggestedGrid}>
                 {suggestedProducts.map((prod) => (
-                  <div key={prod.id} className={styles.suggestedCard} onClick={() => navigate(ROUTES.PRODUCT_PATH(prod.slug))}>
+                  <div key={prod.id} className={styles.suggestedCard} role="link" tabIndex={0} onClick={() => navigate(ROUTES.PRODUCT_PATH(prod.slug))} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') navigate(ROUTES.PRODUCT_PATH(prod.slug)); }}>
                     <div className={styles.suggestedImgBox}>
                       <img
                         src={getImageUrl(prod.image)}
@@ -530,7 +523,7 @@ const Cart = () => {
                           }}
                           aria-label="Add to cart"
                         >
-                          🛒
+
                         </button>
                       </div>
                     </div>

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { 
   FiGrid, 
   FiBox, 
@@ -15,23 +16,6 @@ import {
 } from 'react-icons/fi';
 import styles from '../Dashboard.module.css';
 
-const GiftLogoSvg = () => (
-  <svg className={styles.brandLogoSvg} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M20 12V36" stroke="url(#goldGrad)" strokeWidth="2.5" strokeLinecap="round" />
-    <rect x="6" y="17" width="28" height="19" rx="2" stroke="url(#goldGrad)" strokeWidth="2.2" fill="url(#goldGrad)" fillOpacity="0.12" />
-    <rect x="4" y="12" width="32" height="5" rx="1.5" fill="url(#goldGrad)" stroke="url(#goldGrad)" strokeWidth="1.5" />
-    <path d="M20 12C20 12 16 4 11 4C7.5 4 6 6.5 7 9.5C8 12 20 12 20 12Z" stroke="url(#goldGrad)" strokeWidth="2" strokeLinejoin="round" fill="url(#goldGrad)" fillOpacity="0.2" />
-    <path d="M20 12C20 12 24 4 29 4C32.5 4 34 6.5 33 9.5C32 12 20 12 20 12Z" stroke="url(#goldGrad)" strokeWidth="2" strokeLinejoin="round" fill="url(#goldGrad)" fillOpacity="0.2" />
-    <defs>
-      <linearGradient id="goldGrad" x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#F7D58B" />
-        <stop offset="0.5" stopColor="#DFA843" />
-        <stop offset="1" stopColor="#B8832A" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
-
 const sidebarItems = [
   { id: 'dashboard', label: 'Dashboard', icon: FiGrid, hasCaret: false },
   { id: 'products', label: 'Products', icon: FiBox, hasCaret: true },
@@ -47,6 +31,30 @@ const sidebarItems = [
 ];
 
 const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout, sidebarOpen = false, setSidebarOpen = () => {} }) => {
+  const [customLogo, setCustomLogo] = useState(() => {
+    try {
+      return localStorage.getItem('giftery_store_logo') || null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const handleLogoUpdate = () => {
+      try {
+        const logo = localStorage.getItem('giftery_store_logo');
+        setCustomLogo(logo || null);
+      } catch (e) {}
+    };
+
+    window.addEventListener('store_logo_updated', handleLogoUpdate);
+    window.addEventListener('storage', handleLogoUpdate);
+    return () => {
+      window.removeEventListener('store_logo_updated', handleLogoUpdate);
+      window.removeEventListener('storage', handleLogoUpdate);
+    };
+  }, []);
+
   const handleNavClick = (tabId) => {
     handleTabChange(tabId);
     // Close sidebar on mobile after navigation
@@ -68,11 +76,15 @@ const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout, side
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
       {/* Brand Header */}
       <div className={styles.brandBox}>
-        <GiftLogoSvg />
-        <div className={styles.brandTextGroup}>
-          <h1 className={styles.brandTitle}>GIFTERY</h1>
-          <span className={styles.brandTagline}>PREMIUM GIFTS, LASTING IMPRESSIONS</span>
-        </div>
+        <img
+          src={customLogo || '/images/store-logo-light.png'}
+          alt="GIFTERY"
+          className={styles.sidebarBrandLogo}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/images/store-logo-light.png';
+          }}
+        />
       </div>
 
       {/* Scrollable Navigation Tree */}

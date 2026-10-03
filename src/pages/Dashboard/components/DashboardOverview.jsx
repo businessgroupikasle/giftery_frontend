@@ -12,7 +12,7 @@ import {
   FiUserPlus,
   FiMessageSquare
 } from 'react-icons/fi';
-import { formatOrderId, formatEnquiryId } from '@utils/formatters';
+import { formatOrderId, formatEnquiryId, filterByDateRange, filterByStatus } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
 
 const DEFAULT_RECENT_ORDERS = [];
@@ -28,13 +28,31 @@ const DashboardOverview = ({
   customersList = [],
   ordersList = [],
   backendStats = null,
+  dateFilter = 'Last 30 Days',
+  statusFilter = 'All',
 }) => {
   const [salesTimeframe, setSalesTimeframe] = useState('Weekly');
   const [catTimeframe, setCatTimeframe] = useState('This Week');
   const [orderStatusTimeframe, setOrderStatusTimeframe] = useState('This Week');
 
-  // Effective Orders list
-  const activeOrders = ordersList;
+  // Filter dynamic lists based on selected date range & status (KAN-48)
+  const activeOrders = useMemo(() => {
+    let list = filterByDateRange(ordersList, dateFilter, 'createdAt');
+    list = filterByStatus(list, statusFilter);
+    return list;
+  }, [ordersList, dateFilter, statusFilter]);
+
+  const activeEnquiries = useMemo(() => {
+    let list = filterByDateRange(enquiriesList, dateFilter, 'createdAt');
+    list = filterByStatus(list, statusFilter);
+    return list;
+  }, [enquiriesList, dateFilter, statusFilter]);
+
+  const activeQuotes = useMemo(() => {
+    let list = filterByDateRange(corporateQuotes, dateFilter, 'createdAt');
+    list = filterByStatus(list, statusFilter);
+    return list;
+  }, [corporateQuotes, dateFilter, statusFilter]);
 
   // 1. Dynamic Metric Calculations
   const metrics = useMemo(() => {
@@ -47,7 +65,7 @@ const DashboardOverview = ({
     }, 0);
 
     // Total Orders
-    const totalOrdersCount = ordersList.length > 0 ? ordersList.length : ordersToUse.length;
+    const totalOrdersCount = ordersToUse.length;
 
     // Pending Orders (Pending + Processing)
     const pendingCount = ordersToUse.filter(o => {
@@ -65,13 +83,13 @@ const DashboardOverview = ({
     const customersCount = customersList.length > 0 ? customersList.length : 0;
 
     // New Quotes
-    const quotesCount = corporateQuotes.filter(q => String(q.status || '').toUpperCase() === 'NEW').length;
+    const quotesCount = activeQuotes.filter(q => String(q.status || '').toUpperCase() === 'NEW').length || activeQuotes.length;
 
     // New Enquiries (New / Pending enquiries)
-    const newEnquiriesCount = enquiriesList.filter(e => {
+    const newEnquiriesCount = activeEnquiries.filter(e => {
       const s = String(e.status || '').toUpperCase();
       return s === 'NEW' || s === 'PENDING' || s === 'IN PROGRESS';
-    }).length || enquiriesList.length;
+    }).length || activeEnquiries.length;
 
     return {
       totalRevenue: revenueSum,
@@ -82,7 +100,7 @@ const DashboardOverview = ({
       newQuotes: quotesCount,
       newEnquiries: newEnquiriesCount,
     };
-  }, [activeOrders, ordersList.length, customersList, corporateQuotes, enquiriesList]);
+  }, [activeOrders, customersList, activeQuotes, activeEnquiries]);
 
   // 2. Dynamic Mini Alert Cards Calculations
   const alerts = useMemo(() => {
@@ -181,6 +199,17 @@ const DashboardOverview = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {/* Active Filter Bar Indicator (KAN-48) */}
+      {(dateFilter !== 'Last 30 Days' || statusFilter !== 'All') && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: '10px', padding: '0.65rem 1.15rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#92400e', fontSize: '0.85rem', fontWeight: 600 }}>
+            <span>Filtered by Date: <strong>{dateFilter}</strong></span>
+            {statusFilter !== 'All' && <span>• Status: <strong>{statusFilter}</strong></span>}
+            <span style={{ fontSize: '0.8rem', color: '#b45309', background: '#fde68a', padding: '0.15rem 0.5rem', borderRadius: '12px' }}>{activeOrders.length} Orders Matching</span>
+          </div>
+        </div>
+      )}
+
       {/* ── ROW 1: 6 KPI METRICS CARDS ── */}
       <div className={styles.kpiGrid}>
         {/* Card 1: Total Revenue */}
@@ -471,9 +500,76 @@ const DashboardOverview = ({
         </div>
       </div>
 
+      {/* ── QUICK STATUS SECTION (KAN-52) ── */}
+      <div className={styles.quickStatusGrid}>
+        <div 
+          className={`${styles.miniAlertCard} ${styles.miniCardOrange}`}
+          onClick={() => handleTabChange('products')}
+          style={{ cursor: 'pointer' }}
+          title="Manage Low Stock Products"
+        >
+          <div className={styles.miniIconBox} style={{ color: '#ea580c' }}>
+            <FiArchive />
+          </div>
+          <div>
+            <div className={styles.miniLabel}>Low Stock Alert</div>
+            <div className={styles.miniVal}>{alerts.lowStock}</div>
+            <div className={styles.miniSub}>Products</div>
+          </div>
+        </div>
+
+        <div 
+          className={`${styles.miniAlertCard} ${styles.miniCardRed}`}
+          onClick={() => handleTabChange('products')}
+          style={{ cursor: 'pointer' }}
+          title="Manage Out of Stock Products"
+        >
+          <div className={styles.miniIconBox} style={{ color: '#dc2626' }}>
+            <FiXCircle />
+          </div>
+          <div>
+            <div className={styles.miniLabel}>Out of Stock</div>
+            <div className={styles.miniVal}>{alerts.outOfStock}</div>
+            <div className={styles.miniSub}>Products</div>
+          </div>
+        </div>
+
+        <div 
+          className={`${styles.miniAlertCard} ${styles.miniCardBlue}`}
+          onClick={() => handleTabChange('customers')}
+          style={{ cursor: 'pointer' }}
+          title="View Customer Database"
+        >
+          <div className={styles.miniIconBox} style={{ color: '#0284c7' }}>
+            <FiUserPlus />
+          </div>
+          <div>
+            <div className={styles.miniLabel}>New Customers</div>
+            <div className={styles.miniVal}>{alerts.newCustomersCount}</div>
+            <div className={styles.miniSub}>This Week</div>
+          </div>
+        </div>
+
+        <div 
+          className={`${styles.miniAlertCard} ${styles.miniCardPurple}`}
+          onClick={() => handleTabChange('corporate-quotes')}
+          style={{ cursor: 'pointer' }}
+          title="View Pending Corporate Quotes"
+        >
+          <div className={styles.miniIconBox} style={{ color: '#8b5cf6' }}>
+            <FiFileText />
+          </div>
+          <div>
+            <div className={styles.miniLabel}>Pending Quotes</div>
+            <div className={styles.miniVal}>{activeQuotes.length || corporateQuotes.length}</div>
+            <div className={styles.miniSub}>Active Requests</div>
+          </div>
+        </div>
+      </div>
+
       {/* ── ROW 3: DATA TABLES & ACTIVITY GRID (3 COLUMNS) ── */}
       <div className={styles.bottomGrid}>
-        {/* Column 1: Recent Orders Table & Mini Alert Cards */}
+        {/* Column 1: Recent Orders Table */}
         <div className={styles.cardContainer}>
           <div className={styles.cardHeaderRow}>
             <h3 className={styles.cardTitle}>Recent Orders</h3>
@@ -520,57 +616,6 @@ const DashboardOverview = ({
               })}
             </tbody>
           </table>
-
-          {/* Bottom 4 Mini Alert Cards Row */}
-          <div className={styles.miniAlertsGrid}>
-            <div 
-              className={`${styles.miniAlertCard} ${styles.miniCardOrange}`}
-              onClick={() => handleTabChange('products')}
-              style={{ cursor: 'pointer' }}
-              title="Manage Low Stock Products"
-            >
-              <div className={styles.miniIconBox} style={{ color: '#ea580c' }}>
-                <FiArchive />
-              </div>
-              <div>
-                <div className={styles.miniLabel}>Low Stock Alert</div>
-                <div className={styles.miniVal}>{alerts.lowStock}</div>
-                <div className={styles.miniSub}>Products</div>
-              </div>
-            </div>
-
-            <div 
-              className={`${styles.miniAlertCard} ${styles.miniCardRed}`}
-              onClick={() => handleTabChange('products')}
-              style={{ cursor: 'pointer' }}
-              title="Manage Out of Stock Products"
-            >
-              <div className={styles.miniIconBox} style={{ color: '#dc2626' }}>
-                <FiXCircle />
-              </div>
-              <div>
-                <div className={styles.miniLabel}>Out of Stock</div>
-                <div className={styles.miniVal}>{alerts.outOfStock}</div>
-                <div className={styles.miniSub}>Products</div>
-              </div>
-            </div>
-
-            <div 
-              className={`${styles.miniAlertCard} ${styles.miniCardBlue}`}
-              onClick={() => handleTabChange('customers')}
-              style={{ cursor: 'pointer' }}
-              title="View Customer Database"
-            >
-              <div className={styles.miniIconBox} style={{ color: '#0284c7' }}>
-                <FiUserPlus />
-              </div>
-              <div>
-                <div className={styles.miniLabel}>New Customers</div>
-                <div className={styles.miniVal}>{alerts.newCustomersCount}</div>
-                <div className={styles.miniSub}>This Week</div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Column 2: Top Selling Products List */}
@@ -613,7 +658,7 @@ const DashboardOverview = ({
               <div className={styles.timelineItem} onClick={() => handleTabChange('orders')} style={{ cursor: 'pointer' }}>
                 <span className={`${styles.timelineBadge} ${styles.bgTimelineGreen}`} />
                 <div>
-                  <p className={styles.timelineText}>New order <strong>#{activeOrders[0]?.id || 'ORD-1256'}</strong> placed by {activeOrders[0]?.customer || 'Tech Solutions'}</p>
+                  <p className={styles.timelineText}>New order <strong>{formatOrderId(activeOrders[0]?.id || activeOrders[0]?.orderId, 0, activeOrders[0]?.createdAt)}</strong> placed by {activeOrders[0]?.customer || 'Tech Solutions'}</p>
                   <span className={styles.timelineTime}>5 mins ago</span>
                 </div>
               </div>

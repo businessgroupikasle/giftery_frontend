@@ -1,5 +1,5 @@
 /* =============================================================
-   Login.module.css — Luxury Gifterys Auth Page Centered Design
+   Login.module.css — Luxury GIFTERY Auth Page Centered Design
    ============================================================= */
 
 /* Page Outer Container (Full Viewport Centering) */
@@ -570,7 +570,7 @@
 
 .formFooterPrompt {
   text-align: center;
-  margin-top: 0.4rem;
+  margin-top: 0.85rem;
   font-size: 0.82rem;
   color: #94a3b8;
 }
@@ -1029,4 +1029,34 @@
   .authPageContainer {
     align-items: center;
   }
+}
+
+
+.googleAuthBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.authDivider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #7d8592;
+  font-size: 0.7rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.authDivider::before,
+.authDivider::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: #2a2e37;
+}
+
+.authDivider span {
+  white-space: nowrap;
 }

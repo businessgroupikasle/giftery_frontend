@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { FiUsers, FiEdit2, FiX, FiSave, FiEye, FiSearch, FiFilter, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import axiosInstance from '@api/axiosInstance';
+import { formatCustomerId } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
 
 const CustomersSection = ({
@@ -62,8 +63,8 @@ const CustomersSection = ({
       await axiosInstance.put(`/users/${encodeURIComponent(targetId)}/status`, { isActive, status: newStatus });
       toast.success(
         isActive
-          ? `✅ ${customer.name} is now Active — they can log in.`
-          : `🚫 ${customer.name} is now Inactive — login is blocked.`
+          ? ` ${customer.name} is now Active — they can log in.`
+          : ` ${customer.name} is now Inactive — login is blocked.`
       );
       window.dispatchEvent(new Event('registered_users_updated'));
       if (typeof onRefresh === 'function') onRefresh();
@@ -71,8 +72,8 @@ const CustomersSection = ({
       console.warn('Backend user status sync notice:', err.message);
       toast.success(
         isActive
-          ? `✅ ${customer.name} set to Active.`
-          : `🚫 ${customer.name} set to Inactive.`
+          ? ` ${customer.name} set to Active.`
+          : ` ${customer.name} set to Inactive.`
       );
     } finally {
       setSavingStatus(null);
@@ -81,11 +82,22 @@ const CustomersSection = ({
 
   const handleEditSave = async () => {
     if (!editModal) return;
+    const cleanName = (editForm.name || '').trim();
+    if (!cleanName || cleanName.length < 2) {
+      toast.error('Please enter a valid customer name');
+      return;
+    }
+    const cleanPhone = String(editForm.phone || '').trim().replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length !== 10 || !/^[6-9]/.test(cleanPhone)) {
+      toast.error('Phone number is mandatory. Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
+      return;
+    }
+
     setSavingStatus(editModal.id);
 
     const isActive = editForm.status === 'Active';
     const updated = customers.map((c) =>
-      c.id === editModal.id ? { ...c, name: editForm.name, phone: editForm.phone || 'Not provided', status: editForm.status, isActive } : c
+      c.id === editModal.id ? { ...c, name: cleanName, phone: cleanPhone, status: editForm.status, isActive } : c
     );
     setCustomers(updated);
 
@@ -94,7 +106,7 @@ const CustomersSection = ({
       const stored = JSON.parse(localStorage.getItem('registered_users') || '[]');
       const updatedStored = stored.map((c) =>
         (c.id === editModal.id || c.email === editModal.email)
-          ? { ...c, name: editForm.name, phone: editForm.phone || 'Not provided', status: editForm.status, isActive }
+          ? { ...c, name: cleanName, phone: cleanPhone, status: editForm.status, isActive }
           : c
       );
       localStorage.setItem('registered_users', JSON.stringify(updatedStored));
@@ -104,8 +116,8 @@ const CustomersSection = ({
     try {
       const targetId = editModal.id || editModal.email;
       await axiosInstance.put(`/users/${encodeURIComponent(targetId)}`, {
-        name: editForm.name,
-        phone: editForm.phone,
+        name: cleanName,
+        phone: cleanPhone,
         isActive,
         status: editForm.status,
       });
@@ -252,7 +264,7 @@ const CustomersSection = ({
               transition: 'all 0.15s ease',
             }}
           >
-            ✅ Active ({activeCount})
+             Active ({activeCount})
           </button>
           <button
             type="button"
@@ -269,7 +281,7 @@ const CustomersSection = ({
               transition: 'all 0.15s ease',
             }}
           >
-            🚫 Inactive ({inactiveCount})
+             Inactive ({inactiveCount})
           </button>
         </div>
 
@@ -321,7 +333,7 @@ const CustomersSection = ({
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '1px solid #edf2f7' }}>
-              {['NAME', 'PHONE', 'ORDERS', 'VERIFIED', 'JOINED', 'ACTIONS'].map((h) => (
+              {['CUSTOMER ID', 'NAME', 'PHONE', 'ORDERS', 'VERIFIED', 'JOINED', 'ACTIONS'].map((h) => (
                 <th key={h} style={{ textTransform: 'uppercase', fontSize: '0.75rem', color: '#64748b', fontWeight: '700', padding: '0.9rem 1.25rem', letterSpacing: '0.5px' }}>
                   {h}
                 </th>
@@ -331,7 +343,7 @@ const CustomersSection = ({
           <tbody>
             {filteredCustomers.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ padding: '2.5rem', textAlign: 'center', color: '#64748b' }}>
+                <td colSpan={7} style={{ padding: '2.5rem', textAlign: 'center', color: '#64748b' }}>
                   <FiUsers style={{ fontSize: '2rem', color: '#cbd5e1', marginBottom: '0.5rem' }} />
                   <p style={{ margin: 0, fontWeight: '600' }}>No customers found</p>
                   <span style={{ fontSize: '0.8rem' }}>Try adjusting your search query or filter.</span>
@@ -344,6 +356,10 @@ const CustomersSection = ({
 
                 return (
                   <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9', opacity: isActive ? 1 : 0.7 }}>
+                    <td style={{ padding: '1rem 1.25rem', color: '#1e3a5f', fontSize: '0.8rem', fontWeight: '700', whiteSpace: 'nowrap' }}>
+                      {c.customerId || formatCustomerId(c.id, { email: c.email })}
+                    </td>
+
                     {/* Name & Email */}
                     <td style={{ padding: '1rem 1.25rem' }}>
                       <strong style={{ fontSize: '0.9rem', color: '#1e293b', display: 'block', fontWeight: '600' }}>{c.name}</strong>
@@ -397,34 +413,76 @@ const CustomersSection = ({
                             whiteSpace: 'nowrap',
                           }}
                         >
-                          {isToggling ? '...' : isActive ? '✅ Active' : '🚫 Inactive'}
+                          {isToggling ? '...' : isActive ? ' Active' : ' Inactive'}
                         </button>
                         {/* View */}
                         <button
                           type="button"
                           onClick={() => setSelectedCustomerModal(c)}
-                          title="View Details"
-                          style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '7px', width: '32px', height: '32px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
+                          title="View Customer Details"
+                          style={{
+                            background: '#f8fafc',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '6px',
+                            padding: '0.32rem 0.65rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            cursor: 'pointer',
+                            color: '#334155',
+                            fontSize: '0.74rem',
+                            fontWeight: '600',
+                            whiteSpace: 'nowrap',
+                          }}
                         >
-                          <FiEye size={14} />
+                          <FiEye size={13} />
+                          <span>View</span>
                         </button>
                         {/* Edit */}
                         <button
                           type="button"
                           onClick={() => openEditModal(c)}
                           title="Edit Customer"
-                          style={{ background: '#fef9ec', border: '1px solid #f6d860', borderRadius: '7px', width: '32px', height: '32px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#d97706' }}
+                          style={{
+                            background: '#fef9ec',
+                            border: '1px solid #fde047',
+                            borderRadius: '6px',
+                            padding: '0.32rem 0.65rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            cursor: 'pointer',
+                            color: '#b45309',
+                            fontSize: '0.74rem',
+                            fontWeight: '600',
+                            whiteSpace: 'nowrap',
+                          }}
                         >
-                          <FiEdit2 size={14} />
+                          <FiEdit2 size={13} />
+                          <span>Edit</span>
                         </button>
                         {/* Delete */}
                         <button
                           type="button"
                           onClick={() => setDeleteModal(c)}
                           title="Delete Customer"
-                          style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '7px', width: '32px', height: '32px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444' }}
+                          style={{
+                            background: '#fef2f2',
+                            border: '1px solid #fecaca',
+                            borderRadius: '6px',
+                            padding: '0.32rem 0.65rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            cursor: 'pointer',
+                            color: '#dc2626',
+                            fontSize: '0.74rem',
+                            fontWeight: '600',
+                            whiteSpace: 'nowrap',
+                          }}
                         >
-                          <FiTrash2 size={14} />
+                          <FiTrash2 size={13} />
+                          <span>Delete</span>
                         </button>
                       </div>
                     </td>
@@ -518,15 +576,20 @@ const CustomersSection = ({
 
               {/* Phone */}
               <div>
-                <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '0.4rem' }}>Phone</label>
+                <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '0.4rem' }}>
+                  Phone <span style={{ color: '#ef4444' }}>*</span>
+                </label>
                 <input
                   type="tel"
                   maxLength={10}
                   value={editForm.phone}
                   onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
                   style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.9rem', color: '#1e293b', outline: 'none', boxSizing: 'border-box' }}
-                  placeholder="10-digit mobile number"
+                  placeholder="10-digit mobile number (e.g. 9876543210)"
                 />
+                <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.2rem', display: 'block' }}>
+                  Mandatory 10-digit mobile number starting with 6, 7, 8, or 9
+                </span>
               </div>
 
               {/* Status */}
@@ -550,7 +613,7 @@ const CustomersSection = ({
                       transition: 'all 0.2s ease',
                     }}
                   >
-                    ✅ Active
+                     Active
                     <div style={{ fontSize: '0.7rem', fontWeight: '400', marginTop: '0.2rem', opacity: 0.8 }}>User can log in</div>
                   </button>
 
@@ -571,7 +634,7 @@ const CustomersSection = ({
                       transition: 'all 0.2s ease',
                     }}
                   >
-                    🚫 Inactive
+                     Inactive
                     <div style={{ fontSize: '0.7rem', fontWeight: '400', marginTop: '0.2rem', opacity: 0.8 }}>Login blocked</div>
                   </button>
                 </div>
@@ -579,7 +642,7 @@ const CustomersSection = ({
                 {/* Warning banner when setting Inactive */}
                 {editForm.status === 'Inactive' && (
                   <div style={{ marginTop: '0.6rem', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '8px', padding: '0.6rem 0.85rem', fontSize: '0.78rem', color: '#c2410c', display: 'flex', gap: '0.4rem', alignItems: 'flex-start' }}>
-                    ⚠️ Setting this user as Inactive will immediately block them from logging in to their account.
+                     Setting this user as Inactive will immediately block them from logging in to their account.
                   </div>
                 )}
               </div>
