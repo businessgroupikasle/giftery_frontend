@@ -168,6 +168,44 @@ export const formatEnquiryId = (rawId, createdAt, index = 0) => {
 };
 
 /**
+ * Format a catalogue download request ID into a clean, human-readable format like REQ-2026-0001
+ * Replaces unreadable raw hashes/CUIDs (#am8tli54) with standard labelled business format
+ * @param {string} rawId - The raw ID (CUID, hash, or formatted string)
+ * @param {string|Date} [createdAt] - Creation date of the request
+ * @param {number} [index=0] - Optional list index for sequential numbering
+ * @returns {string} Standard business formatted request ID (e.g. REQ-2026-0001)
+ */
+export const formatCatalogueRequestId = (rawId, createdAt, index = 0) => {
+  if (!rawId) {
+    const year = new Date().getFullYear();
+    const seq = String((typeof index === 'number' && index >= 0 ? index : 0) + 1).padStart(4, '0');
+    return `REQ-${year}-${seq}`;
+  }
+
+  const clean = String(rawId).trim().replace(/^#/, '');
+
+  // If already formatted like REQ-2026-0001 or REQ-0001
+  if (/^REQ-\d{4}-[A-Z0-9-]+$/i.test(clean) || /^REQ-\d{4,}/i.test(clean)) {
+    return clean.toUpperCase();
+  }
+
+  let year = '2026';
+  if (createdAt) {
+    const d = new Date(createdAt);
+    if (!isNaN(d.getTime())) {
+      year = String(d.getFullYear());
+    }
+  }
+
+  if (typeof index === 'number' && index >= 0) {
+    const seq = String(index + 1).padStart(4, '0');
+    return `REQ-${year}-${seq}`;
+  }
+
+  return `REQ-${year}-${stableIdCode(clean, 4)}`;
+};
+
+/**
  * Filter an array of items by a designated date range string or custom range
  * Handles 'Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'This Month', 'Last Month', and Custom Date Ranges
  * @param {Array} items - List of items to filter

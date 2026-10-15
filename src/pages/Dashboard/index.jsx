@@ -1381,15 +1381,17 @@ const Dashboard = () => {
                 <FiRefreshCw />
               </button>
 
-              {/* Export Excel Button */}
-              <button
-                className={`${styles.headerActionBtn} ${styles.excelBtn}`}
-                onClick={handleHeaderExport}
-                title="Export to Excel / CSV"
-              >
-                <FiDownload />
-                <span>Export</span>
-              </button>
+              {/* Export Excel Button (Hidden on Catalogue Requests to prevent duplicate Export button) */}
+              {activeTab !== 'catalogue-requests' && (
+                <button
+                  className={`${styles.headerActionBtn} ${styles.excelBtn}`}
+                  onClick={handleHeaderExport}
+                  title="Export to Excel / CSV"
+                >
+                  <FiDownload />
+                  <span>Export</span>
+                </button>
+              )}
             </div>
           </div>
 

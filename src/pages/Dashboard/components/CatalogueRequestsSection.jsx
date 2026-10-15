@@ -13,7 +13,7 @@ import {
 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import axiosInstance from '@api/axiosInstance';
-import { filterByDateRange } from '@utils/formatters';
+import { filterByDateRange, formatCatalogueRequestId } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
 
 const CatalogueRequestsSection = ({ enquiriesList = [], handleUpdateEnquiryStatus }) => {
@@ -148,7 +148,7 @@ const CatalogueRequestsSection = ({ enquiriesList = [], handleUpdateEnquiryStatu
     const headerLine = headers.map(escapeCell).join(',');
     const dataLines = filteredRequests.map((r, idx) =>
       [
-        r.id || `REQ-${idx + 1}`,
+        formatCatalogueRequestId(r.id, r.createdAt || r.date, idx),
         r.name || 'Anonymous',
         r.email || '',
         r.phone || 'N/A',
@@ -373,7 +373,7 @@ const CatalogueRequestsSection = ({ enquiriesList = [], handleUpdateEnquiryStatu
               </tr>
             </thead>
             <tbody>
-              {filteredRequests.map((item) => {
+              {filteredRequests.map((item, index) => {
                 const currentStatus = String(item.status || 'New');
                 const isResolved = currentStatus.toUpperCase() === 'RESOLVED';
                 const isInProgress = currentStatus.toUpperCase() === 'IN PROGRESS';
@@ -384,8 +384,8 @@ const CatalogueRequestsSection = ({ enquiriesList = [], handleUpdateEnquiryStatu
                       <strong style={{ color: '#0f172a', display: 'block', fontSize: '0.9rem' }}>
                         {item.name || 'Anonymous Lead'}
                       </strong>
-                      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                        ID: #{String(item.id).slice(-8)}
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>
+                        Request ID: {formatCatalogueRequestId(item.id, item.createdAt || item.date, index)}
                       </span>
                     </td>
                     <td>

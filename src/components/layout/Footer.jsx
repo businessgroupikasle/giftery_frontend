@@ -39,7 +39,7 @@ const GiftLogoSvg = () => (
   </div>
 );
 
-const DEFAULT_LOGO_URL = '/images/store-logo-light.png';
+const DEFAULT_LOGO_URL = '/images/store-logo.png';
 const filteredPath = (basePath, query) => `${basePath}?q=${encodeURIComponent(query)}`;
 const toysCategoryPath = (name) => {
   if (name === 'All Toys') return ROUTES.TOYS;

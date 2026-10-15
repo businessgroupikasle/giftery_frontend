@@ -401,19 +401,19 @@ const CustomersSection = ({
                             background: isActive ? '#dcfce7' : '#fee2e2',
                             color: isActive ? '#16a34a' : '#dc2626',
                             border: `1px solid ${isActive ? '#86efac' : '#fca5a5'}`,
-                            padding: '0.28rem 0.7rem',
-                            borderRadius: '20px',
-                            fontSize: '0.72rem',
-                            fontWeight: '700',
+                            padding: '0.32rem 0.65rem',
+                            borderRadius: '6px',
+                            fontSize: '0.74rem',
+                            fontWeight: '600',
                             cursor: isToggling ? 'wait' : 'pointer',
                             transition: 'all 0.2s ease',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '0.25rem',
+                            gap: '0.35rem',
                             whiteSpace: 'nowrap',
                           }}
                         >
-                          {isToggling ? '...' : isActive ? ' Active' : ' Inactive'}
+                          {isToggling ? '...' : isActive ? 'Active' : 'Inactive'}
                         </button>
                         {/* View */}
                         <button

@@ -2,11 +2,41 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+const googleVerificationPlugin = () => ({
+  name: 'google-verification-handler',
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      const match = req.url?.match(/^\/(google[a-zA-Z0-9_\-]*\.html)(\?.*)?$/i);
+      if (match) {
+        const filename = match[1];
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.statusCode = 200;
+        res.end(`google-site-verification: ${filename}`);
+        return;
+      }
+      next();
+    });
+  },
+  configurePreviewServer(server) {
+    server.middlewares.use((req, res, next) => {
+      const match = req.url?.match(/^\/(google[a-zA-Z0-9_\-]*\.html)(\?.*)?$/i);
+      if (match) {
+        const filename = match[1];
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.statusCode = 200;
+        res.end(`google-site-verification: ${filename}`);
+        return;
+      }
+      next();
+    });
+  },
+});
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    plugins: [react()],
+    plugins: [react(), googleVerificationPlugin()],
 
     server: {
       port: 3000,

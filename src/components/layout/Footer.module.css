@@ -324,7 +324,7 @@
 
 @media (max-width: 480px) {
   .footer {
-    padding: 1.5rem 0 0.8rem;
+    padding: 0.9rem 0 0.55rem;
   }
 
   .container {
@@ -333,7 +333,7 @@
 
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.25rem 0.75rem;
+    gap: 0.85rem 0.65rem;
   }
 
   .brandCol {
@@ -343,26 +343,26 @@
   }
 
   .brandLink img {
-    height: 52px !important;
-    max-width: 220px !important;
+    height: 42px !important;
+    max-width: 180px !important;
   }
 
   .brandDescription {
-    max-width: 280px;
-    margin-top: 0.55rem;
-    font-size: 0.64rem;
-    line-height: 1.4;
+    max-width: 250px;
+    margin-top: 0.3rem;
+    font-size: 0.6rem;
+    line-height: 1.3;
   }
 
   .socialIcons {
-    gap: 7px;
-    margin-top: 0.65rem;
+    gap: 6px;
+    margin-top: 0.25rem;
   }
 
   .socialBtn {
-    width: 28px;
-    height: 28px;
-    font-size: 10px;
+    width: 24px;
+    height: 24px;
+    font-size: 9px;
   }
 
   .col {
@@ -370,9 +370,9 @@
   }
 
   .colTitle {
-    margin-bottom: 0.65rem;
-    padding-bottom: 0.35rem;
-    font-size: 0.62rem;
+    margin-bottom: 0.45rem;
+    padding-bottom: 0.25rem;
+    font-size: 0.6rem;
     letter-spacing: 0.45px;
   }
 
@@ -381,13 +381,13 @@
   }
 
   .linkList {
-    gap: 0.3rem;
+    gap: 0.2rem;
   }
 
   .linkList a {
-    gap: 3px;
-    font-size: 0.61rem;
-    line-height: 1.3;
+    gap: 2px;
+    font-size: 0.58rem;
+    line-height: 1.2;
   }
 
   .chevron {
@@ -395,57 +395,63 @@
   }
 
   .toggleMoreBtn {
-    margin-top: 0.4rem;
-    font-size: 0.58rem;
+    margin-top: 0.25rem;
+    font-size: 0.54rem;
+  }
+
+  .grid > .col:last-child {
+    grid-column: 1 / -1;
   }
 
   .infoList {
-    gap: 0.55rem;
+    display: grid;
+    grid-template-columns: 1.35fr 0.85fr;
+    gap: 0.35rem 0.6rem;
   }
 
   .infoItem {
-    gap: 0.4rem;
-    font-size: 0.59rem;
-    line-height: 1.35;
+    gap: 0.3rem;
+    font-size: 0.55rem;
+    line-height: 1.25;
     overflow-wrap: anywhere;
   }
 
   .infoIcon {
     margin-top: 1px;
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .bottomBar {
-    margin-top: 1.25rem;
-    padding-top: 0.75rem;
+    margin-top: 0.8rem;
+    padding-top: 0.5rem;
     flex-direction: column;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.35rem;
     text-align: center;
   }
 
   .copyright {
-    font-size: 0.57rem;
-    line-height: 1.4;
+    font-size: 0.55rem;
+    line-height: 1.25;
   }
 
   .paymentSection {
     justify-content: center;
-    gap: 0.4rem;
+    gap: 0.3rem;
   }
 
   .weAcceptLabel {
-    font-size: 0.58rem;
+    font-size: 0.56rem;
   }
 
   .paymentMethods {
     justify-content: center;
-    gap: 3px;
+    gap: 2px;
   }
 
   .payCard {
-    height: 18px;
-    padding: 0 5px;
-    font-size: 7px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 6px;
   }
 }

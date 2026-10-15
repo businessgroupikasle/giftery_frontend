@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { FiX } from 'react-icons/fi';
 import { getStoredCoupons, DEFAULT_COUPONS } from '../../../constants/coupons';
 import styles from '../Dashboard.module.css';
 
@@ -289,9 +290,33 @@ const CouponsSection = ({ initialCoupons }) => {
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', fontWeight: 'bold' }}
+                aria-label="Close modal"
+                title="Close"
+                style={{
+                  background: '#f1f5f9',
+                  border: '1px solid #cbd5e1',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#0f172a',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#e2e8f0';
+                  e.currentTarget.style.color = '#000000';
+                  e.currentTarget.style.borderColor = '#94a3b8';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f1f5f9';
+                  e.currentTarget.style.color = '#0f172a';
+                  e.currentTarget.style.borderColor = '#cbd5e1';
+                }}
               >
-
+                <FiX size={16} />
               </button>
             </div>
 

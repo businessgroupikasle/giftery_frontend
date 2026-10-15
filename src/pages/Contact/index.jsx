@@ -87,6 +87,13 @@ const ArrowRight = () => (
   </svg>
 );
 
+const CloseIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
 /* ── Main Component ──────────────────────────────────── */
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -742,8 +749,40 @@ const Contact = () => {
       {showAppointmentModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }} onClick={() => setShowAppointmentModal(false)}>
           <div style={{ background: '#ffffff', borderRadius: '16px', maxWidth: '520px', width: '100%', padding: '2rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
-            <button type="button" style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 'bold' }} onClick={() => setShowAppointmentModal(false)}>
-
+            <button
+              type="button"
+              aria-label="Close modal"
+              title="Close modal"
+              style={{
+                position: 'absolute',
+                top: '1.25rem',
+                right: '1.25rem',
+                background: '#f1f5f9',
+                border: '1px solid #cbd5e1',
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#0f172a',
+                transition: 'all 0.2s ease',
+                zIndex: 10,
+              }}
+              onClick={() => setShowAppointmentModal(false)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#e2e8f0';
+                e.currentTarget.style.color = '#000000';
+                e.currentTarget.style.borderColor = '#94a3b8';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#f1f5f9';
+                e.currentTarget.style.color = '#0f172a';
+                e.currentTarget.style.borderColor = '#cbd5e1';
+              }}
+            >
+              <CloseIcon />
             </button>
             <h3 style={{ margin: '0 0 0.4rem 0', color: '#0f172a', fontSize: '1.35rem', fontWeight: '800' }}>
               Book Studio Appointment
@@ -899,25 +938,38 @@ const Contact = () => {
           >
             <button
               type="button"
+              aria-label="Close modal"
+              title="Close modal"
               style={{
                 position: 'absolute',
                 top: '1.25rem',
                 right: '1.25rem',
                 background: '#f1f5f9',
-                border: 'none',
-                width: '32px',
-                height: '32px',
+                border: '1px solid #cbd5e1',
+                width: '36px',
+                height: '36px',
                 borderRadius: '50%',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#64748b',
-                fontWeight: 'bold',
+                color: '#0f172a',
+                transition: 'all 0.2s ease',
+                zIndex: 10,
               }}
               onClick={() => setShowCatalogueModal(false)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#e2e8f0';
+                e.currentTarget.style.color = '#000000';
+                e.currentTarget.style.borderColor = '#94a3b8';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#f1f5f9';
+                e.currentTarget.style.color = '#0f172a';
+                e.currentTarget.style.borderColor = '#cbd5e1';
+              }}
             >
-
+              <CloseIcon />
             </button>
 
             <div

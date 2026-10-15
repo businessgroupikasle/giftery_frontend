@@ -77,12 +77,12 @@ const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout, side
       {/* Brand Header */}
       <div className={styles.brandBox}>
         <img
-          src={customLogo || '/images/store-logo-light.png'}
+          src={customLogo || '/images/store-logo.png'}
           alt="GIFTERY"
           className={styles.sidebarBrandLogo}
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = '/images/store-logo-light.png';
+            e.target.src = '/images/store-logo.png';
           }}
         />
       </div>
