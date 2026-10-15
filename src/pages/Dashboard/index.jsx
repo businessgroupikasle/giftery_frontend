@@ -952,7 +952,7 @@ const Dashboard = () => {
       name: payload.name,
       slug: (editingCategory && editingCategory.slug) || generatedSlug,
       description: payload.description || '',
-      image: payload.image || '/images/cat_corporate.png',
+      image: payload.image || '/images/cat_corporate.webp',
       sortOrder: payload.sortOrder || 0,
       isActive: payload.isActive !== false,
       parentId: payload.parentId || null,

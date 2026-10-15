@@ -22,7 +22,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url('/images/bulk_orders_bg.png');
+  background-image: url('/images/bulk_orders_bg.webp');
   background-size: cover;
   background-position: center;
   z-index: 0;

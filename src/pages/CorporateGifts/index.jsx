@@ -302,8 +302,7 @@ const CorporateGifts = () => {
               price: p.price,
               comparePrice: p.comparePrice,
               stock: p.stock !== undefined ? p.stock : 0,
-              rating: p.rating || 4.8,
-              reviewsCount: p.reviewsCount || p._count?.reviews || 24,
+              rating: p.rating ?? null,
               discount: p.comparePrice ? `${Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100)}%` : null,
               images: imgList,
               image: imgList[0] || '/placeholder.jpg',
@@ -695,7 +694,7 @@ const CorporateGifts = () => {
         <div className={styles.topBanner}>
           {/* Background product image */}
           <img
-            src="/images/corporate_hero_bg.png"
+            src="/images/corporate_hero_bg.webp"
             alt="Premium Corporate Gift Collection"
             className={styles.heroBgImage}
           />
@@ -953,7 +952,7 @@ const CorporateGifts = () => {
             {/* Product Cards Grid */}
             <div className={`${styles.productGrid} ${viewMode === 'list' ? styles.productListMode : ''}`}>
               {paginatedProducts.map((prod) => (
-                <ProductCard key={prod.id} product={prod} />
+                <ProductCard key={prod.id} product={prod} viewMode={viewMode} />
               ))}
             </div>
 

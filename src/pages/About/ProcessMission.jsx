@@ -94,7 +94,7 @@ const ProcessMission = () => {
         {/* Right Visual Image */}
         <div className={styles.missionVisual}>
           <img
-            src="/images/about_mission_bag_set.png"
+            src="/images/about_mission_bag_set.webp"
             alt="Giftery Mission Black Shopping Bag & Gift Items"
             className={styles.bagImg}
           />

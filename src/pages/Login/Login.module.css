@@ -13,7 +13,7 @@
   background-image: 
     radial-gradient(circle at 50% 30%, rgba(223, 168, 67, 0.12) 0%, transparent 60%),
     radial-gradient(circle at 85% 85%, rgba(200, 145, 45, 0.08) 0%, transparent 50%),
-    url('/images/login_luxury_bg.png');
+    url('/images/login_luxury_bg.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

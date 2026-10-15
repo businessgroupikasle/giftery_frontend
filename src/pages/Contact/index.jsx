@@ -383,7 +383,7 @@ const Contact = () => {
         <section className={styles.heroSection}>
           {/* Background image + overlay */}
           <img
-            src="/images/contact_hero_bg.png"
+            src="/images/contact_hero_bg.webp"
             alt="GIFTERY luxury gift collection"
             className={styles.heroBgImage}
           />

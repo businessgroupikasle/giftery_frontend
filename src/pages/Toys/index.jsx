@@ -224,8 +224,7 @@ const Toys = () => {
               price: p.price,
               comparePrice: p.comparePrice,
               stock: p.stock !== undefined ? p.stock : 0,
-              rating: p.rating || 4.8,
-              reviewsCount: p.reviewsCount || p._count?.reviews || 24,
+              rating: p.rating ?? null,
               discount: p.comparePrice ? `${Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100)}%` : null,
               images: imgList,
               image: imgList[0] || '/placeholder.jpg',
@@ -620,7 +619,7 @@ const Toys = () => {
         {/* Preserved Toys Hero Section */}
         <section className={styles.hero}>
           <img
-            src="/images/toys_hero_bg.png"
+            src="/images/toys_hero_bg.webp"
             alt="Premium Toys Collection"
             className={styles.heroBgImage}
           />
@@ -881,7 +880,7 @@ const Toys = () => {
             {/* Product Cards Grid */}
             <div className={`${styles.productGrid} ${viewMode === 'list' ? styles.productListMode : ''}`}>
               {paginatedProducts.map((prod) => (
-                <ProductCard key={prod.id} product={prod} />
+                <ProductCard key={prod.id} product={prod} viewMode={viewMode} />
               ))}
             </div>
 

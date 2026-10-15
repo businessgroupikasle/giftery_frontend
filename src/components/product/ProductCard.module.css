@@ -189,6 +189,59 @@
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.35);
 }
 
+/* Horizontal list view */
+.listCard {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: 180px;
+}
+
+.listCard .imageWrapper {
+  width: 220px;
+  height: 100%;
+  min-height: 180px;
+  aspect-ratio: auto;
+}
+
+.listCard .body {
+  min-width: 0;
+  padding: 1.25rem 1.5rem;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.listCard .name {
+  min-height: auto;
+  font-size: 1.05rem;
+}
+
+.listCard .pricing {
+  margin-top: 0.25rem;
+}
+
+.listCard .actionsRow {
+  width: min(100%, 420px);
+}
+
+@media (max-width: 640px) {
+  .listCard {
+    grid-template-columns: 120px minmax(0, 1fr);
+    min-height: 145px;
+  }
+
+  .listCard .imageWrapper {
+    width: 120px;
+    min-height: 145px;
+  }
+
+  .listCard .body {
+    padding: 0.75rem;
+  }
+
+  .listCard .actionsRow {
+    width: 100%;
+  }
+}
 /* Responsive Design */
 
 /* Tablet View (768px - 1024px) */

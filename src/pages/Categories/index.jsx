@@ -11,7 +11,7 @@ const CATEGORY_DETAILS = {
   'corporate-gifts': {
     title: 'Corporate Gifts Collection',
     subtitle: 'Premium executive hampers, leather sets, and customized luxury gifts for your valued clients.',
-    banner: '/images/cat_corporate.png',
+    banner: '/images/cat_corporate.webp',
     theme: 'dark',
   },
   'welcome-kits': {
@@ -92,7 +92,7 @@ const Categories = () => {
     ? CATEGORY_DETAILS[slug] || {
       title: slug.replace(/-/g, ' ').toUpperCase(),
       subtitle: 'Browse curated items in this collection.',
-      banner: '/images/corporate_gifting_banner.png',
+      banner: '/images/corporate_gifting_banner.webp',
     }
     : null;
 

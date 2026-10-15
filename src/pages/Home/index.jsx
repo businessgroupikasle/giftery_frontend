@@ -14,7 +14,7 @@ const Home = () => {
       <section className={styles.heroBanner}>
         {/* Full-bleed background product image */}
         <img
-          src="/images/home_hero_giftery.png"
+          src="/images/home_hero_giftery.webp"
           alt="Premium Corporate Gifting Solutions"
           className={styles.heroBgImage}
         />

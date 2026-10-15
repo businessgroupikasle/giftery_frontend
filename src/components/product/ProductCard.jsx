@@ -14,16 +14,24 @@ import styles from './ProductCard.module.css';
 
 import ThreeDotMenu from './ThreeDotMenu';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, viewMode = 'grid' }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { addToWishlist, removeFromWishlist } = useWishlist();
   const requireAuth = useRequireAuth();
 
   const {
-    id, name, slug, price, comparePrice, rating = 4.8, _count,
+    id, name, slug, price, comparePrice, rating,
   } = product;
 
+  const ratingSeed = String(id || slug || name || 'product')
+    .split('')
+    .reduce((total, character) => total + character.charCodeAt(0), 0);
+  const fallbackRatings = [3.5, 4, 4.5, 5];
+  const numericRating = Number(rating);
+  const displayRating = Number.isFinite(numericRating) && numericRating > 0
+    ? Math.min(5, numericRating)
+    : fallbackRatings[ratingSeed % fallbackRatings.length];
   const discount = comparePrice ? Math.round(((comparePrice - price) / comparePrice) * 100) : null;
   const isWishlisted = useSelector(selectIsWishlisted(id));
   
@@ -61,7 +69,7 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <article className={styles.card} aria-label={name}>
+    <article className={`${styles.card} ${viewMode === 'list' ? styles.listCard : ''}`} aria-label={name}>
       <div className={styles.imageWrapper}>
         <Link to={productUrl} className={styles.imageLink}>
           <img
@@ -89,8 +97,7 @@ const ProductCard = ({ product }) => {
         <Link to={productUrl} className={styles.name}>{name}</Link>
 
         <div className={styles.rating}>
-          <StarRating rating={rating} size="sm" />
-          <span className={styles.reviewCount}>({_count?.reviews ?? 24})</span>
+          <StarRating rating={displayRating} size="sm" />
         </div>
 
         <div className={styles.pricing}>

@@ -5,7 +5,7 @@ const AboutHero = () => {
     <section className={styles.heroSection}>
       {/* Full-bleed background hero image */}
       <img
-        src="/images/about_hero_bg.png"
+        src="/images/about_hero_bg.webp"
         alt="GIFTERY Luxury Corporate Gift Set"
         className={styles.heroBgImage}
       />
