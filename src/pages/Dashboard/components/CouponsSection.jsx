@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FiX } from 'react-icons/fi';
-import { getStoredCoupons, DEFAULT_COUPONS } from '../../../constants/coupons';
+import { getStoredCoupons } from '../../../constants/coupons';
+import { couponService } from '../../../services/couponService';
 import styles from '../Dashboard.module.css';
 
 const CouponsSection = ({ initialCoupons }) => {
-  const [coupons, setCoupons] = useState(() => {
-    if (initialCoupons && initialCoupons.length > 0) return initialCoupons;
-    return getStoredCoupons();
-  });
+  const [coupons, setCoupons] = useState(() => initialCoupons || []);
 
   const [showModal, setShowModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
@@ -21,28 +19,38 @@ const CouponsSection = ({ initialCoupons }) => {
     status: 'Active',
   });
 
-  // Save to localStorage & notify
-  const updateCouponsState = (newList) => {
-    setCoupons(newList);
-    try {
-      localStorage.setItem('admin_coupons', JSON.stringify(newList));
-      window.dispatchEvent(new Event('admin_coupons_updated'));
-    } catch (e) {}
-  };
-
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('admin_coupons');
-      if (!stored) {
-        localStorage.setItem('admin_coupons', JSON.stringify(coupons));
+    let mounted = true;
+    const loadCoupons = async () => {
+      try {
+        let serverCoupons = await couponService.listAdmin();
+        const localCoupons = getStoredCoupons();
+        for (const coupon of localCoupons) {
+          if (serverCoupons.some((item) => item.code === coupon.code)) continue;
+          const discountValue = Number(String(coupon.discount || '').replace(/[^0-9.]/g, ''));
+          try {
+            await couponService.create({
+              code: coupon.code,
+              discountType: String(coupon.discount || '').includes('%') ? 'percent' : 'fixed',
+              discountValue,
+              category: coupon.category,
+              status: coupon.status,
+            });
+          } catch (error) {
+            if (error.status !== 409) throw error;
+          }
+        }
+        if (localCoupons.length > 0) {
+          localStorage.removeItem('admin_coupons');
+          serverCoupons = await couponService.listAdmin();
+        }
+        if (mounted) setCoupons(serverCoupons);
+      } catch (error) {
+        if (mounted) toast.error(error.message || 'Unable to load coupons');
       }
-    } catch (e) {}
-
-    const handleStorageUpdate = () => {
-      setCoupons(getStoredCoupons());
     };
-    window.addEventListener('storage', handleStorageUpdate);
-    return () => window.removeEventListener('storage', handleStorageUpdate);
+    loadCoupons();
+    return () => { mounted = false; };
   }, []);
 
   const handleOpenAddModal = () => {
@@ -77,28 +85,35 @@ const CouponsSection = ({ initialCoupons }) => {
     setDeletingCoupon({ id, code });
   };
 
-  const confirmDeleteCoupon = () => {
+  const confirmDeleteCoupon = async () => {
     if (!deletingCoupon) return;
     const { id, code } = deletingCoupon;
     setDeletingCoupon(null);
-    const updated = coupons.filter((c) => c.id !== id);
-    updateCouponsState(updated);
-    toast.success(`Coupon "${code}" deleted successfully`);
+    try {
+      await couponService.remove(id);
+      setCoupons((current) => current.filter((coupon) => coupon.id !== id));
+      window.dispatchEvent(new Event('admin_coupons_updated'));
+      toast.success(`Coupon "${code}" deleted permanently`);
+    } catch (error) {
+      toast.error(error.message || 'Unable to delete coupon');
+    }
   };
 
-  const handleToggleStatus = (id) => {
-    const updated = coupons.map((c) => {
-      if (c.id === id) {
-        const nextStatus = c.status === 'Active' ? 'Inactive' : 'Active';
-        toast.info(`Coupon "${c.code}" is now ${nextStatus}`);
-        return { ...c, status: nextStatus };
-      }
-      return c;
-    });
-    updateCouponsState(updated);
+  const handleToggleStatus = async (id) => {
+    const coupon = coupons.find((item) => item.id === id);
+    if (!coupon) return;
+    const nextStatus = coupon.status === 'Active' ? 'Inactive' : 'Active';
+    try {
+      const updated = await couponService.update(id, { ...coupon, status: nextStatus });
+      setCoupons((current) => current.map((item) => item.id === id ? updated : item));
+      window.dispatchEvent(new Event('admin_coupons_updated'));
+      toast.info(`Coupon "${coupon.code}" is now ${nextStatus}`);
+    } catch (error) {
+      toast.error(error.message || 'Unable to update coupon status');
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const cleanCode = form.code.trim().toUpperCase();
     if (!cleanCode) {
@@ -138,43 +153,34 @@ const CouponsSection = ({ initialCoupons }) => {
 
     const formattedCode = cleanCode;
     const cleanNum = Number(numVal.toFixed(2));
-    const formattedDiscount =
-      form.discountType === 'percent'
-        ? `${cleanNum}% OFF`
-        : `₹${cleanNum.toLocaleString('en-IN')} OFF`;
+    const payload = {
+      code: formattedCode,
+      discountType: form.discountType,
+      discountValue: cleanNum,
+      category: form.category.trim() || 'All Products',
+      status: form.status,
+    };
 
-    if (editingCoupon) {
-      const updated = coupons.map((c) =>
-        c.id === editingCoupon.id
-          ? {
-              ...c,
-              code: formattedCode,
-              discount: formattedDiscount,
-              category: form.category.trim() || 'All Products',
-              status: form.status,
-            }
-          : c
-      );
-      updateCouponsState(updated);
-      toast.success(`Coupon "${formattedCode}" updated successfully`);
-    } else {
-      // Check duplicate code
-      if (coupons.some((c) => c.code.toUpperCase() === formattedCode)) {
-        toast.error(`Coupon code "${formattedCode}" already exists`);
-        return;
-      }
-      const newCoupon = {
-        id: 'c-' + Date.now(),
-        code: formattedCode,
-        discount: formattedDiscount,
-        category: form.category.trim() || 'All Products',
-        status: form.status,
-      };
-      updateCouponsState([newCoupon, ...coupons]);
-      toast.success(`Coupon "${formattedCode}" added successfully`);
+    if (!editingCoupon && coupons.some((c) => c.code.toUpperCase() === formattedCode)) {
+      toast.error(`Coupon code "${formattedCode}" already exists`);
+      return;
     }
 
-    setShowModal(false);
+    try {
+      if (editingCoupon) {
+        const updated = await couponService.update(editingCoupon.id, payload);
+        setCoupons((current) => current.map((coupon) => coupon.id === editingCoupon.id ? updated : coupon));
+        toast.success(`Coupon "${formattedCode}" updated successfully`);
+      } else {
+        const created = await couponService.create(payload);
+        setCoupons((current) => [created, ...current]);
+        toast.success(`Coupon "${formattedCode}" added successfully`);
+      }
+      window.dispatchEvent(new Event('admin_coupons_updated'));
+      setShowModal(false);
+    } catch (error) {
+      toast.error(error.message || 'Unable to save coupon');
+    }
   };
 
   return (

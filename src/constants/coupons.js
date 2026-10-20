@@ -1,38 +1,43 @@
 /**
- * coupons.js — Centralized promotional coupons configuration and retrieval helpers
+ * Admin-created coupons are the only valid coupon source.
+ * Hard-coded promotional coupons must not be reintroduced because deleted
+ * coupons need to stay deleted.
  */
+export const DEFAULT_COUPONS = [];
 
-export const DEFAULT_COUPONS = [
-  { id: 'c-0', code: 'MANDATORY123', discount: '10% OFF', category: 'All Products', status: 'Active' },
-  { id: 'c-1', code: 'LUXURY20', discount: '20% OFF', category: 'Corporate Gifts', status: 'Active' },
-  { id: 'c-2', code: 'WELCOME10', discount: '₹100 OFF', category: 'First Purchase', status: 'Active' },
-  { id: 'c-3', code: 'GIFTERY10', discount: '10% OFF', category: 'All Products', status: 'Active' },
-  { id: 'c-4', code: 'SAVE10', discount: '₹50 OFF', category: 'Special Offer', status: 'Active' },
-];
+const STORAGE_KEY = 'admin_coupons';
+const LEGACY_COUPONS = new Map([
+  ['c-0', 'MANDATORY123'],
+  ['c-1', 'LUXURY20'],
+  ['c-2', 'WELCOME10'],
+  ['c-3', 'GIFTERY10'],
+  ['c-4', 'SAVE10'],
+]);
 
-/**
- * Get stored coupons from localStorage merged with default coupons.
- * Ensures mandatory and standard promotional coupons are always accessible.
- * @returns {Array} List of coupon objects
- */
+const isLegacySeedCoupon = (coupon) =>
+  coupon && LEGACY_COUPONS.get(String(coupon.id)) === String(coupon.code || '').toUpperCase();
+
 export const getStoredCoupons = () => {
+  if (typeof window === 'undefined') return [];
+
   try {
-    const stored = localStorage.getItem('admin_coupons');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const map = new Map();
-        // Seed standard defaults first
-        DEFAULT_COUPONS.forEach((c) => map.set(c.code.toUpperCase(), c));
-        // Overwrite or append with admin customizations
-        parsed.forEach((c) => {
-          if (c && c.code) {
-            map.set(c.code.toUpperCase(), c);
-          }
-        });
-        return Array.from(map.values());
-      }
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (!stored) return [];
+
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) return [];
+
+    const adminCoupons = parsed.filter(
+      (coupon) => coupon && coupon.code && !isLegacySeedCoupon(coupon)
+    );
+
+    if (adminCoupons.length !== parsed.length) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(adminCoupons));
+      window.localStorage.removeItem('giftery_applied_coupon');
     }
-  } catch (e) {}
-  return DEFAULT_COUPONS;
+
+    return adminCoupons;
+  } catch {
+    return [];
+  }
 };

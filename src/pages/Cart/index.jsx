@@ -8,7 +8,7 @@ import { removeFromCart, updateQuantity, clearCartAsync, addToCart } from '@stor
 import { formatCurrency } from '@utils/formatters';
 import { getImageUrl } from '@utils/imageUrl';
 import { ROUTES } from '@constants/routes';
-import { getStoredCoupons, DEFAULT_COUPONS } from '@constants/coupons';
+import { couponService } from '@services/couponService';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import useStoreSettings from '@hooks/useStoreSettings';
@@ -65,19 +65,45 @@ const Cart = () => {
     return null;
   });
 
-  const [availableCoupons, setAvailableCoupons] = useState(() => getStoredCoupons());
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [couponsLoaded, setCouponsLoaded] = useState(false);
 
   useEffect(() => {
-    const handleCouponsUpdate = () => {
-      setAvailableCoupons(getStoredCoupons());
+    let mounted = true;
+    const handleCouponsUpdate = async () => {
+      try {
+        const coupons = await couponService.listActive();
+        if (mounted) setAvailableCoupons(coupons);
+      } catch (error) {
+        console.warn('Coupon fetch failed:', error.message);
+      } finally {
+        if (mounted) setCouponsLoaded(true);
+      }
     };
+    handleCouponsUpdate();
     window.addEventListener('admin_coupons_updated', handleCouponsUpdate);
     window.addEventListener('storage', handleCouponsUpdate);
     return () => {
       window.removeEventListener('admin_coupons_updated', handleCouponsUpdate);
       window.removeEventListener('storage', handleCouponsUpdate);
+      mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!couponsLoaded || !appliedCoupon) return;
+    const isStillValid = availableCoupons.some(
+      (coupon) =>
+        String(coupon.code).toUpperCase() === String(appliedCoupon.code).toUpperCase() &&
+        String(coupon.status || 'Active').toUpperCase() === 'ACTIVE'
+    );
+    if (!isStillValid) {
+      setAppliedCoupon(null);
+      try {
+        localStorage.removeItem('giftery_applied_coupon');
+      } catch (err) {}
+    }
+  }, [availableCoupons, appliedCoupon, couponsLoaded]);
 
   const storeSettings = useStoreSettings();
 
@@ -151,7 +177,7 @@ const Cart = () => {
     return ROUTES.CORPORATE_GIFTS;
   };
 
-  const handleApplyCoupon = (e) => {
+  const handleApplyCoupon = async (e) => {
     e.preventDefault();
     if (!couponCode || !couponCode.trim()) {
       toast.error('Please enter a coupon code');
@@ -160,9 +186,16 @@ const Cart = () => {
 
     const trimmedInput = couponCode.trim().toUpperCase();
 
-    // Query live list combining fresh storage, current state, and canonical defaults
-    const freshCoupons = getStoredCoupons();
-    const candidateList = [...availableCoupons, ...freshCoupons];
+    // Always validate against the latest admin-managed list.
+    let freshCoupons;
+    try {
+      freshCoupons = await couponService.listActive();
+      setAvailableCoupons(freshCoupons);
+    } catch (error) {
+      toast.error('Unable to verify coupon. Please try again.');
+      return;
+    }
+    const candidateList = freshCoupons;
     const map = new Map();
     candidateList.forEach((c) => {
       if (c && c.code) map.set(c.code.toUpperCase(), c);

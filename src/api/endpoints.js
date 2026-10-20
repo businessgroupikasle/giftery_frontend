@@ -151,6 +151,22 @@ export const ENDPOINTS = {
     UPDATE: '/settings',
   },
 
+  COUPONS: {
+    LIST: '/coupons',
+    ADMIN_LIST: '/coupons/admin',
+    CREATE: '/coupons',
+    UPDATE: (id) => `/coupons/${id}`,
+    DELETE: (id) => `/coupons/${id}`,
+  },
+
+  COUPONS: {
+    LIST: '/coupons',
+    ADMIN_LIST: '/coupons/admin',
+    CREATE: '/coupons',
+    UPDATE: (id) => `/coupons/${id}`,
+    DELETE: (id) => `/coupons/${id}`,
+  },
+
   // ── Enquiries & Uploads ────────────────────────────────────
   ENQUIRIES: {
     SUBMIT: '/enquiries',
