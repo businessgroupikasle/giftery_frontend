@@ -36,7 +36,7 @@ const GiftLogo = () => (
   </div>
 );
 
-const DEFAULT_LOGO_URL = '/images/store-logo.png';
+const DEFAULT_LOGO_URL = '/images/store-logo-light.png';
 
 const Header = () => {
   const dispatch = useDispatch();

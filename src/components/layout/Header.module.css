@@ -25,6 +25,12 @@
   display: flex;
   align-items: center;
   gap: 0.85rem;
+  padding: 4px 9px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
   text-decoration: none;
   flex-shrink: 0;
 }
@@ -894,4 +900,17 @@
   .dropdownMenu {
     min-width: 160px;
   }
+}
+
+/* Responsive white logo panel */
+@media (max-width: 1024px) {
+  .brand { padding: 3px 7px; }
+}
+
+@media (max-width: 640px) {
+  .brand { padding: 3px 6px; border-radius: 8px; }
+}
+
+@media (max-width: 360px) {
+  .brand { padding: 2px 5px; border-radius: 7px; }
 }
