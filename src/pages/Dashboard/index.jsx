@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FiRefreshCw, FiDownload, FiFilter, FiChevronDown } from 'react-icons/fi';
+import { FiRefreshCw, FiDownload, FiFilter, FiChevronDown, FiX } from 'react-icons/fi';
 import useAuth from '@hooks/useAuth';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
@@ -81,12 +81,24 @@ const Dashboard = () => {
     } catch (e) { }
   }, [activeTab]);
 
+  // Each tab opens at the top (View All links and sidebar switches must not keep the old scroll position)
+  const mainWorkspaceRef = useRef(null);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    mainWorkspaceRef.current?.scrollTo(0, 0);
+  }, [activeTab]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomerModal, setSelectedCustomerModal] = useState(null);
 
   // Header Action Controls State & Click Outside Handler
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('Last 30 Days');
+  // Records each list page currently shows (after its own date/status/search filters), so Export matches the screen
+  const [visibleRecords, setVisibleRecords] = useState({});
+  const setVisibleOrders = useCallback((list) => setVisibleRecords((prev) => ({ ...prev, orders: list })), []);
+  const setVisibleCustomers = useCallback((list) => setVisibleRecords((prev) => ({ ...prev, customers: list })), []);
+  const setVisibleEnquiries = useCallback((list) => setVisibleRecords((prev) => ({ ...prev, enquiries: list })), []);
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [showCustomDateInputs, setShowCustomDateInputs] = useState(false);
   const [customStartDate, setCustomStartDate] = useState('');
@@ -1116,7 +1128,9 @@ const Dashboard = () => {
   const handleExportOrdersCSV = () => {
     const headers = ['Order ID', 'Customer Name', 'Total Amount (INR)', 'Items Count', 'Order Date', 'Status'];
     // Filter records dynamically based on active dashboard date range & status (KAN-48)
-    const filteredOrders = filterByStatus(filterByDateRange(ordersList || [], selectedFilter, 'createdAt'), selectedStatus);
+    // On the Orders page, export what the page shows; elsewhere use the header filter
+    const filteredOrders = visibleRecords.orders
+      ?? filterByStatus(filterByDateRange(ordersList || [], selectedFilter, 'createdAt'), selectedStatus);
     const rows = filteredOrders.map((o, idx) => [
       formatOrderId(o.id || o.orderId, { prefix: '', index: idx, createdAt: o.createdAt }),
       o.customer || o.customerName || o.user?.name || o.shippingAddress?.fullName || 'Customer',
@@ -1129,16 +1143,31 @@ const Dashboard = () => {
   };
 
   const handleExportProductsCSV = () => {
-    const headers = ['Product ID', 'Product Name', 'SKU', 'Category', 'Price (INR)', 'Compare Price (INR)', 'Stock', 'Status'];
-    const rows = (productsList || []).map(p => [
-      p.id, p.name, p.sku || 'N/A', p.category?.name || 'General', p.price || 0, p.comparePrice || 0, p.stock || 0, p.isActive ? 'Active' : 'Inactive',
+    // Readable SKU leads the report; the internal system ID stays unchanged in the last column.
+    const headers = ['Product SKU', 'Product Name', 'Category', 'Price (INR)', 'Compare Price (INR)', 'Stock', 'Status', 'Internal Product ID'];
+    // Ordered by SKU (TOY-0001, TOY-0002, ...); products without a SKU go last
+    const sortedProducts = [...(productsList || [])].sort((a, b) => {
+      if (!a.sku && !b.sku) return String(a.name || '').localeCompare(String(b.name || ''));
+      if (!a.sku) return 1;
+      if (!b.sku) return -1;
+      return a.sku.localeCompare(b.sku, undefined, { numeric: true });
+    });
+    const rows = sortedProducts.map(p => [
+      p.sku || 'N/A', p.name, p.category?.name || 'General', p.price || 0, p.comparePrice || 0, p.stock || 0, p.isActive ? 'Active' : 'Inactive', p.id,
     ]);
     triggerDownloadConfirmation('Products_Inventory_Report', 'Products Inventory Report', headers, rows);
   };
 
+  // The header date range narrows quotes only once the admin picks one (default 'Last 30 Days' shows everything)
+  const getFilteredQuotes = () => (
+    selectedFilter === 'Last 30 Days'
+      ? (corporateQuotes || [])
+      : filterByDateRange(corporateQuotes || [], selectedFilter, 'createdAt')
+  );
+
   const handleExportQuotesCSV = () => {
     const headers = ['Quote ID', 'Customer Name', 'Company Name', 'Email', 'Phone', 'Quantity Requested', 'Submitted Date', 'Status'];
-    const filteredQuotes = filterByStatus(filterByDateRange(corporateQuotes || [], selectedFilter, 'createdAt'), selectedStatus);
+    const filteredQuotes = getFilteredQuotes();
     const rows = filteredQuotes.map((q, idx) => [
       q.id ? (q.id.startsWith('QUO-') ? q.id : `QUO-2026-${String(idx + 1).padStart(4, '0')}`) : `QUO-2026-${String(idx + 1).padStart(4, '0')}`,
       q.name || 'N/A',
@@ -1154,7 +1183,7 @@ const Dashboard = () => {
 
   const handleExportCustomersCSV = () => {
     const headers = ['Customer ID', 'Customer Name', 'Email Address', 'Phone Number', 'Account Role', 'Total Orders', 'Total Spent (INR)', 'Joined Date', 'Status'];
-    const rows = (customersList || []).map(c => [
+    const rows = (visibleRecords.customers ?? customersList ?? []).map(c => [
       c.customerId || formatCustomerId(c.id, { email: c.email }), c.name, c.email, c.phone || 'N/A', c.role || 'CUSTOMER', c.ordersCount || 0, c.totalSpent || 0, c.joinedDate || 'Recent', c.status || 'Active',
     ]);
     triggerDownloadConfirmation('Customer_Database_Report', 'Customer Database Report', headers, rows);
@@ -1162,7 +1191,8 @@ const Dashboard = () => {
 
   const handleExportEnquiriesCSV = () => {
     const headers = ['Enquiry ID', 'Customer Name', 'Email Address', 'Phone Number', 'Category / Subject', 'Enquiry Message', 'Submitted Date', 'Status'];
-    const filteredEnquiries = filterByStatus(filterByDateRange(enquiriesList || [], selectedFilter, 'createdAt'), selectedStatus);
+    const filteredEnquiries = visibleRecords.enquiries
+      ?? filterByStatus(filterByDateRange(enquiriesList || [], selectedFilter, 'createdAt'), selectedStatus);
     const rows = filteredEnquiries.map((e, index) => [
       e.displayId || formatEnquiryId(e.id, e.createdAt, index),
       e.name,
@@ -1174,6 +1204,28 @@ const Dashboard = () => {
       e.status || 'New',
     ]);
     triggerDownloadConfirmation('Customer_Enquiries_Report', 'Customer Enquiries Report', headers, rows);
+  };
+
+  const handleExportCategoriesCSV = () => {
+    const headers = ['Category ID', 'Category Name', 'Parent Category', 'Subcategory', 'Status'];
+    const allCategories = categories || [];
+    const rows = allCategories.map(c => [
+      c.id,
+      c.name,
+      allCategories.find(parent => parent.id === c.parentId)?.name || 'None (Top Level)',
+      // Top-level rows list their subcategories; subcategory rows have none of their own
+      allCategories.filter(child => child.parentId === c.id).map(child => child.name).join('; ') || 'N/A',
+      c.isActive === false ? 'Inactive' : 'Active',
+    ]);
+    triggerDownloadConfirmation('Categories_Report', 'Categories Report', headers, rows);
+  };
+
+  const handleExportAdminUsersCSV = () => {
+    const headers = ['Name', 'Email Address', 'Phone Number', 'Role', 'Permissions', 'Last Login', 'Status'];
+    const rows = (adminUsers || []).map(u => [
+      u.name, u.email, u.phone || 'N/A', u.role, Array.isArray(u.permissions) ? u.permissions.join('; ') : '', u.lastLogin || 'N/A', u.status || 'Active',
+    ]);
+    triggerDownloadConfirmation('Users_Roles_Report', 'Users & Roles Report', headers, rows);
   };
 
   // Export Store Configuration Settings to CSV (KAN-55)
@@ -1212,6 +1264,10 @@ const Dashboard = () => {
       handleExportEnquiriesCSV();
     } else if (activeTab === 'settings') {
       handleExportSettingsCSV();
+    } else if (activeTab === 'categories') {
+      handleExportCategoriesCSV();
+    } else if (activeTab === 'users-roles') {
+      handleExportAdminUsersCSV();
     } else {
       handleExportOrdersCSV();
     }
@@ -1236,7 +1292,7 @@ const Dashboard = () => {
       />
 
       {/* Main Workspace */}
-      <main className={styles.mainWorkspace}>
+      <main className={styles.mainWorkspace} ref={mainWorkspaceRef}>
         {/* Top Navbar Component */}
         <DashboardNavbar
           searchQuery={searchQuery}
@@ -1280,7 +1336,8 @@ const Dashboard = () => {
 
             {/* Header Action Controls */}
             <div className={styles.headerActions}>
-              {/* Filter Dropdown */}
+              {/* Filter Dropdown (only on pages that use the header filter; list pages have their own date filter) */}
+              {['dashboard', 'reports', 'corporate-quotes', 'coupons'].includes(activeTab) && (
               <div className={styles.filterWrapper} ref={filterWrapperRef}>
                 <button
                   className={`${styles.headerActionBtn} ${styles.filterBtn} ${selectedFilter !== 'Last 30 Days' || selectedStatus !== 'All' ? styles.filterBtnActive : ''}`}
@@ -1369,6 +1426,7 @@ const Dashboard = () => {
                   </div>
                 )}
               </div>
+              )}
 
               {/* Refresh Button */}
               <button
@@ -1380,8 +1438,8 @@ const Dashboard = () => {
                 <FiRefreshCw />
               </button>
 
-              {/* Export Excel Button (Hidden on Catalogue Requests to prevent duplicate Export button) */}
-              {activeTab !== 'catalogue-requests' && (
+              {/* Export Excel Button (Hidden on Catalogue Requests and Reports, which have their own export buttons, and on Coupons, which has no export) */}
+              {!['catalogue-requests', 'coupons', 'reports'].includes(activeTab) && (
                 <button
                   className={`${styles.headerActionBtn} ${styles.excelBtn}`}
                   onClick={handleHeaderExport}
@@ -1450,6 +1508,7 @@ const Dashboard = () => {
             <OrdersSection
               ordersList={ordersList}
               handleExportOrdersCSV={handleExportOrdersCSV}
+              onVisibleRecordsChange={setVisibleOrders}
             />
           )}
 
@@ -1461,6 +1520,7 @@ const Dashboard = () => {
               handleExportCustomersCSV={handleExportCustomersCSV}
               loadingCustomers={loadingCustomers}
               onRefresh={loadCustomers}
+              onVisibleRecordsChange={setVisibleCustomers}
             />
           )}
 
@@ -1468,6 +1528,7 @@ const Dashboard = () => {
             <EnquiriesSection
               enquiriesList={enquiriesList}
               handleUpdateEnquiryStatus={handleUpdateEnquiryStatus}
+              onVisibleRecordsChange={setVisibleEnquiries}
             />
           )}
 
@@ -1479,7 +1540,10 @@ const Dashboard = () => {
           )}
 
           {activeTab === 'coupons' && (
-            <CouponsSection />
+            <CouponsSection
+              dateFilter={selectedFilter}
+              isDateFilterActive={selectedFilter !== 'Last 30 Days'}
+            />
           )}
 
           {activeTab === 'reports' && (
@@ -1569,9 +1633,11 @@ const Dashboard = () => {
               <button
                 type="button"
                 onClick={() => setDownloadModalData(null)}
-                style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', fontSize: '1rem', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                aria-label="Close"
+                title="Close"
+                style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', fontSize: '1.1rem', cursor: 'pointer', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-
+                <FiX aria-hidden="true" />
               </button>
             </div>
 

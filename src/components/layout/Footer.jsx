@@ -149,6 +149,7 @@ const Footer = () => {
               <li><Link to={ROUTES.CONTACT}><FaChevronRight className={styles.chevron} /> Contact Us</Link></li>
               <li><Link to={ROUTES.TERMS}><FaChevronRight className={styles.chevron} /> Terms &amp; Conditions</Link></li>
               <li><Link to={ROUTES.PRIVACY}><FaChevronRight className={styles.chevron} /> Privacy Policy</Link></li>
+              <li><Link to={ROUTES.SITEMAP}><FaChevronRight className={styles.chevron} /> Sitemap</Link></li>
             </ul>
           </div>
 
@@ -228,7 +229,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className={styles.bottomBar}>
           <div className={styles.copyright}>
-            Copyright © {new Date().getFullYear()} <span className={styles.goldHighlight}>Giftery</span> | Crafted And Maintained By <span className={styles.goldHighlight}>Ikaslé Business Group</span>
+            Copyright © {new Date().getFullYear()} <span className={styles.goldHighlight}>Giftery</span> | Crafted And Maintained By <a href="https://ikasleinnovations.com/" target="_blank" rel="noopener noreferrer" className={`${styles.goldHighlight} ${styles.companyLink}`}>Ikaslé Business Group</a>
           </div>
 
           <div className={styles.paymentSection}>

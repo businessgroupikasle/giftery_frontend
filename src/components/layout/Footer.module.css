@@ -250,6 +250,15 @@
   font-weight: 700;
 }
 
+.companyLink {
+  text-decoration: none;
+}
+
+.companyLink:hover,
+.companyLink:focus-visible {
+  text-decoration: underline;
+}
+
 .paymentSection {
   display: flex;
   align-items: center;

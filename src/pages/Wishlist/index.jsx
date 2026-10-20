@@ -12,6 +12,7 @@ import { removeFromWishlist, clearWishlistAsync } from '@store/slices/wishlistSl
 import { formatCurrency } from '@utils/formatters';
 import { getImageUrl } from '@utils/imageUrl';
 import { FiHeart, FiShoppingCart, FiX, FiZap } from 'react-icons/fi';
+import ThreeDotMenu from '@components/product/ThreeDotMenu';
 import styles from './Wishlist.module.css';
 
 const Wishlist = () => {
@@ -251,6 +252,11 @@ const Wishlist = () => {
                           <FiShoppingCart aria-hidden="true" />
                           Add to Cart
                         </button>
+                        <ThreeDotMenu
+                          productUrl={item.slug ? ROUTES.PRODUCT.replace(':slug', item.slug) : ROUTES.SHOP}
+                          productName={item.name}
+                          productImage={item.image}
+                        />
                       </div>
                     </div>
                   </div>

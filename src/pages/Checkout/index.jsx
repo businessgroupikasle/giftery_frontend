@@ -202,28 +202,16 @@ const Checkout = () => {
 
     const trimmedInput = couponCode.trim().toUpperCase();
 
-    // Always validate against the latest admin-managed list.
-    let freshCoupons;
+    // Validate on the server so inactive coupons get their own rejection message.
+    let matched;
     try {
-      freshCoupons = await couponService.listActive();
-      setAvailableCoupons(freshCoupons);
+      matched = await couponService.validate(trimmedInput);
     } catch (error) {
-      toast.error('Unable to verify coupon. Please try again.');
+      toast.error(error.message || 'Unable to verify coupon. Please try again.');
       return;
     }
-    const candidateList = freshCoupons;
-    const map = new Map();
-    candidateList.forEach((c) => {
-      if (c && c.code) map.set(c.code.toUpperCase(), c);
-    });
-    const allCoupons = Array.from(map.values());
-
-    const matched = allCoupons.find(
-      (c) => c.code.toUpperCase() === trimmedInput && String(c.status || 'Active').toUpperCase() === 'ACTIVE'
-    );
-
-    if (!matched) {
-      toast.error(`Invalid or expired coupon code "${couponCode}"`);
+    if (!matched || String(matched.status || 'Active').toUpperCase() !== 'ACTIVE') {
+      toast.error('This coupon is inactive and cannot be applied.');
       return;
     }
 

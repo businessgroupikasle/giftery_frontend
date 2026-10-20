@@ -352,6 +352,9 @@
   .collectionsSection {
     padding: 3rem 0 4rem 0;
   }
+  .collectionsContainer {
+    padding: 0 1rem;
+  }
   .filterPillsRow {
     flex-wrap: wrap;
     justify-content: center;
@@ -382,6 +385,9 @@
 @media (max-width: 520px) {
   .collectionsSection {
     padding: 2.5rem 0 3rem 0;
+  }
+  .collectionsContainer {
+    padding: 0 0.6rem;
   }
   .productsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

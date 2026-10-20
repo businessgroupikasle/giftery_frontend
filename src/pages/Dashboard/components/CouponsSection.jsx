@@ -2,11 +2,30 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FiX } from 'react-icons/fi';
 import { getStoredCoupons } from '../../../constants/coupons';
+import { filterByDateRange } from '../../../utils/formatters';
 import { couponService } from '../../../services/couponService';
 import styles from '../Dashboard.module.css';
 
-const CouponsSection = ({ initialCoupons }) => {
+const VALIDITY_STYLES = {
+  Valid: { background: '#dcfce7', color: '#15803d' },
+  Upcoming: { background: '#dbeafe', color: '#1d4ed8' },
+  Expired: { background: '#fee2e2', color: '#b91c1c' },
+};
+
+const formatCouponDate = (value) => {
+  if (!value) return null;
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+const CouponsSection = ({ initialCoupons, dateFilter, isDateFilterActive = false }) => {
   const [coupons, setCoupons] = useState(() => initialCoupons || []);
+
+  // Header date filter narrows the list by each coupon's createdAt date
+  const visibleCoupons = isDateFilterActive && dateFilter
+    ? filterByDateRange(coupons, dateFilter, 'createdAt')
+    : coupons;
 
   const [showModal, setShowModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
@@ -17,6 +36,8 @@ const CouponsSection = ({ initialCoupons }) => {
     discountValue: '',
     category: 'All Products',
     status: 'Active',
+    startDate: '',
+    expiryDate: '',
   });
 
   useEffect(() => {
@@ -61,6 +82,8 @@ const CouponsSection = ({ initialCoupons }) => {
       discountValue: '',
       category: 'All Products',
       status: 'Active',
+      startDate: '',
+      expiryDate: '',
     });
     setShowModal(true);
   };
@@ -75,6 +98,8 @@ const CouponsSection = ({ initialCoupons }) => {
       discountValue: numericVal,
       category: c.category || 'All Products',
       status: c.status || 'Active',
+      startDate: c.startDate || '',
+      expiryDate: c.expiryDate || '',
     });
     setShowModal(true);
   };
@@ -151,6 +176,11 @@ const CouponsSection = ({ initialCoupons }) => {
       }
     }
 
+    if (form.startDate && form.expiryDate && form.expiryDate < form.startDate) {
+      toast.error('Expiry date cannot be before the start date');
+      return;
+    }
+
     const formattedCode = cleanCode;
     const cleanNum = Number(numVal.toFixed(2));
     const payload = {
@@ -159,6 +189,8 @@ const CouponsSection = ({ initialCoupons }) => {
       discountValue: cleanNum,
       category: form.category.trim() || 'All Products',
       status: form.status,
+      startDate: form.startDate || null,
+      expiryDate: form.expiryDate || null,
     };
 
     if (!editingCoupon && coupons.some((c) => c.code.toUpperCase() === formattedCode)) {
@@ -203,20 +235,32 @@ const CouponsSection = ({ initialCoupons }) => {
             <th>Coupon Code</th>
             <th>Discount Value</th>
             <th>Applies To</th>
+            <th>Start Date</th>
+            <th>Expiry Date</th>
+            <th>Validity</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-            {coupons.length === 0 ? (
+            {visibleCoupons.length === 0 ? (
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94a3b8' }}>
-                  <p style={{ margin: 0, fontSize: '1rem', fontWeight: '600', color: '#64748b' }}>No promotional coupons created yet</p>
-                  <span style={{ fontSize: '0.85rem' }}>Click "+ Create Coupon" above to add your first discount code.</span>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94a3b8' }}>
+                  {coupons.length === 0 ? (
+                    <>
+                      <p style={{ margin: 0, fontSize: '1rem', fontWeight: '600', color: '#64748b' }}>No promotional coupons created yet</p>
+                      <span style={{ fontSize: '0.85rem' }}>Click "+ Create Coupon" above to add your first discount code.</span>
+                    </>
+                  ) : (
+                    <>
+                      <p style={{ margin: 0, fontSize: '1rem', fontWeight: '600', color: '#64748b' }}>No coupons found for {dateFilter}</p>
+                      <span style={{ fontSize: '0.85rem' }}>Try a different date range from the Filter menu.</span>
+                    </>
+                  )}
                 </td>
               </tr>
             ) : (
-              coupons.map((c) => (
+              visibleCoupons.map((c) => (
                 <tr key={c.id}>
                   <td>
                     <span className={styles.couponCodeBadge}>{c.code}</span>
@@ -225,6 +269,17 @@ const CouponsSection = ({ initialCoupons }) => {
                     <strong>{c.discount}</strong>
                   </td>
                   <td>{c.category}</td>
+                  <td>{formatCouponDate(c.startDate) || '—'}</td>
+                  <td>{formatCouponDate(c.expiryDate) || 'No expiry'}</td>
+                  <td>
+                    <span
+                      className={styles.pillStatus}
+                      style={VALIDITY_STYLES[c.validity] || VALIDITY_STYLES.Valid}
+                      title={c.validity === 'Expired' ? 'This coupon has expired and cannot be applied' : undefined}
+                    >
+                      {c.validity || 'Valid'}
+                    </span>
+                  </td>
                   <td>
                     <button
                       type="button"
@@ -410,6 +465,36 @@ const CouponsSection = ({ initialCoupons }) => {
                 </select>
                 <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.3rem', display: 'block' }}>
                   Select the product collection or department this coupon targets.
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: '#475569', marginBottom: '0.35rem' }}>
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={form.startDate}
+                    max={form.expiryDate || undefined}
+                    onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: '#475569', marginBottom: '0.35rem' }}>
+                    Expiry Date
+                  </label>
+                  <input
+                    type="date"
+                    value={form.expiryDate}
+                    min={form.startDate || undefined}
+                    onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
+                  />
+                </div>
+                <span style={{ gridColumn: '1 / -1', fontSize: '0.72rem', color: '#64748b', marginTop: '-0.4rem' }}>
+                  Optional. Leave blank for no start or expiry limit. The expiry date itself is still valid.
                 </span>
               </div>
 

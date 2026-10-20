@@ -161,7 +161,7 @@ const CategoriesSection = ({
       tabs.push({
         id: mainCat.id,
         label: mainCat.name,
-        count: children.length + 1, // Parent + children
+        count: children.length, // Subcategories only, matching the list shown under this tab
         mainCategory: mainCat
       });
     });

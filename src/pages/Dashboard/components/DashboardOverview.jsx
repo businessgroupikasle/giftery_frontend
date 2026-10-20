@@ -651,7 +651,6 @@ const DashboardOverview = ({
           <div className={styles.cardContainer} style={{ flex: 1 }}>
             <div className={styles.cardHeaderRow}>
               <h3 className={styles.cardTitle}>Recent Activity</h3>
-              <button type="button" className={styles.dotsBtn}><FiMoreVertical /></button>
             </div>
 
             <div className={styles.timelineList}>

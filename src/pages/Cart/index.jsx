@@ -511,7 +511,6 @@ const Cart = () => {
               </div>
             </div>
             <div className={styles.featureCard}>
-              <span className={styles.featureIcon}>⭐</span>
               <div>
                 <strong>Best Quality</strong>
                 <p>Premium products only</p>

@@ -9,6 +9,7 @@ const unwrapCoupons = (response) => {
 
 export const couponService = {
   listActive: async () => unwrapCoupons(await axiosInstance.get(ENDPOINTS.COUPONS.LIST)),
+  validate: async (code) => unwrapApiData(await axiosInstance.post(ENDPOINTS.COUPONS.VALIDATE, { code })),
   listAdmin: async () => unwrapCoupons(await axiosInstance.get(ENDPOINTS.COUPONS.ADMIN_LIST)),
   create: async (coupon) => unwrapApiData(await axiosInstance.post(ENDPOINTS.COUPONS.CREATE, coupon)),
   update: async (id, coupon) => unwrapApiData(await axiosInstance.put(ENDPOINTS.COUPONS.UPDATE(id), coupon)),

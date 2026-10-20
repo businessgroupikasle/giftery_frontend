@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   FiHelpCircle,
   FiMail,
@@ -10,19 +10,26 @@ import {
   FiFilter,
   FiX,
 } from 'react-icons/fi';
-import { formatEnquiryId } from '../../../utils/formatters';
+import { formatEnquiryId, filterByDateRange } from '../../../utils/formatters';
 import styles from '../Dashboard.module.css';
+import DateRangeFilter from './DateRangeFilter';
 
 const EnquiriesSection = ({
   enquiriesList = [],
   handleUpdateEnquiryStatus,
+  onVisibleRecordsChange,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [dateFilter, setDateFilter] = useState('all');
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
 
-  // Filter enquiries based on search term & status filter
-  const filteredEnquiries = enquiriesList.filter((e) => {
+  // Filter enquiries based on date range, search term & status filter
+  const dateFilteredEnquiries = useMemo(
+    () => (dateFilter === 'all' ? enquiriesList : filterByDateRange(enquiriesList, dateFilter, 'createdAt')),
+    [enquiriesList, dateFilter]
+  );
+  const filteredEnquiries = useMemo(() => dateFilteredEnquiries.filter((e) => {
     const matchesStatus =
       statusFilter === 'ALL' ||
       (e.status || 'New').toUpperCase() === statusFilter.toUpperCase();
@@ -40,7 +47,13 @@ const EnquiriesSection = ({
       (e.message && e.message.toLowerCase().includes(query));
 
     return matchesStatus && matchesSearch;
-  });
+  }), [dateFilteredEnquiries, statusFilter, searchTerm]);
+
+  // Let the header Export download exactly the records shown here
+  useEffect(() => {
+    onVisibleRecordsChange?.(filteredEnquiries);
+    return () => onVisibleRecordsChange?.(null);
+  }, [filteredEnquiries, onVisibleRecordsChange]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -110,7 +123,9 @@ const EnquiriesSection = ({
             ))}
           </div>
 
-          {/* Right: Search Box */}
+          {/* Right: Date Range & Search Box */}
+          <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
           <div style={{ position: 'relative', width: '280px' }}>
             <FiSearch style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
             <input
@@ -137,6 +152,7 @@ const EnquiriesSection = ({
               </button>
             )}
           </div>
+          </div>
         </div>
 
         {/* Table View */}
@@ -145,7 +161,7 @@ const EnquiriesSection = ({
             <div style={{ textAlign: 'center', padding: '3rem 1rem', background: '#f8fafc', borderRadius: '12px', color: '#64748b' }}>
               <FiHelpCircle style={{ fontSize: '2.5rem', color: '#cbd5e1', marginBottom: '0.5rem' }} />
               <p style={{ margin: 0, fontWeight: '600', fontSize: '1rem', color: '#334155' }}>No customer enquiries found</p>
-              <span style={{ fontSize: '0.85rem' }}>Try adjusting your search query or status filter.</span>
+              <span style={{ fontSize: '0.85rem' }}>Try adjusting your search query, status or date filter.</span>
             </div>
           ) : (
             <table className={styles.ordersTable}>

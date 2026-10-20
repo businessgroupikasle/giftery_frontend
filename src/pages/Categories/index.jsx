@@ -102,7 +102,7 @@ const Categories = () => {
   const loadCategoryProducts = async () => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=1000');
+      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=1000&view=list');
       let apiProds = [];
       if (Array.isArray(res)) apiProds = res;
       else if (res?.data && Array.isArray(res.data)) apiProds = res.data;

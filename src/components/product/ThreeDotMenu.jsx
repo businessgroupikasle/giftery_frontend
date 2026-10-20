@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import styles from './ThreeDotMenu.module.css';
 
-const ThreeDotMenu = ({ productUrl, productName, productImage }) => {
+// placement: 'above' opens the dropdown upward (action rows); 'below' opens it downward (top-of-card menus)
+const ThreeDotMenu = ({ productUrl, productName, productImage, placement = 'above' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const menuRef = useRef(null);
@@ -46,7 +47,7 @@ const ThreeDotMenu = ({ productUrl, productName, productImage }) => {
     <div className={styles.wrapper} ref={menuRef}>
       <button
         type="button"
-        className={styles.threeDotBtn}
+        className={`${styles.threeDotBtn} ${placement === 'below' ? styles.threeDotBtnCompact : ''}`}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -63,7 +64,7 @@ const ThreeDotMenu = ({ productUrl, productName, productImage }) => {
       </button>
 
       {isOpen && (
-        <div className={styles.dropdown}>
+        <div className={`${styles.dropdown} ${placement === 'below' ? styles.dropdownBelow : ''}`}>
           <Link
             to={productUrl}
             className={styles.menuItem}

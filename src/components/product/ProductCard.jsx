@@ -77,12 +77,22 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
             alt={name}
             className={styles.image}
             loading="lazy"
+            decoding="async"
             onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/product-placeholder.svg'; }}
           />
         </Link>
         {discount && <span className={styles.badge}>-{discount}%</span>}
 
-        {/* Floating Top Right Wishlist Button */}
+      </div>
+
+      {/* Top-right stack over the image: more-options menu above the wishlist heart */}
+      <div className={styles.topActions}>
+        <ThreeDotMenu
+          placement="below"
+          productUrl={productUrl}
+          productName={name}
+          productImage={image}
+        />
         <button
           className={styles.topRightWishlistBtn}
           onClick={handleWishlist}
@@ -105,7 +115,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
           {comparePrice && <span className={styles.comparePrice}>{formatCurrency(comparePrice)}</span>}
         </div>
 
-        {/* Action Buttons: Add to Cart + Buy Now + 3-Dot Menu on Single Line */}
+        {/* Action Buttons: Add to Cart + Buy Now on Single Line */}
         <div className={styles.actionsRow}>
           <button
             className={styles.addToCartBtn}
@@ -125,11 +135,6 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
             <FiZap aria-hidden="true" />
             Buy Now
           </button>
-          <ThreeDotMenu
-            productUrl={productUrl}
-            productName={name}
-            productImage={image}
-          />
         </div>
       </div>
     </article>

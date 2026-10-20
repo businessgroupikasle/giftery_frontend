@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { FiUsers, FiEdit2, FiX, FiSave, FiEye, FiSearch, FiFilter, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import axiosInstance from '@api/axiosInstance';
-import { formatCustomerId } from '@utils/formatters';
+import { formatCustomerId, filterByDateRange } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
+import DateRangeFilter from './DateRangeFilter';
 
 const CustomersSection = ({
   customersList = [],
@@ -12,10 +13,12 @@ const CustomersSection = ({
   handleExportCustomersCSV,
   loadingCustomers,
   onRefresh,
+  onVisibleRecordsChange,
 }) => {
   const [customers, setCustomers] = useState(customersList);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [dateFilter, setDateFilter] = useState('all');
   const [editModal, setEditModal] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', phone: '', status: 'Active' });
   const [savingStatus, setSavingStatus] = useState(null);
@@ -170,10 +173,16 @@ const CustomersSection = ({
     }
   };
 
-  const activeCount = customers.filter((c) => (c.status || 'Active') === 'Active').length;
-  const inactiveCount = customers.filter((c) => c.status === 'Inactive').length;
+  // Date range narrows the list first; status tabs and counts then work within it
+  const dateFilteredCustomers = useMemo(
+    () => (dateFilter === 'all' ? customers : filterByDateRange(customers, dateFilter, 'createdAt')),
+    [customers, dateFilter]
+  );
 
-  const filteredCustomers = customers.filter((c) => {
+  const activeCount = dateFilteredCustomers.filter((c) => (c.status || 'Active') === 'Active').length;
+  const inactiveCount = dateFilteredCustomers.filter((c) => c.status === 'Inactive').length;
+
+  const filteredCustomers = useMemo(() => dateFilteredCustomers.filter((c) => {
     const isAct = (c.status || 'Active') === 'Active';
     const matchesFilter =
       statusFilter === 'ALL' ||
@@ -197,7 +206,13 @@ const CustomersSection = ({
       joinedStr.includes(q);
 
     return matchesFilter && matchesSearch;
-  });
+  }), [dateFilteredCustomers, statusFilter, searchTerm]);
+
+  // Let the header Export download exactly the records shown here
+  useEffect(() => {
+    onVisibleRecordsChange?.(filteredCustomers);
+    return () => onVisibleRecordsChange?.(null);
+  }, [filteredCustomers, onVisibleRecordsChange]);
 
   return (
     <div
@@ -247,7 +262,7 @@ const CustomersSection = ({
               transition: 'all 0.15s ease',
             }}
           >
-            ALL ({customers.length})
+            ALL ({dateFilteredCustomers.length})
           </button>
           <button
             type="button"
@@ -285,7 +300,9 @@ const CustomersSection = ({
           </button>
         </div>
 
-        {/* Right: Search Box */}
+        {/* Right: Date Range & Search Box */}
+        <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
         <div style={{ position: 'relative', width: '300px', minWidth: '240px' }}>
           <FiSearch style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.95rem' }} />
           <input
@@ -325,6 +342,7 @@ const CustomersSection = ({
               <FiX />
             </button>
           )}
+        </div>
         </div>
       </div>
 

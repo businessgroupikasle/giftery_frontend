@@ -31,6 +31,7 @@ export const ROUTES = {
   TERMS: '/terms-and-conditions',
   TERMS_AND_CONDITIONS: '/terms-and-conditions',
   PRIVACY: '/privacy-policy',
+  SITEMAP: '/sitemap',
   FORBIDDEN: '/403',
   NOT_FOUND: '*',
 

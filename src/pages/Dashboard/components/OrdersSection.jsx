@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { FiShoppingBag, FiMoreVertical, FiEye, FiX, FiSearch, FiFilter } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import axiosInstance from '@api/axiosInstance';
-import { formatOrderId } from '@utils/formatters';
+import { formatOrderId, filterByDateRange } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
 import InvoiceModal from '../../Orders/InvoiceModal';
+import DateRangeFilter from './DateRangeFilter';
 
 const INITIAL_ORDERS = [];
 
-const OrdersSection = ({ ordersList = [] }) => {
+const OrdersSection = ({ ordersList = [], onVisibleRecordsChange }) => {
   const [orderFilter, setOrderFilter] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orders, setOrders] = useState(() => {
     try {
@@ -80,17 +82,23 @@ const OrdersSection = ({ ordersList = [] }) => {
     }
   };
 
+  // Date range narrows the list first; status tabs and counts then work within it
+  const dateFilteredOrders = useMemo(
+    () => (dateFilter === 'all' ? orders : filterByDateRange(orders, dateFilter, 'createdAt')),
+    [orders, dateFilter]
+  );
+
   const statusCounts = {
-    ALL: orders.length,
-    PENDING: orders.filter((o) => (o.status || '').toUpperCase() === 'PENDING').length,
-    CONFIRMED: orders.filter((o) => (o.status || '').toUpperCase() === 'CONFIRMED').length,
-    PROCESSING: orders.filter((o) => (o.status || '').toUpperCase() === 'PROCESSING').length,
-    SHIPPED: orders.filter((o) => (o.status || '').toUpperCase() === 'SHIPPED').length,
-    DELIVERED: orders.filter((o) => (o.status || '').toUpperCase() === 'DELIVERED').length,
-    CANCELLED: orders.filter((o) => (o.status || '').toUpperCase() === 'CANCELLED').length,
+    ALL: dateFilteredOrders.length,
+    PENDING: dateFilteredOrders.filter((o) => (o.status || '').toUpperCase() === 'PENDING').length,
+    CONFIRMED: dateFilteredOrders.filter((o) => (o.status || '').toUpperCase() === 'CONFIRMED').length,
+    PROCESSING: dateFilteredOrders.filter((o) => (o.status || '').toUpperCase() === 'PROCESSING').length,
+    SHIPPED: dateFilteredOrders.filter((o) => (o.status || '').toUpperCase() === 'SHIPPED').length,
+    DELIVERED: dateFilteredOrders.filter((o) => (o.status || '').toUpperCase() === 'DELIVERED').length,
+    CANCELLED: dateFilteredOrders.filter((o) => (o.status || '').toUpperCase() === 'CANCELLED').length,
   };
 
-  const filteredOrders = orders.filter((o) => {
+  const filteredOrders = useMemo(() => dateFilteredOrders.filter((o) => {
     const matchesFilter =
       orderFilter === 'ALL' ||
       (o.status || '').toUpperCase() === orderFilter.toUpperCase();
@@ -114,7 +122,13 @@ const OrdersSection = ({ ordersList = [] }) => {
       amountStr.includes(q);
 
     return matchesFilter && matchesSearch;
-  });
+  }), [dateFilteredOrders, orderFilter, searchTerm]);
+
+  // Let the header Export download exactly the records shown here
+  useEffect(() => {
+    onVisibleRecordsChange?.(filteredOrders);
+    return () => onVisibleRecordsChange?.(null);
+  }, [filteredOrders, onVisibleRecordsChange]);
 
   return (
     <div className={styles.cardContainer}>
@@ -165,7 +179,9 @@ const OrdersSection = ({ ordersList = [] }) => {
           ))}
         </div>
 
-        {/* Right: Search Box */}
+        {/* Right: Date Range & Search Box */}
+        <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
         <div style={{ position: 'relative', width: '320px', minWidth: '240px' }}>
           <FiSearch style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.95rem' }} />
           <input
@@ -205,6 +221,7 @@ const OrdersSection = ({ ordersList = [] }) => {
               <FiX />
             </button>
           )}
+        </div>
         </div>
       </div>
 

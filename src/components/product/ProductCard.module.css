@@ -1,4 +1,7 @@
+/* position + inline-size container: the top-right action stack anchors to the card and sizes its dropdown with cqw */
 .card {
+  position: relative;
+  container-type: inline-size;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
@@ -49,10 +52,19 @@
   z-index: 5;
 }
 
-.topRightWishlistBtn {
+.topActions {
   position: absolute;
   top: 10px;
   right: 10px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.topRightWishlistBtn {
+  position: relative;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -196,6 +208,11 @@
   min-height: 180px;
 }
 
+.listCard .topActions {
+  right: auto;
+  left: calc(220px - 46px);
+}
+
 .listCard .imageWrapper {
   width: 220px;
   height: 100%;
@@ -227,6 +244,10 @@
   .listCard {
     grid-template-columns: 120px minmax(0, 1fr);
     min-height: 145px;
+  }
+
+  .listCard .topActions {
+    left: calc(120px - 42px);
   }
 
   .listCard .imageWrapper {
@@ -302,6 +323,8 @@
     width: 32px;
     height: 32px;
     font-size: 1rem;
+  }
+  .topActions {
     top: 8px;
     right: 8px;
   }
@@ -438,6 +461,8 @@
     width: 28px;
     height: 28px;
     font-size: 0.9rem;
+  }
+  .topActions {
     top: 6px;
     right: 6px;
   }
@@ -473,4 +498,65 @@
 
 .actionsRow > * {
   min-width: 0;
+}
+
+/* Global mobile CSS gives every button min-height: 44px; keep card controls at their own size */
+.topRightWishlistBtn,
+.addToCartBtn,
+.buyNowBtn {
+  min-height: 0;
+}
+
+.topRightWishlistBtn {
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* Keep button icons from being squashed into dots, and drop them when the row is too narrow for icon + label */
+.addToCartBtn svg,
+.buyNowBtn svg {
+  flex-shrink: 0;
+}
+
+/* The card body is the query container; a container cannot restyle itself, so it is not the action row */
+.body {
+  container-type: inline-size;
+}
+
+@container (max-width: 230px) {
+  .addToCartBtn,
+  .buyNowBtn {
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+    font-size: 0.76rem;
+  }
+
+  .addToCartBtn svg,
+  .buyNowBtn svg {
+    display: none;
+  }
+}
+
+/* Two-column phone grids: Add to Cart and Buy Now each get a full-width row */
+@container (max-width: 190px) {
+  .actionsRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
+  }
+
+  .addToCartBtn {
+    height: 38px;
+    font-size: 0.82rem;
+  }
+
+  .buyNowBtn {
+    height: 36px;
+    font-size: 0.8rem;
+  }
+
+  .addToCartBtn svg,
+  .buyNowBtn svg {
+    display: block;
+  }
 }

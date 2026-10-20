@@ -789,7 +789,7 @@ const Product = () => {
                   onClick={handleBuyNow}
                   disabled={maxStock <= 0}
                   style={{
-                    background: '#1b4332',
+                    background: '#1e293b',
                     color: '#ffffff',
                     opacity: maxStock <= 0 ? 0.6 : 1,
                     cursor: maxStock <= 0 ? 'not-allowed' : 'pointer',

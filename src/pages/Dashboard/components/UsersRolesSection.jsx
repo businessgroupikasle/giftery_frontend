@@ -78,18 +78,6 @@ const UsersRolesSection = ({
     }
   }, [showAddRoleModal]);
 
-  // Modal reset & open helper (KAN-57)
-  const handleOpenAddModal = () => {
-    setRoleForm({
-      name: '',
-      email: '',
-      phone: '',
-      role: 'STORE_ADMIN',
-      permissions: [...ROLE_DEFAULT_PERMISSIONS.STORE_ADMIN],
-    });
-    setShowAddRoleModal(true);
-  };
-
   // Modal close & reset helper (KAN-57)
   const handleCloseModal = () => {
     setShowAddRoleModal(false);
@@ -127,7 +115,7 @@ const UsersRolesSection = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* Header & Add Role Button */}
+      {/* Header */}
       <div className={styles.cardContainer}>
         <div className={styles.cardHeaderRow}>
           <div>
@@ -139,26 +127,6 @@ const UsersRolesSection = ({
               Define project-based admin roles, assign module permissions, and manage system access.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleOpenAddModal}
-            style={{
-              padding: '0.65rem 1.25rem',
-              background: 'linear-gradient(135deg, #d99b26, #b8832a)',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: '700',
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              boxShadow: '0 4px 12px rgba(217, 155, 38, 0.3)',
-            }}
-          >
-            <span>+ Add Admin User / Assign Role</span>
-          </button>
         </div>
 
         {/* 4 Roles Overview Cards (KAN-59, KAN-60) */}

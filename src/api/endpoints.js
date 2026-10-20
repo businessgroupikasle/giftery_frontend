@@ -153,6 +153,7 @@ export const ENDPOINTS = {
 
   COUPONS: {
     LIST: '/coupons',
+    VALIDATE: '/coupons/validate',
     ADMIN_LIST: '/coupons/admin',
     CREATE: '/coupons',
     UPDATE: (id) => `/coupons/${id}`,
@@ -161,6 +162,7 @@ export const ENDPOINTS = {
 
   COUPONS: {
     LIST: '/coupons',
+    VALIDATE: '/coupons/validate',
     ADMIN_LIST: '/coupons/admin',
     CREATE: '/coupons',
     UPDATE: (id) => `/coupons/${id}`,

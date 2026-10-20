@@ -1,0 +1,139 @@
+/* ────────────────────────────────────────────────────────
+   Sitemap Page — dark hero header with grouped link cards
+──────────────────────────────────────────────────────── */
+
+.sitemapPage {
+  background-color: #ffffff;
+  color: #111827;
+  min-height: 100vh;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.heroHeader {
+  background: linear-gradient(135deg, #111318 0%, #07080a 100%);
+  padding: 3.5rem 2rem 3rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(229, 193, 88, 0.2);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  margin-bottom: 1.25rem;
+}
+
+.breadcrumb a {
+  color: #e5c158;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumbSeparator {
+  color: #6b7280;
+}
+
+.breadcrumbActive {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.heroTitle {
+  font-size: clamp(2.2rem, 4vw, 3.25rem);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.15;
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.02em;
+}
+
+.goldText {
+  color: #e5c158;
+}
+
+.heroSubtext {
+  max-width: 560px;
+  margin: 0 auto;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #9ca3af;
+}
+
+.contentContainer {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.groupTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.6rem;
+  border-bottom: 2px solid #e5c158;
+}
+
+.linkList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.85rem;
+}
+
+.linkCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  height: 100%;
+  padding: 1rem 1.15rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  text-decoration: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.linkCard:hover,
+.linkCard:focus-visible {
+  border-color: #d99b26;
+  box-shadow: 0 6px 18px rgba(217, 155, 38, 0.15);
+  transform: translateY(-2px);
+}
+
+.linkName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.linkDescription {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
+@media (max-width: 600px) {
+  .heroHeader {
+    padding: 2.5rem 1rem 2rem;
+  }
+
+  .contentContainer {
+    padding: 2rem 1rem 3rem;
+  }
+
+  .linkList {
+    grid-template-columns: 1fr;
+  }
+}

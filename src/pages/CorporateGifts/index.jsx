@@ -223,7 +223,7 @@ const CorporateGifts = () => {
       setLoading(true);
       try {
         const [prodRes, catRes] = await Promise.allSettled([
-          axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=1000'),
+          axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=1000&view=list'),
           axiosInstance.get(ENDPOINTS.CATEGORIES.LIST),
         ]);
 
@@ -596,6 +596,16 @@ const CorporateGifts = () => {
   // Quote Modal State
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [quoteSubmitted, setQuoteSubmitted] = useState(false);
+
+  // Prevent background scrolling while the quote popup is open
+  useEffect(() => {
+    if (!showQuoteModal) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showQuoteModal]);
   const [quoteForm, setQuoteForm] = useState({
     name: '',
     company: '',
