@@ -55,6 +55,19 @@ const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout, side
     };
   }, []);
 
+  useEffect(() => {
+    if (!sidebarOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setSidebarOpen(false);
+    };
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [sidebarOpen, setSidebarOpen]);
   const handleNavClick = (tabId) => {
     handleTabChange(tabId);
     // Close sidebar on mobile after navigation
@@ -67,13 +80,19 @@ const DashboardSidebar = ({ activeTab, handleTabChange, user, handleLogout, side
     <>
       {/* Dark Backdrop Overlay for Mobile Side Drawer */}
       {sidebarOpen && (
-        <div
+        <button
+          type="button"
           className={styles.sidebarOverlay}
+          aria-label="Close dashboard navigation"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+      <aside
+        id="dashboard-sidebar"
+        aria-label="Dashboard navigation"
+        className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}
+      >
       {/* Brand Header */}
       <div className={styles.brandBox}>
         <img

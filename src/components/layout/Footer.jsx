@@ -16,9 +16,9 @@ import styles from './Footer.module.css';
 const GiftLogoSvg = () => (
   <div style={{ display: 'inline-flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.15' }}>
     <span style={{
-      fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif",
+      fontFamily: "'Playfair Display', 'Playfair Display', Georgia, serif",
       fontSize: '1.85rem',
-      fontWeight: '800',
+      fontWeight: '400',
       color: '#ffffff',
       letterSpacing: '0.06em',
       lineHeight: '1',
@@ -26,9 +26,9 @@ const GiftLogoSvg = () => (
       GIFTERY
     </span>
     <span style={{
-      fontFamily: "'Inter', sans-serif",
+      fontFamily: "'Montserrat', sans-serif",
       fontSize: '0.62rem',
-      fontWeight: '800',
+      fontWeight: '700',
       color: '#ea580c',
       letterSpacing: '0.12em',
       marginTop: '5px',

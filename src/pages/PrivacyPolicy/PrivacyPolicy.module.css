@@ -6,7 +6,7 @@
   background-color: #ffffff;
   color: #111827;
   min-height: 100vh;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* ── Hero Banner Header ──────────────────────────────── */
@@ -105,7 +105,7 @@
 
 .goldText {
   color: #e5c158;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Playfair Display', Georgia, serif;
 }
 
 .heroSubtext {

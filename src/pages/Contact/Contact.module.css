@@ -6,7 +6,7 @@
 
 /* ── Page Container ─────────────────────────────────── */
 .pageContainer {
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-family: 'Montserrat', 'Segoe UI', sans-serif;
   color: #1a1a1a;
   min-height: 100vh;
   background: #f4f4f4;
@@ -199,11 +199,23 @@
 .formGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  align-items: start;
   gap: 0.75rem;
 }
 
 .formGroupFull {
   grid-column: 1 / -1;
+}
+
+.formField {
+  min-width: 0;
+}
+
+.fieldError {
+  margin: 0.3rem 0 0;
+  color: #b91c1c;
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
 .formInput,
@@ -227,6 +239,12 @@
 .formTextarea:focus {
   border-color: #D4AF37;
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
+}
+
+.formInputError,
+.formInputError:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .formInput::placeholder,
@@ -267,9 +285,16 @@
   margin-top: 0.25rem;
 }
 
-.sendBtn:hover {
+
+
+.sendBtn:hover:not(:disabled) {
   background: #c9a227;
   transform: translateY(-1px);
+}
+
+.sendBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .sendBtn svg {

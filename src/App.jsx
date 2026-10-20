@@ -1,7 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useAuth from '@hooks/useAuth';
-import useWishlist from '@hooks/useWishlist';
 import ProtectedRoute from '@routes/ProtectedRoute';
 import { ROUTES } from '@constants/routes';
 import env from '@config/env';
@@ -44,9 +43,7 @@ const Dashboard   = lazy(() => import('@pages/Dashboard'));
 const PageLoader = AppPageLoader;
 
 const App = () => {
-  const { user } = useAuth();
-  const { hydrateWishlist } = useWishlist();
-  const location = useLocation();
+  const { user } = useAuth();  const location = useLocation();
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(() => {
     try {
       const stored = localStorage.getItem('store_basic_settings');
@@ -79,13 +76,6 @@ const App = () => {
 
     fetchAndSyncSettings();
   }, []);
-
-  useEffect(() => {
-    if (user) {
-      hydrateWishlist();
-    }
-  }, [user, hydrateWishlist]);
-
   // ── SEO & Google Analytics Tracking ─────────────────────────
   useEffect(() => {
     initAnalytics();

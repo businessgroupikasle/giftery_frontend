@@ -116,13 +116,6 @@ const TOYS_CATEGORIES_SIDEBAR = [
   { id: 'outdoor-toys', name: 'Outdoor Toys', count: 20 },
 ];
 
-const TARGET_AUDIENCE_DATA = [
-  { id: 'executive', label: 'Executive Office & Desk', count: 35 },
-  { id: 'adults', label: 'Adult Puzzle Enthusiasts', count: 40 },
-  { id: 'teens', label: 'Teens & STEM Learners', count: 28 },
-  { id: 'corporate', label: 'Corporate Gifting & Event Favors', count: 32 },
-  { id: 'kids', label: 'Kids Educational Games', count: 22 },
-];
 
 const TOYS_MOCK_PRODUCTS = [
 
@@ -205,7 +198,7 @@ const Toys = () => {
           .map((p) => {
             const imgList = Array.isArray(p.images)
               ? p.images
-              : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
+              : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/images/product-placeholder.svg']);
 
             const prodCatId = p.categoryId || (typeof p.category === 'object' ? p.category?.id : p.category);
             const prodSubId = p.subCategoryId || (typeof p.subCategory === 'object' ? p.subCategory?.id : p.subCategory) || (typeof p.subcategory === 'object' ? p.subcategory?.id : p.subcategory);
@@ -227,7 +220,7 @@ const Toys = () => {
               rating: p.rating ?? null,
               discount: p.comparePrice ? `${Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100)}%` : null,
               images: imgList,
-              image: imgList[0] || '/placeholder.jpg',
+              image: imgList[0] || '/images/product-placeholder.svg',
               slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
               categoryId: prodCatId,
               subCategoryId: pSubObj?.id || prodSubId || null,
@@ -324,7 +317,6 @@ const Toys = () => {
   const [minPrice, setMinPrice] = useState('0');
   const [maxPrice, setMaxPrice] = useState('5000');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [selectedAudience, setSelectedAudience] = useState([]);
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
@@ -502,24 +494,12 @@ const Toys = () => {
     }, 2500);
   };
 
-  const toggleAudience = (id) => {
-    setSelectedAudience((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
-  const handleApplyFilters = () => {
-    setMobileFiltersOpen(false);
-    toast.success('Filters applied successfully!');
-  };
-
   const handleClearAll = () => {
     setSearchQuery('');
     setSelectedCategory('all');
     setActiveSubCategory('all');
     setMinPrice('0');
     setMaxPrice('5000');
-    setSelectedAudience([]);
     setCurrentPage(1);
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('category');
@@ -583,21 +563,6 @@ const Toys = () => {
         if (normTarget && (subSlug.includes(normTarget) || subName.includes(normTarget))) return true;
 
         return false;
-      }
-
-      // 3. Audience Filter
-      if (selectedAudience.length > 0) {
-        const pAudience = Array.isArray(prod.audience) ? prod.audience.map(a => a.toLowerCase()) : [];
-        const pTags = Array.isArray(prod.tags) ? prod.tags.map(t => t.toLowerCase()) : [];
-        const pStr = `${(prod.name || '').toLowerCase()} ${(prod.description || '').toLowerCase()}`;
-
-        // Match things like "Toddlers (2-4 Yrs)" to "toddler" or "2-4"
-        const hasMatch = selectedAudience.some(aud => {
-          const audLower = aud.toLowerCase();
-          const cleanAud = audLower.split(' (')[0].trim(); // "toddlers"
-          return pAudience.includes(audLower) || pTags.includes(cleanAud) || pStr.includes(cleanAud);
-        });
-        if (!hasMatch) return false;
       }
 
       return true;
@@ -758,32 +723,6 @@ const Toys = () => {
                 </div>
               </div>
             </div>
-
-            {/* Section 3: Target Audience / Category */}
-            <div className={styles.filterSection}>
-              <div className={styles.sectionTitleRow}>
-                <span>Target Use</span>
-                <span className={styles.toggleIcon}>−</span>
-              </div>
-              <div className={styles.checkboxList}>
-                {TARGET_AUDIENCE_DATA.map((aud) => (
-                  <label key={aud.id} className={styles.checkboxItem}>
-                    <div className={styles.checkboxLeft}>
-                      <input
-                        type="checkbox"
-                        checked={selectedAudience.includes(aud.id)}
-                        onChange={() => toggleAudience(aud.id)}
-                        className={styles.checkboxInput}
-                      />
-                      <span>{aud.label}</span>
-                    </div>
-                    <span className={styles.itemCount}>({aud.count})</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <button type="button" onClick={handleApplyFilters} className={styles.applyFiltersBtn}>Apply Filters</button>
           </aside>
 
           {/* Right Product Grid Area */}

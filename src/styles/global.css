@@ -2,7 +2,7 @@
    global.css — Base resets and global styles
    ============================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;500&display=swap');
 @import './variables.css';
 
 /* Reset */
@@ -13,10 +13,55 @@ html { scroll-behavior: smooth; }
 body {
   font-family: var(--font-primary);
   font-size: var(--text-base);
+  font-weight: 400;
   color: var(--color-text-primary);
   background-color: var(--color-bg);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display) !important;
+  font-weight: 500 !important;
+}
+
+button,
+[role='button'],
+nav,
+nav a,
+nav button {
+  font-family: var(--font-primary) !important;
+  font-weight: 600 !important;
+}
+
+input,
+textarea,
+select,
+p,
+li {
+  font-family: var(--font-primary);
+  font-weight: 400;
+}
+
+/* Product headings remain clean and compact instead of inheriting display type. */
+[class*='productName'],
+[class*='productTitle'],
+[class*='product-name'],
+[class*='product-title'] {
+  font-family: var(--font-primary) !important;
+  font-weight: 500 !important;
+}
+
+[class*='tagline'],
+[class*='Tagline'] {
+  font-family: var(--font-primary) !important;
+  font-weight: 700 !important;
+}
+
+[class*='brandTitle'],
+[class*='logoText'] {
+  font-family: var(--font-display) !important;
+  font-weight: 400 !important;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -103,7 +148,7 @@ input, textarea, select {
 
 .Toastify__toast {
   border-radius: 10px !important;
-  font-family: var(--font-primary), 'Inter', sans-serif !important;
+  font-family: var(--font-primary) !important;
   font-size: 0.88rem !important;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12) !important;
   padding: 0.75rem 1rem !important;

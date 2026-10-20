@@ -29,7 +29,7 @@ const normalizeWishlistItem = (item) => {
   const unitPrice = Number(p.price || item.price || 0);
   const img = Array.isArray(p.images)
     ? p.images[0]
-    : (p.image || item.image || '/placeholder.jpg');
+    : (p.image || item.image || '/images/product-placeholder.svg');
 
   return {
     id: targetId,

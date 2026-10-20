@@ -7,11 +7,20 @@ import { ENDPOINTS } from '@api/endpoints';
 import styles from './FloatingWidgets.module.css';
 
 const EMPTY_FORM = { name: '', email: '', phone: '', company: '' };
+const EMAIL_ERROR_MESSAGE = 'Please enter a valid email address';
+const EMAIL_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]*[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/;
+
+const getEmailError = (value, required = false) => {
+  const email = value.trim();
+  if (!email) return required ? EMAIL_ERROR_MESSAGE : '';
+  return EMAIL_PATTERN.test(email) && !email.includes('..') ? '' : EMAIL_ERROR_MESSAGE;
+};
 
 const FloatingWidgets = () => {
   const [downloading, setDownloading] = useState(false);
   const [showCatalogueForm, setShowCatalogueForm] = useState(false);
   const [catalogueForm, setCatalogueForm] = useState(EMPTY_FORM);
+  const [emailError, setEmailError] = useState('');
 
   const downloadCatalogue = () => {
     const link = document.createElement('a');
@@ -27,6 +36,7 @@ const FloatingWidgets = () => {
       ? event.target.value.replace(/\D/g, '').slice(0, 10)
       : event.target.value;
     setCatalogueForm((current) => ({ ...current, [field]: value }));
+    if (field === 'email') setEmailError(getEmailError(value));
   };
 
   const handleCatalogueSubmit = async (event) => {
@@ -35,11 +45,12 @@ const FloatingWidgets = () => {
 
     const email = catalogueForm.email.trim();
     const phone = catalogueForm.phone.trim();
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     const indianPhonePattern = /^[6-9]\d{9}$/;
+    const currentEmailError = getEmailError(email, true);
 
-    if (!emailPattern.test(email)) {
-      toast.error('Please enter a valid email address.');
+    if (currentEmailError) {
+      setEmailError(currentEmailError);
+      toast.error(currentEmailError);
       return;
     }
 
@@ -60,6 +71,7 @@ const FloatingWidgets = () => {
       downloadCatalogue();
       setShowCatalogueForm(false);
       setCatalogueForm(EMPTY_FORM);
+      setEmailError('');
       window.dispatchEvent(new Event('enquiries_updated'));
       toast.success('Details saved. Catalogue downloaded successfully!');
     } catch (err) {
@@ -88,12 +100,28 @@ const FloatingWidgets = () => {
             <div className={styles.modalIcon}><FaDownload /></div>
             <h2>Download Catalogue</h2>
             <p>Share your basic details to access our latest gifting catalogue.</p>
-            <form onSubmit={handleCatalogueSubmit} className={styles.catalogueForm}>
+            <form onSubmit={handleCatalogueSubmit} className={styles.catalogueForm} noValidate>
               <label>Full Name<input required value={catalogueForm.name} onChange={updateField('name')} placeholder="Enter your name" /></label>
-              <label>Email Address<input required type="email" inputMode="email" autoComplete="email" value={catalogueForm.email} onChange={updateField('email')} placeholder="name@company.com" /></label>
+              <label>
+                Email Address
+                <input
+                  required
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  value={catalogueForm.email}
+                  onChange={updateField('email')}
+                  onBlur={() => setEmailError(getEmailError(catalogueForm.email, true))}
+                  placeholder="name@company.com"
+                  className={emailError ? styles.invalidInput : undefined}
+                  aria-invalid={Boolean(emailError)}
+                  aria-describedby={emailError ? 'floating-catalogue-email-error' : undefined}
+                />
+                {emailError && <span id="floating-catalogue-email-error" className={styles.fieldError} role="alert">{emailError}</span>}
+              </label>
               <label>Phone Number<input required type="tel" inputMode="numeric" autoComplete="tel" minLength={10} maxLength={10} pattern="[6-9][0-9]{9}" title="Enter a valid 10-digit Indian mobile number" value={catalogueForm.phone} onChange={updateField('phone')} placeholder="e.g. 9876543210" /></label>
               <label>Company Name <span>(Optional)</span><input value={catalogueForm.company} onChange={updateField('company')} placeholder="Enter company name" /></label>
-              <button type="submit" disabled={downloading}>{downloading ? 'Saving...' : 'Submit & Download'}</button>
+              <button type="submit" disabled={downloading || Boolean(emailError)}>{downloading ? 'Saving...' : 'Submit & Download'}</button>
             </form>
           </div>
         </div>

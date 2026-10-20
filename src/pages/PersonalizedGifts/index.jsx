@@ -104,13 +104,6 @@ const CATEGORIES_DATA = [
   { id: 'wooden-engraving', name: 'Wooden Photo Engraving', count: 24 },
 ];
 
-const OCCASIONS_DATA = [
-  { id: 'birthday', label: 'Birthday Celebrations', count: 38 },
-  { id: 'anniversary', label: 'Anniversary & Romance', count: 44 },
-  { id: 'wedding', label: 'Wedding & Reception', count: 29 },
-  { id: 'corporate', label: 'Employee Appreciation', count: 32 },
-  { id: 'festival', label: 'Festival Gifts', count: 25 },
-];
 
 const PRODUCTS_LIST = [
 
@@ -190,7 +183,7 @@ const PersonalizedGifts = () => {
           .map((p) => {
             const imgList = Array.isArray(p.images)
               ? p.images
-              : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/placeholder.jpg']);
+              : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : [p.image || '/images/product-placeholder.svg']);
 
             const prodCatId = p.categoryId || (typeof p.category === 'object' ? p.category?.id : p.category);
             const prodSubId = p.subCategoryId || (typeof p.subCategory === 'object' ? p.subCategory?.id : p.subCategory) || (typeof p.subcategory === 'object' ? p.subcategory?.id : p.subcategory);
@@ -212,7 +205,7 @@ const PersonalizedGifts = () => {
               rating: p.rating ?? null,
               discount: p.comparePrice ? `${Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100)}%` : null,
               images: imgList,
-              image: imgList[0] || '/placeholder.jpg',
+              image: imgList[0] || '/images/product-placeholder.svg',
               slug: p.slug || p.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
               categoryId: prodCatId,
               subCategoryId: pSubObj?.id || prodSubId || null,
@@ -332,7 +325,6 @@ const PersonalizedGifts = () => {
   const [minPrice, setMinPrice] = useState('0');
   const [maxPrice, setMaxPrice] = useState('5000');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [selectedOccasions, setSelectedOccasions] = useState([]);
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
@@ -449,24 +441,12 @@ const PersonalizedGifts = () => {
     scrollToResults();
   };
 
-  const toggleOccasion = (id) => {
-    setSelectedOccasions((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
-  const handleApplyFilters = () => {
-    setMobileFiltersOpen(false);
-    toast.success('Filters applied successfully!');
-  };
-
   const handleClearAll = () => {
     setSearchQuery('');
     setSelectedCategory('all');
     setActiveSubCategory('all');
     setMinPrice('0');
     setMaxPrice('5000');
-    setSelectedOccasions([]);
     setCurrentPage(1);
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('category');
@@ -524,19 +504,6 @@ const PersonalizedGifts = () => {
         if (subName && (subName.includes(targetSlug) || targetSlug.includes(subName))) return true;
 
         return false;
-      }
-
-      // 3. Occasion Filter
-      if (selectedOccasions.length > 0) {
-        const pOccasions = Array.isArray(prod.occasions) ? prod.occasions.map(o => o.toLowerCase()) : [];
-        const pTags = Array.isArray(prod.tags) ? prod.tags.map(t => t.toLowerCase()) : [];
-        const pStr = `${(prod.name || '').toLowerCase()} ${(prod.description || '').toLowerCase()}`;
-
-        const hasMatch = selectedOccasions.some(occ => {
-          const occLower = occ.toLowerCase();
-          return pOccasions.includes(occLower) || pTags.includes(occLower) || pStr.includes(occLower);
-        });
-        if (!hasMatch) return false;
       }
 
       return true;
@@ -745,32 +712,6 @@ const PersonalizedGifts = () => {
                 </div>
               </div>
             </div>
-
-            {/* Section 3: Occasion */}
-            <div className={styles.filterSection}>
-              <div className={styles.sectionTitleRow}>
-                <span>Occasion</span>
-                <span className={styles.toggleIcon}>−</span>
-              </div>
-              <div className={styles.checkboxList}>
-                {OCCASIONS_DATA.map((occ) => (
-                  <label key={occ.id} className={styles.checkboxItem}>
-                    <div className={styles.checkboxLeft}>
-                      <input
-                        type="checkbox"
-                        checked={selectedOccasions.includes(occ.id)}
-                        onChange={() => toggleOccasion(occ.id)}
-                        className={styles.checkboxInput}
-                      />
-                      <span>{occ.label}</span>
-                    </div>
-                    <span className={styles.itemCount}>({occ.count})</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <button type="button" onClick={handleApplyFilters} className={styles.applyFiltersBtn}>Apply Filters</button>
           </aside>
 
           {/* Right Product Grid Area */}

@@ -25,6 +25,7 @@ import { addToWishlistAlias, removeFromWishlistAlias, selectWishlistItems } from
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import useRequireAuth from '@hooks/useRequireAuth';
+import { getProductThumbnail } from '@utils/imageUrl';
 import styles from './ShopByCategory.module.css';
 
 const filterCategories = [
@@ -128,8 +129,8 @@ const ShopByCategory = () => {
         comparePrice: p.comparePrice,
         stock: p.stock,
         rating: p.rating ?? null,
-        image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : (p.image || '/placeholder.jpg'),
-        images: Array.isArray(p.images) ? p.images : [p.image || '/placeholder.jpg'],
+        image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : (p.image || '/images/product-placeholder.svg'),
+        images: Array.isArray(p.images) ? p.images : [p.image || '/images/product-placeholder.svg'],
         isFeatured: Boolean(p.featured || p.isFeatured),
         featured: Boolean(p.featured || p.isFeatured),
         isBestseller: Boolean(p.isBestseller),
@@ -291,9 +292,7 @@ const ShopByCategory = () => {
         <div className={styles.productsGrid}>
           {displayProducts.map((product) => {
             const targetId = String(product.id || product.slug);
-            const imgSrc = Array.isArray(product.images) && product.images.length > 0
-              ? product.images[0]
-              : (product.image || '/images/prod_gift_set.png');
+            const imgSrc = getProductThumbnail(product);
             const isWishlisted = wishlistItems.some((i) => String(i.productId || i.id) === targetId);
 
             return (
@@ -304,32 +303,17 @@ const ShopByCategory = () => {
                 style={{ cursor: 'pointer' }}
               >
                 <div className={styles.productImgWrapper} style={{ position: 'relative' }}>
-                  <img src={imgSrc} alt={product.name} className={styles.productImg} />
+                  <img src={imgSrc} alt={product.name} className={styles.productImg} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/product-placeholder.svg'; }} />
                   <button
                     type="button"
                     title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                    className={styles.wishlistBtn}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       handleToggleWishlist(product);
                     }}
-                    style={{
-                      position: 'absolute',
-                      top: '8px',
-                      right: '8px',
-                      background: 'rgba(255, 255, 255, 0.92)',
-                      border: 'none',
-                      borderRadius: '50%',
-                      width: '32px',
-                      height: '32px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                      zIndex: 10,
-                      transition: 'transform 0.15s ease',
-                    }}
+
                   >
                     <FiHeart fill={isWishlisted ? '#ef4444' : 'none'} color={isWishlisted ? '#ef4444' : '#64748b'} size={16} />
                   </button>

@@ -864,7 +864,6 @@ const Dashboard = () => {
         toast.success(`Product "${payload.name}" created and saved to database!`);
       }
 
-      await fetchProducts();
       window.dispatchEvent(new Event('products_updated'));
       resetProductForm();
     } catch (err) {

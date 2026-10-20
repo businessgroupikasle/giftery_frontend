@@ -95,6 +95,68 @@ const CloseIcon = () => (
 );
 
 /* ── Main Component ──────────────────────────────────── */
+const EMAIL_VALIDATION_MESSAGE = 'Please enter a valid email address';
+const MAIN_FORM_ERROR_MESSAGES = {
+  fullName: 'Please enter your full name',
+  phone: 'Please enter a valid 10-digit mobile number',
+  inquiryType: 'Please select an inquiry type',
+  subject: 'Please enter a subject',
+  message: 'Please enter your message',
+};
+const VALID_INQUIRY_TYPES = new Set([
+  'corporate-gifting',
+  'bulk-order',
+  'personalized-gifts',
+  'partnership',
+  'general',
+]);
+const CONTACT_EMAIL_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]*[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/;
+
+const CATALOGUE_EMAIL_VALIDATION_MESSAGE = 'Please enter a valid email address.';
+
+const getCatalogueEmailError = (value, required = false) => (
+  getContactEmailError(value, required) ? CATALOGUE_EMAIL_VALIDATION_MESSAGE : ''
+);
+const APPOINTMENT_VALIDATION_MESSAGES = {
+  name: 'Please enter a valid full name.',
+  email: 'Please enter a valid email address.',
+  phone: 'Please enter a valid 10-digit mobile number.',
+};
+
+const getAppointmentFieldError = (name, value, required = false) => {
+  const normalizedValue = value?.trim() || '';
+  if (!normalizedValue) return required ? APPOINTMENT_VALIDATION_MESSAGES[name] : '';
+
+  if (name === 'name') {
+    return /^[a-zA-Z\s.'-]+$/.test(normalizedValue) && /[a-zA-Z]/.test(normalizedValue)
+      ? ''
+      : APPOINTMENT_VALIDATION_MESSAGES.name;
+  }
+  if (name === 'email') {
+    return !getContactEmailError(normalizedValue) && /[a-zA-Z0-9]/.test(normalizedValue.split('@')[0])
+      ? ''
+      : APPOINTMENT_VALIDATION_MESSAGES.email;
+  }
+  if (name === 'phone') {
+    return isValidMobile(normalizedValue) ? '' : APPOINTMENT_VALIDATION_MESSAGES.phone;
+  }
+  return '';
+};
+const getContactEmailError = (value, required = false) => {
+  const email = value?.trim() || '';
+  if (!email) return required ? EMAIL_VALIDATION_MESSAGE : '';
+  if (
+    email.length > 80
+    || !CONTACT_EMAIL_PATTERN.test(email)
+    || email.includes('..')
+    || !isValidEmail(email)
+    || /^\d+$/.test(email)
+  ) {
+    return EMAIL_VALIDATION_MESSAGE;
+  }
+  return '';
+};
+
 const Contact = () => {
   const [formData, setFormData] = useState({
     fullName: '',
@@ -107,6 +169,8 @@ const Contact = () => {
   });
   const [submitted, setSubmitted] = useState(false);
   const [charCount, setCharCount] = useState(0);
+  const [emailError, setEmailError] = useState('');
+  const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -123,6 +187,7 @@ const Contact = () => {
   // Book an Appointment Modal State
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [appointmentSubmitted, setAppointmentSubmitted] = useState(false);
+  const [appointmentErrors, setAppointmentErrors] = useState({ name: '', email: '', phone: '' });
   const [appointmentData, setAppointmentData] = useState({
     name: '',
     email: '',
@@ -136,6 +201,7 @@ const Contact = () => {
   // Corporate Catalogue Modal State
   const [showCatalogueModal, setShowCatalogueModal] = useState(false);
   const [catalogueDownloading, setCatalogueDownloading] = useState(false);
+  const [catalogueEmailError, setCatalogueEmailError] = useState('');
   const [catalogueForm, setCatalogueForm] = useState({
     name: '',
     email: '',
@@ -156,17 +222,26 @@ const Contact = () => {
 
   const handleAppointmentChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'phone') {
-      const cleaned = value.replace(/\D/g, '').slice(0, 10);
-      setAppointmentData((prev) => ({ ...prev, phone: cleaned }));
-      return;
+    let nextValue = value;
+    if (name === 'phone') nextValue = value.replace(/\D/g, '').slice(0, 10);
+    if (name === 'name') nextValue = value.replace(/[^a-zA-Z\s.'-]/g, '');
+
+    setAppointmentData((prev) => ({ ...prev, [name]: nextValue }));
+    if (Object.hasOwn(APPOINTMENT_VALIDATION_MESSAGES, name)) {
+      setAppointmentErrors((prev) => ({
+        ...prev,
+        [name]: getAppointmentFieldError(name, nextValue),
+      }));
     }
-    if (name === 'name') {
-      const cleaned = value.replace(/[^a-zA-Z\s.'-]/g, '');
-      setAppointmentData((prev) => ({ ...prev, name: cleaned }));
-      return;
-    }
-    setAppointmentData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAppointmentBlur = (e) => {
+    const { name, value } = e.target;
+    if (!Object.hasOwn(APPOINTMENT_VALIDATION_MESSAGES, name)) return;
+    setAppointmentErrors((prev) => ({
+      ...prev,
+      [name]: getAppointmentFieldError(name, value, true),
+    }));
   };
 
   const handleCatalogueSubmit = async (e) => {
@@ -176,8 +251,10 @@ const Contact = () => {
       toast.error('Please enter a valid full name containing only letters');
       return;
     }
-    if (!isValidEmail(catalogueForm.email)) {
-      toast.error('Please enter a valid corporate email address');
+    const currentCatalogueEmailError = getCatalogueEmailError(catalogueForm.email, true);
+    if (currentCatalogueEmailError) {
+      setCatalogueEmailError(currentCatalogueEmailError);
+      toast.error(currentCatalogueEmailError);
       return;
     }
     if (!isValidMobile(catalogueForm.phone)) {
@@ -201,6 +278,7 @@ const Contact = () => {
       link.remove();
       setShowCatalogueModal(false);
       setCatalogueForm({ name: '', email: '', phone: '', company: '' });
+      setCatalogueEmailError('');
       toast.success('Corporate catalogue downloaded successfully!');
       window.dispatchEvent(new Event('enquiries_updated'));
     } catch (err) {
@@ -212,20 +290,15 @@ const Contact = () => {
 
   const handleAppointmentSubmit = (e) => {
     e.preventDefault();
-    if (!appointmentData.name?.trim() || !appointmentData.email?.trim() || !appointmentData.phone?.trim()) {
-      toast.error('Please fill in your name, email and phone number');
-      return;
-    }
-    if (!/^[a-zA-Z\s.'-]+$/.test(appointmentData.name.trim())) {
-      toast.error('Full Name should contain only valid letters and spaces');
-      return;
-    }
-    if (!isValidEmail(appointmentData.email) || /^\d+$/.test(appointmentData.email.trim())) {
-      toast.error('Please enter a valid email address (e.g. name@example.com)');
-      return;
-    }
-    if (!isValidMobile(appointmentData.phone)) {
-      toast.error('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9');
+    const validationErrors = {
+      name: getAppointmentFieldError('name', appointmentData.name, true),
+      email: getAppointmentFieldError('email', appointmentData.email, true),
+      phone: getAppointmentFieldError('phone', appointmentData.phone, true),
+    };
+    setAppointmentErrors(validationErrors);
+    const firstError = validationErrors.name || validationErrors.email || validationErrors.phone;
+    if (firstError) {
+      toast.error(firstError);
       return;
     }
 
@@ -254,6 +327,7 @@ const Contact = () => {
     setTimeout(() => {
       setShowAppointmentModal(false);
       setAppointmentSubmitted(false);
+      setAppointmentErrors({ name: '', email: '', phone: '' });
       setAppointmentData({
         name: '',
         email: '',
@@ -268,46 +342,42 @@ const Contact = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'phone') {
-      const cleaned = value.replace(/\D/g, '').slice(0, 10);
-      setFormData((prev) => ({ ...prev, phone: cleaned }));
-      return;
+    let nextValue = value;
+    if (name === 'phone') nextValue = value.replace(/\D/g, '').slice(0, 10);
+    if (name === 'fullName') nextValue = value.replace(/[^a-zA-Z\s.'-]/g, '');
+
+    setFormData((prev) => ({ ...prev, [name]: nextValue }));
+    if (name === 'email') setEmailError(getContactEmailError(nextValue));
+    if (name === 'message') setCharCount(nextValue.length);
+
+    if (Object.hasOwn(MAIN_FORM_ERROR_MESSAGES, name)) {
+      let nextError = nextValue.trim() ? '' : MAIN_FORM_ERROR_MESSAGES[name];
+      if (name === 'fullName' && (!/^[a-zA-Z\s.'-]+$/.test(nextValue.trim()) || !/[a-zA-Z]/.test(nextValue))) {
+        nextError = MAIN_FORM_ERROR_MESSAGES.fullName;
+      }
+      if (name === 'phone' && !isValidMobile(nextValue)) nextError = MAIN_FORM_ERROR_MESSAGES.phone;
+      if (name === 'inquiryType' && !VALID_INQUIRY_TYPES.has(nextValue)) nextError = MAIN_FORM_ERROR_MESSAGES.inquiryType;
+      setFormErrors((prev) => ({ ...prev, [name]: nextError }));
     }
-    if (name === 'fullName') {
-      const cleaned = value.replace(/[^a-zA-Z\s.'-]/g, '');
-      setFormData((prev) => ({ ...prev, fullName: cleaned }));
-      return;
-    }
-    if (name === 'message') setCharCount(value.length);
-    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.fullName?.trim() || !formData.email?.trim() || !formData.message?.trim()) {
-      toast.error('Please fill in required fields (Name, Email, Message)');
-      return;
-    }
-    if (!/^[a-zA-Z\s.'-]+$/.test(formData.fullName.trim())) {
-      toast.error('Name should contain only letters and spaces (numbers not allowed)');
-      return;
-    }
-    if (formData.email.trim().length > 80) {
-      toast.error('Email address cannot exceed 80 characters');
-      return;
-    }
-    if (!isValidEmail(formData.email) || /^\d+$/.test(formData.email.trim())) {
-      toast.error('Please enter a valid email address (e.g. name@example.com)');
-      return;
-    }
-    if (!formData.phone || !formData.phone.trim()) {
-      toast.error('Please enter your 10-digit mobile number');
-      return;
-    }
-    if (!isValidMobile(formData.phone)) {
-      toast.error('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9');
-      return;
-    }
+    const fullName = formData.fullName.trim();
+    const validationErrors = {
+      fullName: fullName && /^[a-zA-Z\s.'-]+$/.test(fullName) && /[a-zA-Z]/.test(fullName)
+        ? ''
+        : MAIN_FORM_ERROR_MESSAGES.fullName,
+      phone: isValidMobile(formData.phone) ? '' : MAIN_FORM_ERROR_MESSAGES.phone,
+      inquiryType: VALID_INQUIRY_TYPES.has(formData.inquiryType) ? '' : MAIN_FORM_ERROR_MESSAGES.inquiryType,
+      subject: formData.subject.trim() ? '' : MAIN_FORM_ERROR_MESSAGES.subject,
+      message: formData.message.trim() ? '' : MAIN_FORM_ERROR_MESSAGES.message,
+    };
+    const currentEmailError = getContactEmailError(formData.email, true);
+    setFormErrors(validationErrors);
+    setEmailError(currentEmailError);
+
+    if (currentEmailError || Object.values(validationErrors).some(Boolean)) return;
 
     try {
       const res = await axiosInstance.post(ENDPOINTS.ENQUIRIES.SUBMIT, {
@@ -351,10 +421,12 @@ const Contact = () => {
           phone: '',
           company: '',
           subject: '',
-          inquiryType: 'general',
+          inquiryType: '',
           message: '',
         });
         setCharCount(0);
+        setEmailError('');
+        setFormErrors({});
       }, 5000);
     } catch (err) {
       setSubmitted(true);
@@ -367,10 +439,12 @@ const Contact = () => {
           phone: '',
           company: '',
           subject: '',
-          inquiryType: 'general',
+          inquiryType: '',
           message: '',
         });
         setCharCount(0);
+        setEmailError('');
+        setFormErrors({});
       }, 5000);
     }
   };
@@ -447,10 +521,14 @@ const Contact = () => {
                         phone: '',
                         company: '',
                         subject: '',
-                        inquiryType: 'general',
+                        inquiryType: '',
                         message: '',
                       });
                       setCharCount(0);
+                      setEmailError('');
+                      setFormErrors({});
+        setEmailError('');
+        setFormErrors({});
                     }}
                     style={{
                       marginTop: '1rem',
@@ -468,43 +546,63 @@ const Contact = () => {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} noValidate>
                   <div className={styles.formGrid}>
                     {/* Row 1 */}
-                    <input
-                      className={styles.formInput}
-                      type="text"
-                      name="fullName"
-                      placeholder="Your Full Name *"
-                      required
-                      maxLength={50}
-                      value={formData.fullName}
-                      onChange={handleChange}
-                    />
-                    <input
-                      className={styles.formInput}
-                      type="email"
-                      name="email"
-                      placeholder="Your Email Address *"
-                      required
-                      maxLength={80}
-                      value={formData.email}
-                      onChange={handleChange}
-                    />
+                    <div className={styles.formField}>
+                      <input
+                        className={`${styles.formInput} ${formErrors.fullName ? styles.formInputError : ''}`}
+                        type="text"
+                        name="fullName"
+                        placeholder="Your Full Name *"
+                        required
+                        maxLength={50}
+                        value={formData.fullName}
+                        onChange={handleChange}
+                        aria-invalid={Boolean(formErrors.fullName)}
+                        aria-describedby={formErrors.fullName ? 'contact-name-error' : undefined}
+                      />
+                      {formErrors.fullName && <p id="contact-name-error" className={styles.fieldError} role="alert">{formErrors.fullName}</p>}
+                    </div>
+                    <div className={styles.formField}>
+                      <input
+                        className={`${styles.formInput} ${emailError ? styles.formInputError : ''}`}
+                        type="email"
+                        name="email"
+                        placeholder="Your Email Address *"
+                        required
+                        maxLength={80}
+                        value={formData.email}
+                        onChange={handleChange}
+                        onBlur={() => setEmailError(getContactEmailError(formData.email, true))}
+                        aria-invalid={Boolean(emailError)}
+                        aria-describedby={emailError ? 'contact-email-error' : undefined}
+                      />
+                      {emailError && (
+                        <p id="contact-email-error" className={styles.fieldError} role="alert">
+                          {emailError}
+                        </p>
+                      )}
+                    </div>
 
                     {/* Row 2 */}
-                    <input
-                      className={styles.formInput}
-                      type="tel"
-                      name="phone"
-                      placeholder="10-digit Mobile Number *"
-                      required
-                      maxLength={10}
-                      pattern="[6-9][0-9]{9}"
-                      inputMode="numeric"
-                      value={formData.phone}
-                      onChange={handleChange}
-                    />
+                    <div className={styles.formField}>
+                      <input
+                        className={`${styles.formInput} ${formErrors.phone ? styles.formInputError : ''}`}
+                        type="tel"
+                        name="phone"
+                        placeholder="10-digit Mobile Number *"
+                        required
+                        maxLength={10}
+                        pattern="[6-9][0-9]{9}"
+                        inputMode="numeric"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        aria-invalid={Boolean(formErrors.phone)}
+                        aria-describedby={formErrors.phone ? 'contact-phone-error' : undefined}
+                      />
+                      {formErrors.phone && <p id="contact-phone-error" className={styles.fieldError} role="alert">{formErrors.phone}</p>}
+                    </div>
                     <input
                       className={styles.formInput}
                       type="text"
@@ -517,11 +615,13 @@ const Contact = () => {
                     {/* Row 3 — Inquiry Type */}
                     <div className={styles.formGroupFull}>
                       <select
-                        className={styles.formSelect}
+                        className={`${styles.formSelect} ${formErrors.inquiryType ? styles.formInputError : ''}`}
                         name="inquiryType"
                         required
                         value={formData.inquiryType}
                         onChange={handleChange}
+                        aria-invalid={Boolean(formErrors.inquiryType)}
+                        aria-describedby={formErrors.inquiryType ? 'contact-inquiry-error' : undefined}
                       >
                         <option value="" disabled>Select Inquiry Type *</option>
                         <option value="corporate-gifting">Corporate Gifting</option>
@@ -530,38 +630,45 @@ const Contact = () => {
                         <option value="partnership">Partnership / Collaboration</option>
                         <option value="general">General Inquiry</option>
                       </select>
+                      {formErrors.inquiryType && <p id="contact-inquiry-error" className={styles.fieldError} role="alert">{formErrors.inquiryType}</p>}
                     </div>
 
                     {/* Row 4 — Subject */}
                     <div className={styles.formGroupFull}>
                       <input
-                        className={styles.formInput}
+                        className={`${styles.formInput} ${formErrors.subject ? styles.formInputError : ''}`}
                         type="text"
                         name="subject"
                         placeholder="Subject *"
                         required
                         value={formData.subject}
                         onChange={handleChange}
+                        aria-invalid={Boolean(formErrors.subject)}
+                        aria-describedby={formErrors.subject ? 'contact-subject-error' : undefined}
                       />
+                      {formErrors.subject && <p id="contact-subject-error" className={styles.fieldError} role="alert">{formErrors.subject}</p>}
                     </div>
 
                     {/* Row 5 — Message */}
                     <div className={styles.formGroupFull}>
                       <textarea
-                        className={styles.formTextarea}
+                        className={`${styles.formTextarea} ${formErrors.message ? styles.formInputError : ''}`}
                         name="message"
                         placeholder="Your Message *"
                         required
                         maxLength={500}
                         value={formData.message}
                         onChange={handleChange}
+                        aria-invalid={Boolean(formErrors.message)}
+                        aria-describedby={formErrors.message ? 'contact-message-error' : undefined}
                       />
+                      {formErrors.message && <p id="contact-message-error" className={styles.fieldError} role="alert">{formErrors.message}</p>}
                       <p className={styles.charCount}>{charCount} / 500</p>
                     </div>
 
                     {/* Submit */}
                     <div className={styles.formGroupFull}>
-                      <button type="submit" className={styles.sendBtn}>
+                      <button type="submit" className={styles.sendBtn} disabled={submitted || Boolean(emailError) || Object.values(formErrors).some(Boolean)}>
                         SEND MESSAGE <SendIcon />
                       </button>
                     </div>
@@ -798,18 +905,26 @@ const Contact = () => {
                 <p style={{ margin: '0.5rem 0 0 0', color: '#15803d', fontSize: '0.85rem' }}>We look forward to seeing you. Check your email for details.</p>
               </div>
             ) : (
-              <form onSubmit={handleAppointmentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <form onSubmit={handleAppointmentSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>Full Name *</label>
                   <input
                     type="text"
                     name="name"
                     value={appointmentData.name}
-                    onChange={handleAppointmentChange}
+                      onChange={handleAppointmentChange}
+                      onBlur={handleAppointmentBlur}
+                    aria-invalid={Boolean(appointmentErrors.name)}
+                    aria-describedby={appointmentErrors.name ? "appointment-name-error" : undefined}
                     placeholder="Enter your full name"
                     required
-                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: `1px solid ${appointmentErrors.name ? '#dc2626' : '#cbd5e1'}`, outline: 'none', fontSize: '0.88rem' }}
                   />
+                  {appointmentErrors.name && (
+                    <p id="appointment-name-error" className={styles.fieldError} role="alert">
+                      {appointmentErrors.name}
+                    </p>
+                  )}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
@@ -820,10 +935,19 @@ const Contact = () => {
                       name="email"
                       value={appointmentData.email}
                       onChange={handleAppointmentChange}
+                      onBlur={handleAppointmentBlur}
+                      aria-invalid={Boolean(appointmentErrors.email)}
+                      aria-describedby={appointmentErrors.email ? "appointment-email-error" : undefined}
                       placeholder="name@company.com"
                       required
-                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: `1px solid ${appointmentErrors.email ? '#dc2626' : '#cbd5e1'}`, outline: 'none', fontSize: '0.88rem' }}
                     />
+                    {appointmentErrors.email && (
+                      <p id="appointment-email-error" className={styles.fieldError} role="alert">
+                        {appointmentErrors.email}
+                      </p>
+                    )}
+
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>Phone Number *</label>
@@ -832,13 +956,21 @@ const Contact = () => {
                       name="phone"
                       value={appointmentData.phone}
                       onChange={handleAppointmentChange}
+                      onBlur={handleAppointmentBlur}
+                      aria-invalid={Boolean(appointmentErrors.phone)}
+                      aria-describedby={appointmentErrors.phone ? "appointment-phone-error" : undefined}
                       placeholder="10-digit mobile number"
                       required
                       maxLength={10}
                       pattern="[6-9][0-9]{9}"
                       inputMode="numeric"
-                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: `1px solid ${appointmentErrors.phone ? '#dc2626' : '#cbd5e1'}`, outline: 'none', fontSize: '0.88rem' }}
                     />
+                    {appointmentErrors.phone && (
+                      <p id="appointment-phone-error" className={styles.fieldError} role="alert">
+                        {appointmentErrors.phone}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -898,7 +1030,8 @@ const Contact = () => {
 
                 <button
                   type="submit"
-                  style={{ marginTop: '0.5rem', background: '#dfa843', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '0.85rem', fontWeight: '800', fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(223, 168, 67, 0.35)' }}
+                  disabled={Object.values(appointmentErrors).some(Boolean)}
+                  style={{ marginTop: '0.5rem', background: '#dfa843', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '0.85rem', fontWeight: '800', fontSize: '0.9rem', cursor: Object.values(appointmentErrors).some(Boolean) ? 'not-allowed' : 'pointer', opacity: Object.values(appointmentErrors).some(Boolean) ? 0.6 : 1, boxShadow: '0 4px 12px rgba(223, 168, 67, 0.35)' }}
                 >
                   CONFIRM APPOINTMENT
                 </button>
@@ -996,7 +1129,7 @@ const Contact = () => {
               Please share your business details to download our complete 2026 Corporate Gifts Catalogue (PDF).
             </p>
 
-            <form onSubmit={handleCatalogueSubmit} style={{ display: 'grid', gap: '0.9rem' }}>
+            <form onSubmit={handleCatalogueSubmit} noValidate style={{ display: 'grid', gap: '0.9rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>
                   Full Name *
@@ -1025,9 +1158,21 @@ const Contact = () => {
                     maxLength={80}
                     placeholder="name@company.com"
                     value={catalogueForm.email}
-                    onChange={(e) => setCatalogueForm({ ...catalogueForm, email: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      setCatalogueForm({ ...catalogueForm, email: value });
+                      setCatalogueEmailError(getCatalogueEmailError(value));
+                    }}
+                    onBlur={() => setCatalogueEmailError(getCatalogueEmailError(catalogueForm.email, true))}
+                    aria-invalid={Boolean(catalogueEmailError)}
+                    aria-describedby={catalogueEmailError ? 'catalogue-email-error' : undefined}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: `1px solid ${catalogueEmailError ? '#dc2626' : '#cbd5e1'}`, outline: 'none', fontSize: '0.88rem' }}
                   />
+                  {catalogueEmailError && (
+                    <p id="catalogue-email-error" className={styles.fieldError} role="alert">
+                      {catalogueEmailError}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -1065,7 +1210,7 @@ const Contact = () => {
 
               <button
                 type="submit"
-                disabled={catalogueDownloading}
+                disabled={catalogueDownloading || Boolean(catalogueEmailError)}
                 style={{
                   marginTop: '0.5rem',
                   background: '#dfa843',
@@ -1075,7 +1220,8 @@ const Contact = () => {
                   padding: '0.85rem',
                   fontWeight: '800',
                   fontSize: '0.9rem',
-                  cursor: catalogueDownloading ? 'wait' : 'pointer',
+                  cursor: catalogueDownloading ? 'wait' : catalogueEmailError ? 'not-allowed' : 'pointer',
+                  opacity: catalogueEmailError ? 0.6 : 1,
                   boxShadow: '0 4px 12px rgba(223, 168, 67, 0.35)',
                 }}
               >

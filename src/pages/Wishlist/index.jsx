@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Layout from '@components/layout/Layout';
-import useFetch from '@hooks/useFetch';
 import useWishlist from '@hooks/useWishlist';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
@@ -22,16 +21,8 @@ const Wishlist = () => {
 
   // Get items from Redux store
   const reduxWishlist = useSelector((state) => state.wishlist.items) || [];
-
-  // Fetch backend API wishlist items if user logged in
-  const { data, fetch: refetchWishlist } = useFetch(ENDPOINTS.WISHLIST.GET);
-  const wishlistObj = data?.data?.wishlist || data?.wishlist || data;
-  const apiWishlist = Array.isArray(wishlistObj?.items)
-    ? wishlistObj.items.map((i) => i.product || i)
-    : (Array.isArray(wishlistObj) ? wishlistObj : []);
-
-  // Combine items avoiding duplicates
-  const allItems = [...reduxWishlist, ...apiWishlist];
+  // AuthContext owns server hydration; this page consumes the shared Redux data.
+  const allItems = reduxWishlist;
   const itemsMap = new Map();
 
   allItems.forEach((item) => {
@@ -44,7 +35,7 @@ const Wishlist = () => {
         comparePrice: item.comparePrice || (item.price ? Math.round(item.price * 1.25) : null),
         discount: item.discount || (item.comparePrice ? `${Math.round(((item.comparePrice - item.price) / item.comparePrice) * 100)}% OFF` : null),
         category: item.category?.name || item.categoryName || item.category || 'Giftery Collection',
-        image: item.image || item.images?.[0] || '/placeholder.jpg',
+        image: item.image || item.images?.[0] || '/images/product-placeholder.svg',
         slug: item.slug || '',
       });
     }
@@ -53,47 +44,41 @@ const Wishlist = () => {
   // Stored wishlist items (only real items, no fake fallback)
   const wishlistItems = Array.from(itemsMap.values());
   const itemCount = wishlistItems.length;
-
-  // Live Recommended Catalogue items from store
-  const [recommendedItems, setRecommendedItems] = useState([]);
+  // Load the catalogue independently; derive exclusions locally as wishlist state changes.
+  const [recommendationCatalogue, setRecommendationCatalogue] = useState([]);
 
   useEffect(() => {
     const fetchLiveProducts = async () => {
-      let apiProducts = [];
       try {
         const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
-        let extracted = [];
-        if (Array.isArray(res)) extracted = res;
-        else if (res?.data && Array.isArray(res.data)) extracted = res.data;
-        else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
-        else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
-        else if (res?.products && Array.isArray(res.products)) extracted = res.products;
-        apiProducts = extracted;
-      } catch (err) { }
-
-      if (apiProducts.length > 0) {
-        // Exclude items already in wishlist
-        const wishlistIds = new Set(wishlistItems.map(i => i.id));
-        const filtered = apiProducts
-          .filter(p => !wishlistIds.has(p.id))
-          .slice(0, 3)
-          .map(p => ({
-            id: p.id,
-            name: p.name,
-            price: p.price,
-            comparePrice: p.comparePrice,
-            category: p.category?.name || p.categoryName || 'Giftery Collection',
-            image: Array.isArray(p.images) ? p.images[0] : (p.image || '/placeholder.jpg'),
-            slug: p.slug,
-          }));
-        setRecommendedItems(filtered);
+        const products = Array.isArray(res) ? res
+          : Array.isArray(res?.data) ? res.data
+          : Array.isArray(res?.data?.data) ? res.data.data
+          : Array.isArray(res?.data?.products) ? res.data.products
+          : Array.isArray(res?.products) ? res.products : [];
+        setRecommendationCatalogue(products);
+      } catch (err) {
+        console.warn('Wishlist recommendations fetch failed:', err.message);
       }
     };
-
     fetchLiveProducts();
     window.addEventListener('products_updated', fetchLiveProducts);
     return () => window.removeEventListener('products_updated', fetchLiveProducts);
-  }, [wishlistItems.length]);
+  }, []);
+
+  const recommendedItems = useMemo(() => {
+    const wishlistIds = new Set(wishlistItems.map((item) => item.id));
+    return recommendationCatalogue.filter((product) => !wishlistIds.has(product.id)).slice(0, 3).map((product) => ({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      comparePrice: product.comparePrice,
+      category: product.category?.name || product.categoryName || 'Giftery Collection',
+      image: Array.isArray(product.images) ? product.images[0] : (product.image || '/images/product-placeholder.svg'),
+      slug: product.slug,
+    }));
+  }, [recommendationCatalogue, wishlistItems]);
+
 
   const handleAddToCart = async (item) => {
     dispatch(addToCart({ id: item.id, name: item.name, price: item.price, image: item.image, slug: item.slug }));
@@ -101,9 +86,7 @@ const Wishlist = () => {
 
     try {
       await axiosInstance.delete(ENDPOINTS.WISHLIST.REMOVE(item.id));
-      refetchWishlist();
     } catch (e) {
-      refetchWishlist();
     }
 
     toast.success(`Moved "${item.name}" to cart`);
@@ -126,9 +109,7 @@ const Wishlist = () => {
     dispatch(removeFromWishlist(id));
     try {
       await axiosInstance.delete(ENDPOINTS.WISHLIST.REMOVE(id));
-      refetchWishlist();
     } catch (e) {
-      refetchWishlist();
     }
     toast.info(`Removed "${name}" from wishlist`);
   };
@@ -136,7 +117,6 @@ const Wishlist = () => {
   const handleClearWishlist = async () => {
     try {
       await dispatch(clearWishlistAsync()).unwrap();
-      await refetchWishlist();
       toast.info('Wishlist cleared');
     } catch (error) {
       toast.error(error || 'Unable to clear wishlist. Please try again.');
@@ -226,7 +206,7 @@ const Wishlist = () => {
                         src={getImageUrl(item.image)}
                         alt={item.name}
                         className={styles.itemImg}
-                        onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/product-placeholder.svg'; }}
                       />
                       {item.discount && <span className={styles.discountTag}>{item.discount}</span>}
                       <button

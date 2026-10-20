@@ -77,7 +77,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
             alt={name}
             className={styles.image}
             loading="lazy"
-            onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/product-placeholder.svg'; }}
           />
         </Link>
         {discount && <span className={styles.badge}>-{discount}%</span>}

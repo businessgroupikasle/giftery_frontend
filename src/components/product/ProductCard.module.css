@@ -461,3 +461,16 @@
     font-size: 0.68rem;
   }
 }
+
+/* Allow grid tracks and purchase controls to shrink without clipping siblings. */
+.card,
+.body,
+.actionsRow,
+.addToCartBtn,
+.buyNowBtn {
+  min-width: 0;
+}
+
+.actionsRow > * {
+  min-width: 0;
+}

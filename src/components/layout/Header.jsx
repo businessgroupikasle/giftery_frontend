@@ -12,9 +12,9 @@ import styles from './Header.module.css';
 const GiftLogo = () => (
   <div style={{ display: 'inline-flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.15' }}>
     <span style={{
-      fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif",
+      fontFamily: "'Playfair Display', 'Playfair Display', Georgia, serif",
       fontSize: '1.85rem',
-      fontWeight: '800',
+      fontWeight: '400',
       color: '#ffffff',
       letterSpacing: '0.06em',
       textShadow: '0 2px 4px rgba(0,0,0,0.5)',
@@ -23,9 +23,9 @@ const GiftLogo = () => (
       GIFTERY
     </span>
     <span style={{
-      fontFamily: "'Inter', sans-serif",
+      fontFamily: "'Montserrat', sans-serif",
       fontSize: '0.62rem',
-      fontWeight: '800',
+      fontWeight: '700',
       color: '#d99b26',
       letterSpacing: '0.12em',
       marginTop: '5px',
@@ -266,13 +266,13 @@ const Header = () => {
           </Link>
 
           {/* 2. Cart with Gold Badge */}
-          <Link to={ROUTES.CART} className={styles.cartBtn} aria-label="Cart">
+          <Link to={ROUTES.CART} className={styles.cartBtn} aria-label={cartCount > 0 ? `Cart, ${cartCount} item${cartCount === 1 ? '' : 's'}` : 'Cart'}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="9" cy="21" r="1"></circle>
               <circle cx="20" cy="21" r="1"></circle>
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
             </svg>
-            <span className={styles.cartBadge}>{cartCount}</span>
+            {cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
           </Link>
 
           {/* 3. Account / User Profile */}

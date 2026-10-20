@@ -1,5 +1,5 @@
 import BulkImportModal from './BulkImportModal';
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { FiUpload, FiSearch, FiPlus, FiX } from 'react-icons/fi';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
@@ -89,7 +89,9 @@ const resolveSubCategoryName = (product, categoriesList = []) => {
 };
 
 const ProductsSection = ({
-  categories: initialCategories = [],
+  productsList = [],
+  categories = [],
+  loadingProducts = false,
   showProductForm,
   editingProduct,
   savingProduct,
@@ -100,37 +102,9 @@ const ProductsSection = ({
   handleProductFormChange,
   handleProductSubmit,
   handleDeleteProduct,
-  onRefresh,
 }) => {
-  const [categories, setCategories] = useState(initialCategories);
   const [maxSlots, setMaxSlots] = useState(1);
 
-  // Fetch live categories with accurate DB product counts
-  const refreshCategories = useCallback(async () => {
-    try {
-      const res = await axiosInstance.get(ENDPOINTS.CATEGORIES.LIST);
-      let apiCats = [];
-      if (Array.isArray(res)) apiCats = res;
-      else if (Array.isArray(res?.categories)) apiCats = res.categories;
-      else if (Array.isArray(res?.data?.categories)) apiCats = res.data.categories;
-      else if (Array.isArray(res?.data)) apiCats = res.data;
-      if (apiCats.length > 0) {
-        setCategories(apiCats);
-      }
-    } catch (e) {
-      console.warn('Failed to refresh category counts:', e.message);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (initialCategories && initialCategories.length > 0) {
-      setCategories(initialCategories);
-    }
-  }, [initialCategories]);
-
-  useEffect(() => {
-    refreshCategories();
-  }, [refreshCategories]);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [activeCategoryFilter, setActiveCategoryFilter] = useState('all');
   const [activeSubCategoryFilter, setActiveSubCategoryFilter] = useState('all');
@@ -139,93 +113,43 @@ const ProductsSection = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
-  // Server-side loaded page data and pagination metadata
-  const [pageProducts, setPageProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [meta, setMeta] = useState({
-    total: 0,
-    page: 1,
-    limit: 25,
-    totalPages: 1,
-    hasNext: false,
-    hasPrev: false,
-  });
-
-  // Debounce search input
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 300);
-    return () => clearTimeout(handler);
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Reset page to 1 when filters or search change
   useEffect(() => {
     setCurrentPage(1);
   }, [activeCategoryFilter, activeSubCategoryFilter, debouncedSearch, pageSize]);
-
-  // Fetch products from backend with exact filters & pagination
-  const fetchPageProducts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = {
-        page: currentPage,
-        limit: pageSize,
-        showAll: 'true',
-      };
-
-      if (debouncedSearch.trim()) {
-        params.search = debouncedSearch.trim();
-      }
-
-      if (activeCategoryFilter !== 'all' && activeCategoryFilter !== 'unassigned') {
-        params.categoryId = activeCategoryFilter;
-      }
-
-      if (activeSubCategoryFilter !== 'all') {
-        params.subCategoryId = activeSubCategoryFilter;
-      }
-
-      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST, { params });
-      const body = res.data || res;
-      const productList = Array.isArray(body.data)
-        ? body.data
-        : (Array.isArray(body.products) ? body.products : (Array.isArray(body) ? body : []));
-
-      setPageProducts(productList);
-
-      if (body.meta) {
-        setMeta(body.meta);
-      } else {
-        setMeta({
-          total: productList.length,
-          page: currentPage,
-          limit: pageSize,
-          totalPages: Math.ceil(productList.length / pageSize) || 1,
-          hasNext: false,
-          hasPrev: currentPage > 1,
-        });
-      }
-    } catch (err) {
-      console.error('Error fetching dashboard products:', err);
-      toast.error(`Failed to fetch products: ${err.message}`);
-    } finally {
-      setLoading(false);
+  // The dashboard owns products and categories; this section filters and paginates them locally.
+  const filteredProducts = useMemo(() => productsList.filter((product) => {
+    const query = debouncedSearch.trim().toLowerCase();
+    if (query && ![product.name, product.sku, product.slug].some((value) => String(value || '').toLowerCase().includes(query))) return false;
+    const mainCategoryId = resolveMainCategoryId(product, categories);
+    if (activeCategoryFilter === 'unassigned' && mainCategoryId !== 'unassigned') return false;
+    if (activeCategoryFilter !== 'all' && activeCategoryFilter !== 'unassigned' && mainCategoryId !== activeCategoryFilter) return false;
+    if (activeSubCategoryFilter !== 'all') {
+      const subCategoryId = product.subCategoryId || product.subcategory?.id || product.subCategory?.id || product.subcategory || product.subCategory;
+      if (subCategoryId !== activeSubCategoryFilter) return false;
     }
-  }, [currentPage, pageSize, activeCategoryFilter, activeSubCategoryFilter, debouncedSearch]);
+    return true;
+  }), [productsList, categories, activeCategoryFilter, activeSubCategoryFilter, debouncedSearch]);
 
-  useEffect(() => {
-    fetchPageProducts();
-  }, [fetchPageProducts]);
+  const meta = useMemo(() => ({
+    total: filteredProducts.length,
+    page: currentPage,
+    limit: pageSize,
+    totalPages: Math.max(1, Math.ceil(filteredProducts.length / pageSize)),
+    hasNext: currentPage * pageSize < filteredProducts.length,
+    hasPrev: currentPage > 1,
+  }), [filteredProducts.length, currentPage, pageSize]);
 
-  // Listen for realtime product updates
-  useEffect(() => {
-    const handleUpdate = () => {
-      fetchPageProducts();
-    };
-    window.addEventListener('products_updated', handleUpdate);
-    return () => window.removeEventListener('products_updated', handleUpdate);
-  }, [fetchPageProducts]);
+  const pageProducts = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredProducts.slice(start, start + pageSize);
+  }, [filteredProducts, currentPage, pageSize]);
+  const loading = loadingProducts;
+
 
   const handleCloseModal = () => {
     setMaxSlots(1);
@@ -508,8 +432,7 @@ const ProductsSection = ({
           categories={categories}
           onClose={() => setShowBulkImportModal(false)}
           onImportSuccess={() => {
-            fetchPageProducts();
-            if (onRefresh) onRefresh();
+            window.dispatchEvent(new Event('products_updated'));
           }}
         />
       )}
@@ -572,7 +495,6 @@ const ProductsSection = ({
             {/* Modal Form */}
             <form onSubmit={async (e) => {
               if (handleProductSubmit) await handleProductSubmit(e);
-              fetchPageProducts();
             }} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
 
               {/* Row 1: Product Name & SKU */}
@@ -793,7 +715,7 @@ const ProductsSection = ({
                                 src={url}
                                 alt={`Slot ${idx + 1}`}
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                onError={(e) => { e.currentTarget.src = '/placeholder.jpg'; }}
+                                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/product-placeholder.svg'; }}
                               />
                               <button
                                 type="button"
@@ -1040,7 +962,7 @@ const ProductsSection = ({
                         src={getProductThumbnail(product)}
                         alt={product.name}
                         style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0' }}
-                        onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/product-placeholder.svg'; }}
                       />
                     </td>
                     <td>
@@ -1090,8 +1012,7 @@ const ProductsSection = ({
                           type="button"
                           onClick={async () => {
                             if (handleDeleteProduct) await handleDeleteProduct(product.id, product.name);
-                            fetchPageProducts();
-                          }}
+                                        }}
                           style={{ padding: '0.35rem 0.75rem', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', fontSize: '0.78rem', fontWeight: '600', cursor: 'pointer' }}
                         >
                           Delete

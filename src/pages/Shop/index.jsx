@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '@components/layout/Layout';
 import ProductGrid from '@components/product/ProductGrid';
 import Pagination from '@components/common/Pagination';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
+import useDebounce from '@hooks/useDebounce';
 import styles from './Shop.module.css';
 
 const SORT_OPTIONS = [
@@ -18,6 +19,7 @@ const SORT_OPTIONS = [
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') || '';
+  const debouncedSearch = useDebounce(search, 400);
   const sort = searchParams.get('sort') || 'newest';
   const minPrice = searchParams.get('minPrice') || '';
   const maxPrice = searchParams.get('maxPrice') || '';
@@ -27,8 +29,10 @@ const Shop = () => {
   const [liveProducts, setLiveProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState({ total: 0, totalPages: 1, page: 1, limit: 24 });
+  const latestRequest = useRef(0);
 
-  const loadProducts = useCallback(async () => {
+  const loadProducts = useCallback(async (signal) => {
+    const requestId = ++latestRequest.current;
     setLoading(true);
     try {
       const params = {
@@ -37,16 +41,17 @@ const Shop = () => {
         sort,
       };
 
-      if (search.trim()) params.search = search.trim();
+      if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
       if (minPrice) params.minPrice = minPrice;
       if (maxPrice) params.maxPrice = maxPrice;
 
-      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST, { params });
+      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST, { params, signal });
       const body = res.data || res;
       const productList = Array.isArray(body.data)
         ? body.data
         : (Array.isArray(body.products) ? body.products : (Array.isArray(body) ? body : []));
 
+      if (requestId !== latestRequest.current) return;
       setLiveProducts(productList.filter(p => p.isActive !== false));
 
       if (body.meta) {
@@ -60,17 +65,22 @@ const Shop = () => {
         });
       }
     } catch (e) {
-      console.warn('Shop products fetch error:', e.message);
+      if (e.code !== 'ERR_CANCELED' && requestId === latestRequest.current) {
+        console.warn('Shop products fetch error:', e.message);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === latestRequest.current) setLoading(false);
     }
-  }, [currentPage, search, sort, minPrice, maxPrice]);
+  }, [currentPage, debouncedSearch, sort, minPrice, maxPrice]);
 
   useEffect(() => {
-    loadProducts();
-    window.addEventListener('products_updated', loadProducts);
+    const controller = new AbortController();
+    const handleProductsUpdated = () => loadProducts();
+    loadProducts(controller.signal);
+    window.addEventListener('products_updated', handleProductsUpdated);
     return () => {
-      window.removeEventListener('products_updated', loadProducts);
+      controller.abort();
+      window.removeEventListener('products_updated', handleProductsUpdated);
     };
   }, [loadProducts]);
 

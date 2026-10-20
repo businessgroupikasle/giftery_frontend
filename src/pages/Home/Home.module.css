@@ -75,7 +75,7 @@
 }
 
 .goldSerifTitle {
-  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-family: 'Playfair Display', 'Playfair Display', Georgia, serif;
   color: #e5c158;
   font-weight: 700;
   background: linear-gradient(135deg, #fff3ca 0%, #e5c158 50%, #b88d22 100%);
@@ -283,7 +283,7 @@
 }
 
 .collectionsTitleGold {
-  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-family: 'Playfair Display', 'Playfair Display', Georgia, serif;
   color: #c58b29;
 }
 
@@ -486,7 +486,7 @@
   font-size: 1.85rem;
   font-weight: 800;
   color: #ffffff;
-  font-family: 'Cinzel', serif;
+  font-family: 'Playfair Display', serif;
 }
 
 .viewAll {

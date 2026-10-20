@@ -1,0 +1,111 @@
+/* Shared responsive safeguards. Page-level visual design remains in CSS modules. */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
+main,
+main > *,
+section,
+article,
+form,
+fieldset,
+header,
+footer,
+nav {
+  min-width: 0;
+}
+
+img,
+picture,
+svg,
+canvas,
+video,
+iframe {
+  max-width: 100%;
+}
+
+img,
+video {
+  height: auto;
+}
+
+input,
+textarea,
+select,
+button {
+  max-width: 100%;
+}
+
+textarea {
+  resize: vertical;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+td,
+th,
+label,
+a {
+  overflow-wrap: anywhere;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(217, 155, 38, 0.65);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  body {
+    padding-right: env(safe-area-inset-right);
+    padding-left: env(safe-area-inset-left);
+  }
+
+  button,
+  [role='button'],
+  input[type='button'],
+  input[type='submit'],
+  select {
+    min-height: 44px;
+  }
+
+  [role='dialog'],
+  [aria-modal='true'] {
+    max-width: calc(100vw - 1rem);
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (max-width: 374px) {
+  [role='dialog'],
+  [aria-modal='true'] {
+    max-width: calc(100vw - 0.5rem);
+    max-height: calc(100dvh - 0.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

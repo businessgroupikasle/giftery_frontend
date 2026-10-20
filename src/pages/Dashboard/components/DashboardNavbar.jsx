@@ -139,6 +139,9 @@ const DashboardNavbar = ({
           type="button"
           className={styles.navToggleBtn}
           title="Toggle Sidebar"
+          aria-label="Toggle dashboard navigation"
+          aria-controls="dashboard-sidebar"
+          aria-expanded={sidebarOpen}
           onClick={() => setSidebarOpen(!sidebarOpen)}
           style={{
             background: 'none',

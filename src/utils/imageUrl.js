@@ -1,4 +1,9 @@
 import env from '@config/env';
+const readImageValue = (image) => {
+  if (typeof image === 'string') return image;
+  if (!image || typeof image !== 'object') return '';
+  return image.url || image.secure_url || image.path || image.src || '';
+};
 
 /**
  * getImageUrl — Normalizes any image URL/path into a web-accessible URL
@@ -7,36 +12,37 @@ import env from '@config/env';
  * import.meta.env.VITE_API_BASE_URL or env.API_BASE_URL (fallback: http://localhost:5000)
  *
  * @param {string} image - Image URL or relative path
- * @param {string} [fallback='/placeholder-product.png'] - Fallback image
+ * @param {string} [fallback='/images/product-placeholder.svg'] - Fallback image
  * @returns {string} Fully resolved image URL
  */
-export const getImageUrl = (image, fallback = '/placeholder-product.png') => {
-  if (!image || typeof image !== 'string') return fallback;
+export const getImageUrl = (image, fallback = '/images/product-placeholder.svg') => {
+  const rawValue = readImageValue(image);
+  if (!rawValue) return fallback;
 
-  const trimmed = image.trim();
+  const trimmed = rawValue.trim().replace(/\\/g, '/');
   if (!trimmed) return fallback;
 
-  // If already absolute URL, base64, or blob URL
-  if (
-    trimmed.startsWith('http://') ||
-    trimmed.startsWith('https://') ||
-    trimmed.startsWith('data:') ||
-    trimmed.startsWith('blob:')
-  ) {
-    return trimmed;
-  }
+  if (trimmed.startsWith('//')) return `${window.location.protocol}${trimmed}`;
+  if (/^(https?:|data:|blob:)/i.test(trimmed)) return trimmed;
 
-  // Local frontend public assets in /images/...
+  // Files bundled with the frontend remain on the frontend origin.
   if (trimmed.startsWith('/images/') || trimmed.startsWith('images/')) {
     return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
   }
 
-  // Backend API Base URL from existing environment config
-  const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || env.API_BASE_URL || 'http://localhost:5000';
-  const baseUrl = rawBaseUrl.replace(/\/$/, '');
-  const imagePath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || env.API_BASE_URL || 'http://localhost:5000')
+    .replace(/\/$/, '');
+  const uploadBaseUrl = (import.meta.env.VITE_CDN_URL || env.CDN_URL || `${apiBaseUrl}/uploads`)
+    .replace(/\/$/, '');
+  const withoutLeadingSlash = trimmed.replace(/^\/+/, '');
 
-  return `${baseUrl}${imagePath}`;
+  // Explicit backend-root paths already include their public directory.
+  if (/^(uploads|public)\//i.test(withoutLeadingSlash)) {
+    return `${apiBaseUrl}/${withoutLeadingSlash.replace(/^public\//i, '')}`;
+  }
+
+  // Bare filenames and relative subdirectories are uploaded media paths.
+  return `${uploadBaseUrl}/${withoutLeadingSlash}`;
 };
 
 /**
@@ -48,15 +54,15 @@ export const getImageUrl = (image, fallback = '/placeholder-product.png') => {
  * - product.image / product.imageUrl (string)
  *
  * @param {object} product - Product record
- * @param {string} [fallback='/placeholder-product.png'] - Fallback image
+ * @param {string} [fallback='/images/product-placeholder.svg'] - Fallback image
  * @returns {string} Fully resolved image URL
  */
-export const getProductThumbnail = (product, fallback = '/placeholder-product.png') => {
+export const getProductThumbnail = (product, fallback = '/images/product-placeholder.svg') => {
   if (!product) return fallback;
 
   // 1. Array of images
   if (Array.isArray(product.images) && product.images.length > 0) {
-    const first = product.images.find(img => typeof img === 'string' && img.trim());
+    const first = product.images.map(readImageValue).find(Boolean);
     if (first) return getImageUrl(first, fallback);
   }
 
@@ -67,7 +73,7 @@ export const getProductThumbnail = (product, fallback = '/placeholder-product.pn
       try {
         const parsed = JSON.parse(trimmed);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const first = parsed.find(img => typeof img === 'string' && img.trim());
+          const first = parsed.map(readImageValue).find(Boolean);
           if (first) return getImageUrl(first, fallback);
         }
       } catch (e) {}
@@ -79,12 +85,8 @@ export const getProductThumbnail = (product, fallback = '/placeholder-product.pn
   }
 
   // 3. Single image property
-  if (product.image && typeof product.image === 'string' && product.image.trim()) {
-    return getImageUrl(product.image, fallback);
-  }
-  if (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.trim()) {
-    return getImageUrl(product.imageUrl, fallback);
-  }
+  const singleImage = readImageValue(product.image) || readImageValue(product.imageUrl) || readImageValue(product.thumbnail);
+  if (singleImage) return getImageUrl(singleImage, fallback);
 
   return fallback;
 };

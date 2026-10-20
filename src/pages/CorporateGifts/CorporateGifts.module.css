@@ -1285,3 +1285,20 @@
 .submitQuoteBtn:hover {
   background: #facc15;
 }
+
+/* Keep purchase actions usable at intermediate widths and browser zoom levels. */
+.productGrid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+}
+
+.contentArea,
+.contentHeader,
+.controlGroup {
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .productGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

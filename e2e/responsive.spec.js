@@ -6,7 +6,7 @@ test.describe('Responsive storefront UI', () => {
 
   test('opens mobile navigation and keeps the page within the viewport', async ({ page }) => {
     await mockApi(page);
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
 
     const menuButton = page.getByRole('button', { name: 'Toggle mobile menu' });
     await expect(menuButton).toBeVisible();
@@ -26,7 +26,7 @@ test.describe('Responsive storefront UI', () => {
       totalPrice: 750,
     })));
     await mockApi(page);
-    await page.goto('/cart');
+    await page.goto('/cart', { waitUntil: 'domcontentloaded' });
 
     await expect(page.getByRole('heading', { name: 'Mobile Gift' })).toBeVisible();
     await expect(page.getByRole('button', { name: /proceed to checkout/i })).toBeVisible();

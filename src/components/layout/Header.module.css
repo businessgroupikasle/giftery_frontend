@@ -54,7 +54,7 @@
 }
 
 .brandTitle {
-  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-family: 'Playfair Display', 'Playfair Display', Georgia, serif;
   font-size: 1.65rem;
   font-weight: 700;
   color: #ffffff;
@@ -618,8 +618,8 @@
   }
 }
 
-/* Tablet to Mobile Transition (768px) */
-@media (max-width: 768px) {
+/* Tablet and mobile compact navigation */
+@media (max-width: 1024px) {
   .inner {
     padding: 0 1rem;
     height: 76px;
@@ -627,9 +627,15 @@
     flex-wrap: nowrap;
   }
   .brand {
+    min-width: 0;
     gap: 0.7rem;
     flex: 1;
     order: 0;
+  }
+  .brand img {
+    width: auto;
+    height: 58px !important;
+    max-width: 190px !important;
   }
   .brandTitle {
     font-size: 1.35rem;

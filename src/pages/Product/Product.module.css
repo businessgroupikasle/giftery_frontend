@@ -8,7 +8,7 @@
   background: #f8fafc;
   min-height: 100vh;
   padding: 1.5rem 0 4rem;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-family: 'Montserrat', 'Segoe UI', sans-serif;
   color: #0f172a;
 }
 
@@ -272,14 +272,6 @@
   margin: 0 0 1rem 0;
 }
 
-.shortSummary {
-  font-size: 0.88rem;
-  color: #475569;
-  line-height: 1.55;
-  margin: 0 0 1.25rem 0;
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 1rem;
-}
 
 /* Customization Section */
 .customizationSection {
@@ -912,11 +904,6 @@
   }
   .comparePrice {
     font-size: 0.9rem;
-  }
-  .shortSummary {
-    font-size: 0.85rem;
-    margin: 0 0 1rem 0;
-    padding-bottom: 0.85rem;
   }
   .customizationSection {
     margin-bottom: 1rem;

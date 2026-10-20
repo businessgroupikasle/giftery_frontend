@@ -219,7 +219,7 @@ const Product = () => {
               id: p.id,
               name: p.name,
               price: p.price,
-              image: Array.isArray(p.images) ? p.images[0] : (p.image || '/placeholder.jpg'),
+              image: Array.isArray(p.images) ? p.images[0] : (p.image || '/images/product-placeholder.svg'),
               slug: p.slug,
             }));
           setRelatedProducts(filtered);
@@ -271,12 +271,10 @@ const Product = () => {
     price,
     comparePrice = product.comparePrice ? Number(product.comparePrice) : null,
     discount = comparePrice && price && comparePrice > price ? `${Math.round(((comparePrice - price) / comparePrice) * 100)}% OFF` : null,
-    rating = product.rating ? Number(product.rating) : 4.8,
     reviewsCount = product.reviewsCount ? Number(product.reviewsCount) : 0,
     salesCount = product.salesCount || null,
     badge = product.featured ? 'FEATURED' : (product.tags ? String(product.tags).split(',')[0].trim() : null),
     description = product.description || '',
-    shortDescription = description,
     category,
     categoryName = category?.name || product.categoryName || 'Corporate Gifts',
     subcategory = product.subcategory || 'Gifts',
@@ -600,7 +598,7 @@ const Product = () => {
       name,
       price: Number(price || 0),
       comparePrice,
-      image: selectedImage || galleryImages[0] || '/placeholder.jpg',
+      image: selectedImage || galleryImages[0] || '/images/product-placeholder.svg',
       slug,
       sku: product.sku || '',
       variant: product.variant || 'Standard Edition',
@@ -696,7 +694,7 @@ const Product = () => {
                     <img
                       src={getImageUrl(imgUrl)}
                       alt={`${name} thumb ${idx + 1}`}
-                      onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/product-placeholder.svg'; }}
                     />
                   </button>
                 ))}
@@ -709,7 +707,7 @@ const Product = () => {
                   src={getImageUrl(selectedImage || galleryImages[0])}
                   alt={name}
                   className={styles.mainImg}
-                  onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/product-placeholder.svg'; }}
                 />
                 <button type="button" className={styles.wishlistOverlayBtn} onClick={handleWishlistToggle} aria-label="Add to wishlist">
                   <FiHeart aria-hidden="true" />
@@ -728,8 +726,8 @@ const Product = () => {
               {/* Rating & Sold Bar */}
               <div className={styles.ratingSoldRow}>
                 <div className={styles.starsRow}>
-                  <span className={styles.goldStars}></span>
-                  <span className={styles.ratingNum}>{rating}</span>
+                  <StarRating rating={5} size="sm" />
+                  <span className={styles.ratingNum}>5.0</span>
                   <span className={styles.reviewsText}>({reviewsCount} reviews)</span>
                 </div>
                 {salesCount && (
@@ -747,9 +745,6 @@ const Product = () => {
                 {discount && <span className={styles.discountBadge}>{discount}</span>}
               </div>
               <p className={styles.taxSubtext}>Inclusive of all taxes</p>
-
-              {/* Short Summary Description */}
-              {shortDescription && <p className={styles.shortSummary}>{shortDescription}</p>}
 
               {/* Quantity Stepper & Stock Info */}
               <div className={styles.quantitySection}>
@@ -913,8 +908,8 @@ const Product = () => {
                       <h4 className={styles.relName}>{rel.name}</h4>
                       <div className={styles.relPriceRow}>
                         <span className={styles.relPrice}>₹{rel.price?.toLocaleString('en-IN')}.00</span>
-                        <button type="button" className={styles.miniCartBtn} onClick={(e) => { e.stopPropagation(); if (!requireAuth()) return; dispatch(addToCart({ id: rel.id, name: rel.name, price: rel.price, image: rel.image, slug: rel.slug })); toast.success(`Added ${rel.name}`); }}>
-
+                        <button type="button" className={styles.miniCartBtn} aria-label={`Add ${rel.name} to cart`} title="Add to cart" onClick={(e) => { e.stopPropagation(); if (!requireAuth()) return; dispatch(addToCart({ id: rel.id, name: rel.name, price: rel.price, image: rel.image, slug: rel.slug })); toast.success(`Added ${rel.name}`); }}>
+                          <FiShoppingCart aria-hidden="true" />
                         </button>
                       </div>
                     </div>
@@ -923,35 +918,6 @@ const Product = () => {
               </div>
             </div>
 
-          </div>
-
-          {/* ── 5. BOTTOM VALUE HIGHLIGHTS BANNER ── */}
-          <div className={styles.bottomHighlightsBanner}>
-            <div className={styles.bannerHighlightCard}>
-              <div>
-                <strong>Bulk Discounts</strong>
-                <p>Special pricing on orders over 50+ units</p>
-              </div>
-            </div>
-            <div className={styles.bannerHighlightCard}>
-              <div>
-                <strong>Custom Branding</strong>
-                <p>Add your logo & brand identity</p>
-              </div>
-            </div>
-            <div className={styles.bannerHighlightCard}>
-              <span className={styles.bannerIcon}>⭐</span>
-              <div>
-                <strong>Premium Quality</strong>
-                <p>Finest materials guaranteed</p>
-              </div>
-            </div>
-            <div className={styles.bannerHighlightCard}>
-              <div>
-                <strong>On-time Delivery</strong>
-                <p>Pan India delivery you can trust</p>
-              </div>
-            </div>
           </div>
 
           {showQuoteForm && (

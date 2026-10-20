@@ -32,8 +32,8 @@
   --color-border-focus:  var(--color-primary);
 
   /* ── Typography ──────────────────────────────────────── */
-  --font-primary:   'Inter', system-ui, sans-serif;
-  --font-display:   'Outfit', 'Inter', sans-serif;
+  --font-primary:   'Montserrat', system-ui, sans-serif;
+  --font-display:   'Playfair Display', Georgia, serif;
   --font-mono:      'Fira Code', 'Courier New', monospace;
 
   --text-xs:   0.75rem;

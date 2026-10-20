@@ -8,7 +8,7 @@
   background: #f8fafc;
   min-height: 100vh;
   padding: 2rem 0 5rem;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-family: 'Montserrat', 'Segoe UI', sans-serif;
   color: #0f172a;
   width: 100%;
   overflow-x: hidden;
@@ -691,6 +691,7 @@
 .miniCartBtn {
   background: #ffffff;
   border: 1px solid #dfa843;
+  color: #dfa843;
   border-radius: 6px;
   width: 28px;
   height: 28px;

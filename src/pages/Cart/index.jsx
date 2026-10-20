@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FiTrash2, FiX } from 'react-icons/fi';
+import { FiShoppingCart, FiTrash2, FiX } from 'react-icons/fi';
 import Layout from '@components/layout/Layout';
 import { removeFromCart, updateQuantity, clearCartAsync, addToCart } from '@store/slices/cartSlice';
 import { formatCurrency } from '@utils/formatters';
@@ -20,46 +20,41 @@ const Cart = () => {
 
   const reduxItems = useSelector((state) => state.cart.items) || [];
   const cartItems = reduxItems;
-
-  const [suggestedProducts, setSuggestedProducts] = useState([]);
+  const [recommendationCatalogue, setRecommendationCatalogue] = useState([]);
 
   useEffect(() => {
     const fetchLiveProducts = async () => {
-      let apiProducts = [];
       try {
         const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST);
-        let extracted = [];
-        if (Array.isArray(res)) extracted = res;
-        else if (res?.data && Array.isArray(res.data)) extracted = res.data;
-        else if (res?.data?.data && Array.isArray(res.data.data)) extracted = res.data.data;
-        else if (res?.data?.products && Array.isArray(res.data.products)) extracted = res.data.products;
-        else if (res?.products && Array.isArray(res.products)) extracted = res.products;
-        apiProducts = extracted;
-      } catch (err) {}
-
-      if (apiProducts.length > 0) {
-        const cartIds = new Set(cartItems.map(i => i.id));
-        const filtered = apiProducts
-          .filter(p => !cartIds.has(p.id))
-          .slice(0, 6)
-          .map(p => ({
-            id: p.id,
-            name: p.name,
-            price: p.price,
-            image: Array.isArray(p.images) ? p.images[0] : (p.image || '/placeholder.jpg'),
-            slug: p.slug,
-            categoryName: p.categoryName || p.category?.name || (typeof p.category === 'string' ? p.category : ''),
-            categorySlug: p.categorySlug || p.category?.slug || '',
-            subCategorySlug: p.subCategorySlug || p.subCategory?.slug || '',
-          }));
-        setSuggestedProducts(filtered);
+        const products = Array.isArray(res) ? res
+          : Array.isArray(res?.data) ? res.data
+          : Array.isArray(res?.data?.data) ? res.data.data
+          : Array.isArray(res?.data?.products) ? res.data.products
+          : Array.isArray(res?.products) ? res.products : [];
+        setRecommendationCatalogue(products);
+      } catch (err) {
+        console.warn('Cart recommendations fetch failed:', err.message);
       }
     };
-
     fetchLiveProducts();
     window.addEventListener('products_updated', fetchLiveProducts);
     return () => window.removeEventListener('products_updated', fetchLiveProducts);
-  }, [cartItems.length]);
+  }, []);
+
+  const suggestedProducts = useMemo(() => {
+    const cartIds = new Set(cartItems.map((item) => item.id));
+    return recommendationCatalogue.filter((product) => !cartIds.has(product.id)).slice(0, 6).map((product) => ({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: Array.isArray(product.images) ? product.images[0] : (product.image || '/images/product-placeholder.svg'),
+      slug: product.slug,
+      categoryName: product.categoryName || product.category?.name || (typeof product.category === 'string' ? product.category : ''),
+      categorySlug: product.categorySlug || product.category?.slug || '',
+      subCategorySlug: product.subCategorySlug || product.subCategory?.slug || '',
+    }));
+  }, [recommendationCatalogue, cartItems]);
+
 
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(() => {
@@ -318,7 +313,7 @@ const Cart = () => {
                                 <img
                                   src={getImageUrl(item.image)}
                                   alt={item.name}
-                                  onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/product-placeholder.svg'; }}
                                 />
                               </div>
                               <div className={styles.itemDetails}>
@@ -506,7 +501,7 @@ const Cart = () => {
                       <img
                         src={getImageUrl(prod.image)}
                         alt={prod.name}
-                        onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/product-placeholder.svg'; }}
                       />
                     </div>
                     <div className={styles.suggestedInfo}>
@@ -521,9 +516,10 @@ const Cart = () => {
                             dispatch(addToCart({ id: prod.id, name: prod.name, price: prod.price, image: prod.image, slug: prod.slug }));
                             toast.success(`Added ${prod.name} to cart`);
                           }}
-                          aria-label="Add to cart"
+                          aria-label={`Add ${prod.name} to cart`}
+                          title="Add to cart"
                         >
-
+                          <FiShoppingCart aria-hidden="true" />
                         </button>
                       </div>
                     </div>

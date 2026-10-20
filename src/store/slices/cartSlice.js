@@ -57,7 +57,7 @@ const normalizeCartItem = (item) => {
   const qty = Number(item.quantity) || 1;
   const img = Array.isArray(p.images)
     ? p.images[0]
-    : (p.image || item.image || '/images/products/placeholder.png');
+    : (p.image || item.image || '/images/product-placeholder.svg');
 
   return {
     id: targetId,
@@ -206,7 +206,7 @@ const cartSlice = createSlice({
           customization: payload.customization || null,
           price: unitPrice,
           salePrice: unitPrice,
-          image: payload.image || payload.product?.images?.[0] || payload.product?.image || '/images/products/placeholder.png',
+          image: payload.image || payload.product?.images?.[0] || payload.product?.image || '/images/product-placeholder.svg',
           slug: payload.slug || payload.product?.slug || '',
           quantity: Math.min(qty, maxStock),
           maxStock,
