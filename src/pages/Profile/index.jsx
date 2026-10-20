@@ -160,7 +160,7 @@ const Profile = () => {
         pincode: pincode.trim(),
         country: country.trim(),
       });
-      toast.success('Delivery address saved successfully in Database!');
+      toast.success('Delivery address saved successfully');
     } catch (err) {
       toast.error(err.message || 'Failed to save address');
     } finally {
