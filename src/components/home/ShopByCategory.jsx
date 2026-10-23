@@ -29,9 +29,9 @@ import { getProductThumbnail } from '@utils/imageUrl';
 import styles from './ShopByCategory.module.css';
 
 const filterCategories = [
-  { id: 'featured', label: 'Featured Products' },
   { id: 'bestsellers', label: 'Best Sellers' },
   { id: 'popular', label: 'Popular Products' },
+  { id: 'featured', label: 'Featured Products' },
   { id: 'new', label: 'New Arrivals' },
   { id: 'loved', label: 'Most Loved' },
   { id: 'giftsets', label: 'Gift Sets' },
@@ -104,7 +104,7 @@ const ShopByCategory = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const requireAuth = useRequireAuth();
-  const [activeFilter, setActiveFilter] = useState('featured');
+  const [activeFilter, setActiveFilter] = useState('bestsellers');
   const [productsList, setProductsList] = useState([]);
   const filterPillsRef = useRef(null);
   const wishlistItems = useSelector(selectWishlistItems);
