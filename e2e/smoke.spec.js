@@ -37,4 +37,29 @@ test.describe('Application smoke and routing', () => {
     await page.goto('/this-route-does-not-exist');
     await expect(page.locator('#root')).toContainText(/404|not found/i);
   });
+
+  test('catalogue form rejects a numeric-only full name', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Download Product Catalogue' }).click();
+
+    const fullName = page.getByLabel('Full Name');
+    await fullName.fill('1555555');
+    await fullName.blur();
+
+    await expect(page.getByText('Please enter a valid full name.', { exact: true })).toBeVisible();
+    await expect(fullName).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.getByRole('button', { name: 'Submit & Download' })).toBeDisabled();
+  });
+
+  test('contact form requires a valid phone number', async ({ page }) => {
+    await page.goto('/contact');
+
+    const phone = page.getByPlaceholder('10-digit Mobile Number *');
+    await expect(phone).toHaveAttribute('required', '');
+    await phone.focus();
+    await phone.blur();
+
+    await expect(page.getByText('Please enter a valid 10-digit mobile number', { exact: true })).toBeVisible();
+    await expect(phone).toHaveAttribute('aria-invalid', 'true');
+  });
 });

@@ -129,7 +129,7 @@ const Footer = () => {
               <a href="https://www.instagram.com/giftery.india/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={styles.socialBtn}>
                 <FaInstagram />
               </a>
-              <a href="https://www.linkedin.com/company/giftery/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className={styles.socialBtn}>
+              <a href="https://www.linkedin.com/company/gifteryindia/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className={styles.socialBtn}>
                 <FaLinkedinIn />
               </a>
               <a href="https://www.youtube.com/@gifteryindia" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className={styles.socialBtn}>

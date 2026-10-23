@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import Layout from '@components/layout/Layout';
 import StarRating from '@components/product/StarRating';
@@ -120,6 +120,7 @@ const parseImagesArray = (imgs, fallbackImg) => {
 
 const Product = () => {
   const { slug } = useParams();
+  const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { addToWishlist } = useWishlist();
@@ -155,8 +156,20 @@ const Product = () => {
         const data = res.product || res.data?.product || res.data?.data || res.data;
         if (data && (data.id || data.slug)) {
           if (isMounted) {
-            setProduct(data);
-            trackEcommerce.viewItem(data);
+            const cataloguePricing = location.state?.cataloguePricing;
+            const isSameProduct = cataloguePricing && (
+              cataloguePricing.id === data.id
+              || (cataloguePricing.slug && cataloguePricing.slug === (data.slug || slug))
+            );
+            const consistentProduct = isSameProduct
+              ? {
+                ...data,
+                price: cataloguePricing.price ?? data.price,
+                comparePrice: cataloguePricing.comparePrice ?? data.comparePrice,
+              }
+              : data;
+            setProduct(consistentProduct);
+            trackEcommerce.viewItem(consistentProduct);
             const imgs = parseImagesArray(data.images || data.image, 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80');
             setSelectedImage(imgs[0]);
             setQuantity(data.minOrder || 1);
@@ -240,7 +253,7 @@ const Product = () => {
       isMounted = false;
       window.removeEventListener('products_updated', handleUpdate);
     };
-  }, [slug]);
+  }, [slug, location.state]);
 
   if (loading) {
     return (

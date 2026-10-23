@@ -7,6 +7,14 @@ import { ENDPOINTS } from '@api/endpoints';
 import styles from './FloatingWidgets.module.css';
 
 const EMPTY_FORM = { name: '', email: '', phone: '', company: '' };
+const FULL_NAME_ERROR_MESSAGE = 'Please enter a valid full name.';
+const FULL_NAME_PATTERN = /^[\p{L}\p{M}]+(?:[ .'-][\p{L}\p{M}]+)*$/u;
+
+const getFullNameError = (value, required = false) => {
+  const name = value.trim();
+  if (!name) return required ? FULL_NAME_ERROR_MESSAGE : '';
+  return name.length >= 2 && FULL_NAME_PATTERN.test(name) ? '' : FULL_NAME_ERROR_MESSAGE;
+};
 const EMAIL_ERROR_MESSAGE = 'Please enter a valid email address';
 const EMAIL_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]*[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/;
 
@@ -20,6 +28,7 @@ const FloatingWidgets = () => {
   const [downloading, setDownloading] = useState(false);
   const [showCatalogueForm, setShowCatalogueForm] = useState(false);
   const [catalogueForm, setCatalogueForm] = useState(EMPTY_FORM);
+  const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
 
   const downloadCatalogue = () => {
@@ -36,6 +45,7 @@ const FloatingWidgets = () => {
       ? event.target.value.replace(/\D/g, '').slice(0, 10)
       : event.target.value;
     setCatalogueForm((current) => ({ ...current, [field]: value }));
+    if (field === 'name') setNameError(getFullNameError(value));
     if (field === 'email') setEmailError(getEmailError(value));
   };
 
@@ -43,10 +53,18 @@ const FloatingWidgets = () => {
     event.preventDefault();
     if (downloading) return;
 
+    const name = catalogueForm.name.trim();
     const email = catalogueForm.email.trim();
     const phone = catalogueForm.phone.trim();
     const indianPhonePattern = /^[6-9]\d{9}$/;
+    const currentNameError = getFullNameError(name, true);
     const currentEmailError = getEmailError(email, true);
+
+    if (currentNameError) {
+      setNameError(currentNameError);
+      toast.error(currentNameError);
+      return;
+    }
 
     if (currentEmailError) {
       setEmailError(currentEmailError);
@@ -62,7 +80,7 @@ const FloatingWidgets = () => {
     setDownloading(true);
     try {
       await axiosInstance.post(ENDPOINTS.ENQUIRIES.SUBMIT, {
-        name: catalogueForm.name.trim(),
+        name,
         email,
         phone,
         subject: 'Catalogue Request',
@@ -71,6 +89,7 @@ const FloatingWidgets = () => {
       downloadCatalogue();
       setShowCatalogueForm(false);
       setCatalogueForm(EMPTY_FORM);
+      setNameError('');
       setEmailError('');
       window.dispatchEvent(new Event('enquiries_updated'));
       toast.success('Details saved. Catalogue downloaded successfully!');
@@ -101,7 +120,21 @@ const FloatingWidgets = () => {
             <h2>Download Catalogue</h2>
             <p>Share your basic details to access our latest gifting catalogue.</p>
             <form onSubmit={handleCatalogueSubmit} className={styles.catalogueForm} noValidate>
-              <label>Full Name<input required value={catalogueForm.name} onChange={updateField('name')} placeholder="Enter your name" /></label>
+              <label>
+                Full Name
+                <input
+                  required
+                  autoComplete="name"
+                  value={catalogueForm.name}
+                  onChange={updateField('name')}
+                  onBlur={() => setNameError(getFullNameError(catalogueForm.name, true))}
+                  placeholder="Enter your name"
+                  className={nameError ? styles.invalidInput : undefined}
+                  aria-invalid={Boolean(nameError)}
+                  aria-describedby={nameError ? 'floating-catalogue-name-error' : undefined}
+                />
+                {nameError && <span id="floating-catalogue-name-error" className={styles.fieldError} role="alert">{nameError}</span>}
+              </label>
               <label>
                 Email Address
                 <input
@@ -121,7 +154,7 @@ const FloatingWidgets = () => {
               </label>
               <label>Phone Number<input required type="tel" inputMode="numeric" autoComplete="tel" minLength={10} maxLength={10} pattern="[6-9][0-9]{9}" title="Enter a valid 10-digit Indian mobile number" value={catalogueForm.phone} onChange={updateField('phone')} placeholder="e.g. 9876543210" /></label>
               <label>Company Name <span>(Optional)</span><input value={catalogueForm.company} onChange={updateField('company')} placeholder="Enter company name" /></label>
-              <button type="submit" disabled={downloading || Boolean(emailError)}>{downloading ? 'Saving...' : 'Submit & Download'}</button>
+              <button type="submit" disabled={downloading || Boolean(nameError) || Boolean(emailError)}>{downloading ? 'Saving...' : 'Submit & Download'}</button>
             </form>
           </div>
         </div>

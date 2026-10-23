@@ -362,7 +362,7 @@ const CatalogueRequestsSection = ({ enquiriesList = [], handleUpdateEnquiryStatu
             <p style={{ margin: 0, fontWeight: '600' }}>No catalogue requests match the selected filter criteria.</p>
           </div>
         ) : (
-          <table className={styles.ordersTable}>
+          <table className={`${styles.ordersTable} ${styles.dashboardDataTable}`}>
             <thead>
               <tr>
                 <th>Customer / Lead</th>

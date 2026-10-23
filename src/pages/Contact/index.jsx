@@ -361,6 +361,15 @@ const Contact = () => {
     }
   };
 
+  const handleMainFormBlur = (e) => {
+    const { name, value } = e.target;
+    if (name !== 'phone') return;
+    setFormErrors((prev) => ({
+      ...prev,
+      phone: isValidMobile(value) ? '' : MAIN_FORM_ERROR_MESSAGES.phone,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const fullName = formData.fullName.trim();
@@ -383,7 +392,7 @@ const Contact = () => {
       const res = await axiosInstance.post(ENDPOINTS.ENQUIRIES.SUBMIT, {
         name: formData.fullName,
         email: formData.email,
-        phone: formData.phone || 'Not provided',
+        phone: formData.phone,
         subject: formData.subject || formData.inquiryType || 'General Inquiry',
         message: formData.message,
       });
@@ -396,7 +405,7 @@ const Contact = () => {
         displayId: fallbackId,
         name: formData.fullName,
         email: formData.email,
-        phone: formData.phone || 'Not provided',
+        phone: formData.phone,
         subject: formData.subject || formData.inquiryType || 'General Inquiry',
         message: formData.message,
         status: 'New',
@@ -598,6 +607,7 @@ const Contact = () => {
                         inputMode="numeric"
                         value={formData.phone}
                         onChange={handleChange}
+                        onBlur={handleMainFormBlur}
                         aria-invalid={Boolean(formErrors.phone)}
                         aria-describedby={formErrors.phone ? 'contact-phone-error' : undefined}
                       />

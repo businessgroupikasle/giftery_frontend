@@ -38,6 +38,11 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
   const image = getProductThumbnail(product);
 
   const productUrl = ROUTES.PRODUCT_PATH ? ROUTES.PRODUCT_PATH(slug) : `/product/${slug}`;
+  // Preserve the prices shown in the catalogue when opening product details.
+  // List and detail endpoints can briefly disagree after a product update.
+  const productLinkState = {
+    cataloguePricing: { id, slug, price, comparePrice },
+  };
 
   const handleBuyNow = (e) => {
     e.preventDefault();
@@ -71,7 +76,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
   return (
     <article className={`${styles.card} ${viewMode === 'list' ? styles.listCard : ''}`} aria-label={name}>
       <div className={styles.imageWrapper}>
-        <Link to={productUrl} className={styles.imageLink}>
+        <Link to={productUrl} state={productLinkState} className={styles.imageLink}>
           <img
             src={image}
             alt={name}
@@ -104,7 +109,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
       </div>
 
       <div className={styles.body}>
-        <Link to={productUrl} className={styles.name}>{name}</Link>
+        <Link to={productUrl} state={productLinkState} className={styles.name}>{name}</Link>
 
         <div className={styles.rating}>
           <StarRating rating={displayRating} size="sm" />

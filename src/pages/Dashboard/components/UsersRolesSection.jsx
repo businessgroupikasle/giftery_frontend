@@ -158,7 +158,7 @@ const UsersRolesSection = ({
         </div>
 
         <div style={{ overflowX: 'auto', marginTop: '1rem' }}>
-          <table className={styles.ordersTable}>
+          <table className={`${styles.ordersTable} ${styles.dashboardDataTable}`}>
             <thead>
               <tr>
                 <th>Admin User</th>

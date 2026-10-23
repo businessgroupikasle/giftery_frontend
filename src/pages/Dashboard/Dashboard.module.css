@@ -1402,6 +1402,37 @@
   text-align: left;
 }
 
+/* Keep dashboard records readable after the fixed sidebar reduces laptop width. */
+.dashboardDataTable {
+  min-width: 1040px;
+}
+
+.enquiriesTable {
+  min-width: 1180px;
+}
+
+.ordersTable th,
+.ordersTable code,
+.ordersTable a,
+.ordersTable button,
+.ordersTable select,
+.ordersTable .pillStatus,
+.tablePrimaryText,
+.tableNoWrap {
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.tableActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: max-content;
+  white-space: nowrap;
+}
+
 .ordersTable th {
   padding: 0.65rem 0.5rem;
   font-size: 0.72rem;

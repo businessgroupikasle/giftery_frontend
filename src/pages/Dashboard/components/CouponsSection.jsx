@@ -229,7 +229,7 @@ const CouponsSection = ({ initialCoupons, dateFilter, isDateFilterActive = false
         </button>
       </div>
 
-      <table className={styles.ordersTable}>
+      <table className={`${styles.ordersTable} ${styles.dashboardDataTable}`}>
         <thead>
           <tr>
             <th>Coupon Code</th>

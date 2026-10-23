@@ -156,7 +156,7 @@ const EnquiriesSection = ({
         </div>
 
         {/* Table View */}
-        <div style={{ overflowX: 'auto', marginTop: '1rem' }}>
+        <div className={styles.tableWrapper} style={{ marginTop: '1rem' }}>
           {filteredEnquiries.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', background: '#f8fafc', borderRadius: '12px', color: '#64748b' }}>
               <FiHelpCircle style={{ fontSize: '2.5rem', color: '#cbd5e1', marginBottom: '0.5rem' }} />
@@ -164,7 +164,7 @@ const EnquiriesSection = ({
               <span style={{ fontSize: '0.85rem' }}>Try adjusting your search query, status or date filter.</span>
             </div>
           ) : (
-            <table className={styles.ordersTable}>
+            <table className={`${styles.ordersTable} ${styles.enquiriesTable}`}>
               <thead>
                 <tr>
                   <th>Enquiry ID</th>
@@ -189,7 +189,7 @@ const EnquiriesSection = ({
 
                     {/* 2. Customer Name */}
                     <td>
-                      <strong style={{ color: '#0f172a', fontSize: '0.9rem' }}>{e.name}</strong>
+                      <strong className={styles.tablePrimaryText} style={{ color: '#0f172a', fontSize: '0.9rem' }}>{e.name}</strong>
                     </td>
 
                     {/* 3. Email */}
@@ -228,7 +228,7 @@ const EnquiriesSection = ({
 
                     {/* 6. Date */}
                     <td>
-                      <span style={{ fontSize: '0.82rem', color: '#64748b', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <span className={styles.tableNoWrap} style={{ fontSize: '0.82rem', color: '#64748b', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
                         <FiCalendar style={{ color: '#94a3b8' }} />
                         {e.createdAt || e.date || 'Recent'}
                       </span>
@@ -243,7 +243,7 @@ const EnquiriesSection = ({
 
                     {/* 8. Actions */}
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                      <div className={styles.tableActions}>
                         {/* View Details Button */}
                         <button
                           type="button"
