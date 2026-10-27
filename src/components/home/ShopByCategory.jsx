@@ -329,7 +329,7 @@ const ShopByCategory = () => {
                     className={styles.addToCartBtn}
                   >
                     <FiShoppingCart aria-hidden="true" />
-                    Add to Cart
+                    <span>Add to Cart</span>
                   </button>
                 </div>
               </div>

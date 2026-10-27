@@ -32,8 +32,8 @@ const Wishlist = () => {
       itemsMap.set(id, {
         id,
         name: item.name || 'Wishlist Product',
-        price: item.price || 999,
-        comparePrice: item.comparePrice || (item.price ? Math.round(item.price * 1.25) : null),
+        price: Number(item.price ?? 0),
+        comparePrice: item.comparePrice == null ? null : Number(item.comparePrice),
         discount: item.discount || (item.comparePrice ? `${Math.round(((item.comparePrice - item.price) / item.comparePrice) * 100)}% OFF` : null),
         category: item.category?.name || item.categoryName || item.category || 'Giftery Collection',
         image: item.image || item.images?.[0] || '/images/product-placeholder.svg',

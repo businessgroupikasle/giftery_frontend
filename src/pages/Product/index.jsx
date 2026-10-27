@@ -822,7 +822,6 @@ const Product = () => {
           {/* ── 3. TRUST & VALUE BADGES BAR ── */}
           <div className={styles.trustBadgesGrid}>
             <div className={styles.trustItem}>
-              <div className={styles.trustIconCircle}>⭐</div>
               <div>
                 <strong className={styles.trustTitle}>Premium Quality</strong>
                 <p className={styles.trustDesc}>Finest Materials</p>

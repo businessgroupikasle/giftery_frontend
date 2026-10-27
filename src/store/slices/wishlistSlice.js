@@ -26,7 +26,8 @@ const saveWishlistToStorage = (items) => {
 const normalizeWishlistItem = (item) => {
   const p = item.product || {};
   const targetId = String(p.id || item.productId || item.id || `wish-${Date.now()}`);
-  const unitPrice = Number(p.price || item.price || 0);
+  const unitPrice = Number(p.price ?? item.price ?? 0);
+  const comparePriceValue = p.comparePrice ?? item.comparePrice ?? null;
   const img = Array.isArray(p.images)
     ? p.images[0]
     : (p.image || item.image || '/images/product-placeholder.svg');
@@ -36,6 +37,7 @@ const normalizeWishlistItem = (item) => {
     productId: targetId,
     name: p.name || item.name || 'Gift Item',
     price: unitPrice,
+    comparePrice: comparePriceValue === null ? null : Number(comparePriceValue),
     image: img,
     slug: p.slug || item.slug || '',
   };

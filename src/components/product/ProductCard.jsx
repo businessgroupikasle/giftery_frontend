@@ -131,14 +131,14 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
             }}
           >
             <FiShoppingCart aria-hidden="true" />
-            Add to Cart
+            <span>Add to Cart</span>
           </button>
           <button
             className={styles.buyNowBtn}
             onClick={handleBuyNow}
           >
             <FiZap aria-hidden="true" />
-            Buy Now
+            <span>Buy Now</span>
           </button>
         </div>
       </div>

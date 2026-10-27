@@ -31,7 +31,14 @@ const EnquiriesSection = ({
 
   // Filter enquiries based on date range, search term & status filter
   const dateFilteredEnquiries = useMemo(
-    () => (dateFilter === 'all' ? enquiriesList : filterByDateRange(enquiriesList, dateFilter, 'createdAt')),
+    () => {
+      const generalEnquiries = enquiriesList.filter((item) => {
+        const subject = String(item.subject || '').toLowerCase();
+        const message = String(item.message || '').toLowerCase();
+        return item.type !== 'appointment' && !subject.includes('studio appointment') && !message.includes('appointment requested for');
+      });
+      return dateFilter === 'all' ? generalEnquiries : filterByDateRange(generalEnquiries, dateFilter, 'createdAt');
+    },
     [enquiriesList, dateFilter]
   );
   const filteredEnquiries = useMemo(() => dateFilteredEnquiries.filter((e) => {

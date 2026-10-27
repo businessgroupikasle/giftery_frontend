@@ -235,6 +235,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.55rem;
   background: #ffffff;
   color: #d99b26;
   border: 2px solid #f1d59b;
@@ -244,6 +245,17 @@
   font-weight: 800;
   cursor: pointer;
   transition: all 0.25s ease;
+}
+
+.addToCartBtn svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+
+.addToCartBtn span {
+  display: inline-block;
+  line-height: 1;
 }
 
 .addToCartBtn:hover {
@@ -552,7 +564,7 @@
   .addToCartBtn {
     min-height: 34px;
     padding: 0.45rem 0.35rem;
-    gap: 0.3rem;
+    gap: 0.45rem;
     border: 1px solid #d99b26;
     border-radius: 9px;
     background: #d99b26;
@@ -564,7 +576,7 @@
   .addToCartBtn svg {
     width: 13px;
     height: 13px;
-    flex: 0 0 auto;
+    flex: 0 0 13px;
   }
 
   .addToCartBtn:hover {

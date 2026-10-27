@@ -144,7 +144,6 @@ const Footer = () => {
             <ul className={styles.linkList}>
               <li><Link to={ROUTES.HOME}><FaChevronRight className={styles.chevron} /> Home</Link></li>
               <li><Link to={ROUTES.ABOUT}><FaChevronRight className={styles.chevron} /> About Us</Link></li>
-              <li><Link to={ROUTES.SHOP}><FaChevronRight className={styles.chevron} /> Products</Link></li>
               <li><Link to={ROUTES.FAQ || '/faq'}><FaChevronRight className={styles.chevron} /> FAQs</Link></li>
               <li><Link to={ROUTES.CONTACT}><FaChevronRight className={styles.chevron} /> Contact Us</Link></li>
               <li><Link to={ROUTES.TERMS}><FaChevronRight className={styles.chevron} /> Terms &amp; Conditions</Link></li>

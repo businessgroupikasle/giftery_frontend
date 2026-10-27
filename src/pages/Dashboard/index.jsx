@@ -25,6 +25,7 @@ import UsersRolesSection from './components/UsersRolesSection';
 import SettingsSection from './components/SettingsSection';
 import ReportsSection from './components/ReportsSection';
 import CatalogueRequestsSection from './components/CatalogueRequestsSection';
+import AppointmentsSection from './components/AppointmentsSection';
 const ADMIN_ROLES = [
   { id: 'role-1', name: 'SUPER_ADMIN', title: 'Super Admin', badgeColor: '#d99b26', description: 'Full unrestricted system access & store configuration', userCount: 1, permissions: ['Dashboard', 'Products', 'Categories', 'Orders', 'Quotes', 'Customers', 'Enquiries', 'Coupons', 'Users & Roles', 'Settings'] },
   { id: 'role-2', name: 'STORE_ADMIN', title: 'Store Manager', badgeColor: '#2563eb', description: 'Full access to products, categories, orders, quotes & customers', userCount: 1, permissions: ['Dashboard', 'Products', 'Categories', 'Orders', 'Quotes', 'Customers', 'Enquiries', 'Coupons'] },
@@ -553,7 +554,7 @@ const Dashboard = () => {
     const localEnquiries = [...local1, ...local2];
     const map = new Map();
     localEnquiries.forEach(le => map.set(le.id, le));
-    backendEnquiries.forEach(be => map.set(be.id, be));
+    backendEnquiries.forEach(be => map.set(be.id, { ...(map.get(be.id) || {}), ...be }));
 
     const rawList = Array.from(map.values());
     const formattedList = rawList.map((e, index) => ({
@@ -1361,6 +1362,7 @@ const Dashboard = () => {
                 {activeTab === 'corporate-quotes' && 'Corporate Gift Quote Requests'}
                 {activeTab === 'customers' && 'Customers & Registered Users'}
                 {activeTab === 'enquiries' && 'Customer Enquiries & Contact Messages'}
+                {activeTab === 'appointments' && 'Experience Studio Appointments'}
                 {activeTab === 'catalogue-requests' && 'Catalogue Download Requests'}
                 {activeTab === 'coupons' && 'Coupons & Promotional Offers'}
                 {activeTab === 'reports' && 'Store Analytics & Downloadable Reports'}
@@ -1477,7 +1479,7 @@ const Dashboard = () => {
               </button>
 
               {/* Export Excel Button (Hidden on Catalogue Requests and Reports, which have their own export buttons, and on Coupons, which has no export) */}
-              {!['catalogue-requests', 'coupons', 'reports'].includes(activeTab) && (
+              {!['appointments', 'catalogue-requests', 'coupons', 'reports'].includes(activeTab) && (
                 <button
                   className={`${styles.headerActionBtn} ${styles.excelBtn}`}
                   onClick={handleHeaderExport}
@@ -1574,6 +1576,14 @@ const Dashboard = () => {
 
           {activeTab === 'catalogue-requests' && (
             <CatalogueRequestsSection
+              enquiriesList={enquiriesList}
+              handleUpdateEnquiryStatus={handleUpdateEnquiryStatus}
+              handleDeleteEnquiry={handleDeleteEnquiry}
+            />
+          )}
+
+          {activeTab === 'appointments' && (
+            <AppointmentsSection
               enquiriesList={enquiriesList}
               handleUpdateEnquiryStatus={handleUpdateEnquiryStatus}
               handleDeleteEnquiry={handleDeleteEnquiry}

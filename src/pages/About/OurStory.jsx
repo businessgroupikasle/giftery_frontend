@@ -61,7 +61,7 @@ const OurStory = () => {
                 <circle cx="12" cy="10" r="3"></circle>
               </svg>
             </div>
-            <div className={styles.cardHighlight}>PAN India</div>
+            <div className={`${styles.cardHighlight} ${styles.cardHighlightText}`}>PAN INDIA</div>
             <h3 className={styles.cardTitle}>Delivery</h3>
             <p className={styles.cardSubtitle}>Delivering smiles across every pincode</p>
           </div>

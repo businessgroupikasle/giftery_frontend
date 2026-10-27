@@ -187,6 +187,7 @@ const Contact = () => {
   // Book an Appointment Modal State
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [appointmentSubmitted, setAppointmentSubmitted] = useState(false);
+  const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
   const [appointmentErrors, setAppointmentErrors] = useState({ name: '', email: '', phone: '' });
   const [appointmentData, setAppointmentData] = useState({
     name: '',
@@ -288,8 +289,9 @@ const Contact = () => {
     }
   };
 
-  const handleAppointmentSubmit = (e) => {
+  const handleAppointmentSubmit = async (e) => {
     e.preventDefault();
+    if (appointmentSubmitting) return;
     const validationErrors = {
       name: getAppointmentFieldError('name', appointmentData.name, true),
       email: getAppointmentFieldError('email', appointmentData.email, true),
@@ -303,41 +305,55 @@ const Contact = () => {
     }
 
     const stored = JSON.parse(localStorage.getItem('customer_enquiries') || '[]');
-    const readableId = formatEnquiryId(null, new Date(), stored.length);
-
-    const newBooking = {
-      id: readableId,
-      displayId: readableId,
-      name: appointmentData.name,
-      email: appointmentData.email,
-      phone: appointmentData.phone,
+    const payload = {
+      name: appointmentData.name.trim(),
+      email: appointmentData.email.trim(),
+      phone: appointmentData.phone.trim(),
       subject: `Studio Appointment: ${appointmentData.location}`,
       message: `Appointment requested for ${appointmentData.date} at ${appointmentData.timeSlot}. Store: ${appointmentData.location}. Notes: ${appointmentData.notes || 'None'}`,
-      status: 'New',
-      createdAt: new Date().toISOString(),
+      type: 'appointment',
+      appointmentDate: appointmentData.date,
+      appointmentTime: appointmentData.timeSlot,
+      appointmentLocation: appointmentData.location,
+      appointmentNotes: appointmentData.notes.trim(),
     };
 
+    setAppointmentSubmitting(true);
     try {
-      localStorage.setItem('customer_enquiries', JSON.stringify([newBooking, ...stored]));
-      window.dispatchEvent(new Event('enquiries_updated'));
-    } catch (e) { }
+      const res = await axiosInstance.post(ENDPOINTS.ENQUIRIES.SUBMIT, payload);
+      const responseData = res.data?.data || res.data || res;
+      const readableId = formatEnquiryId(responseData?.id, responseData?.createdAt || new Date(), stored.length);
+      const newBooking = {
+        ...payload,
+        ...(responseData && typeof responseData === 'object' ? responseData : {}),
+        id: responseData?.id || readableId,
+        displayId: responseData?.displayId || responseData?.enquiryNumber || readableId,
+        status: responseData?.status || 'New',
+        createdAt: responseData?.createdAt || new Date().toISOString(),
+      };
 
-    setAppointmentSubmitted(true);
-    toast.success('Appointment booked successfully! Our team will confirm your visit.');
-    setTimeout(() => {
-      setShowAppointmentModal(false);
-      setAppointmentSubmitted(false);
-      setAppointmentErrors({ name: '', email: '', phone: '' });
-      setAppointmentData({
-        name: '',
-        email: '',
-        phone: '',
-        date: new Date().toISOString().split('T')[0],
-        timeSlot: '11:00 AM',
-        location: 'Giftery Corporate Gift Store (R.S. Puram, Coimbatore)',
-        notes: '',
-      });
-    }, 2000);
+      localStorage.setItem('customer_enquiries', JSON.stringify([newBooking, ...stored.filter((item) => item.id !== newBooking.id)]));
+      window.dispatchEvent(new Event('enquiries_updated'));
+      setAppointmentSubmitted(true);
+      toast.success('Appointment booked successfully! Our team will confirm your visit.');
+      setTimeout(() => {
+        setShowAppointmentModal(false);
+        setAppointmentSubmitted(false);
+        setAppointmentErrors({ name: '', email: '', phone: '' });
+        setAppointmentData({
+          name: '', email: '', phone: '',
+          date: new Date().toISOString().split('T')[0],
+          timeSlot: '11:00 AM',
+          location: 'Giftery Corporate Gift Store (R.S. Puram, Coimbatore)',
+          notes: '',
+        });
+      }, 2000);
+    } catch (err) {
+      console.error('Appointment booking error:', err);
+      toast.error(err.response?.data?.message || 'Unable to book the appointment. Please try again.');
+    } finally {
+      setAppointmentSubmitting(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -1040,10 +1056,10 @@ const Contact = () => {
 
                 <button
                   type="submit"
-                  disabled={Object.values(appointmentErrors).some(Boolean)}
-                  style={{ marginTop: '0.5rem', background: '#dfa843', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '0.85rem', fontWeight: '800', fontSize: '0.9rem', cursor: Object.values(appointmentErrors).some(Boolean) ? 'not-allowed' : 'pointer', opacity: Object.values(appointmentErrors).some(Boolean) ? 0.6 : 1, boxShadow: '0 4px 12px rgba(223, 168, 67, 0.35)' }}
+                  disabled={appointmentSubmitting || Object.values(appointmentErrors).some(Boolean)}
+                  style={{ marginTop: '0.5rem', background: '#dfa843', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '0.85rem', fontWeight: '800', fontSize: '0.9rem', cursor: appointmentSubmitting || Object.values(appointmentErrors).some(Boolean) ? 'not-allowed' : 'pointer', opacity: appointmentSubmitting || Object.values(appointmentErrors).some(Boolean) ? 0.6 : 1, boxShadow: '0 4px 12px rgba(223, 168, 67, 0.35)' }}
                 >
-                  CONFIRM APPOINTMENT
+                  {appointmentSubmitting ? 'BOOKING APPOINTMENT...' : 'CONFIRM APPOINTMENT'}
                 </button>
               </form>
             )}
