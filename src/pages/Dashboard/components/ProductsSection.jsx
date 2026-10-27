@@ -783,18 +783,6 @@ const ProductsSection = ({
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-                  {/* Col 1 */}
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
-                    <input
-                      type="checkbox"
-                      name="isFeatured"
-                      checked={!!productForm.isFeatured || !!productForm.featured}
-                      onChange={handleProductFormChange}
-                      style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
-                    />
-                    Featured Products
-                  </label>
-
                   {/* Col 2 */}
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
                     <input
@@ -829,18 +817,6 @@ const ProductsSection = ({
                       style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
                     />
                     New Arrivals
-                  </label>
-
-                  {/* Col 2 Row 2 */}
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
-                    <input
-                      type="checkbox"
-                      name="isMostLoved"
-                      checked={!!productForm.isMostLoved}
-                      onChange={handleProductFormChange}
-                      style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#d99b26' }}
-                    />
-                    Most Loved
                   </label>
 
                   {/* Col 3 Row 2 */}

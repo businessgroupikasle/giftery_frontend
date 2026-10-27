@@ -10,13 +10,14 @@ import {
   FiCheckCircle,
   FiClock,
   FiAlertCircle,
+  FiTrash2,
 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import axiosInstance from '@api/axiosInstance';
 import { filterByDateRange, formatCatalogueRequestId } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
 
-const CatalogueRequestsSection = ({ enquiriesList = [], handleUpdateEnquiryStatus }) => {
+const CatalogueRequestsSection = ({ enquiriesList = [], handleUpdateEnquiryStatus, handleDeleteEnquiry }) => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [dateFilter, setDateFilter] = useState('all');
@@ -370,6 +371,7 @@ const CatalogueRequestsSection = ({ enquiriesList = [], handleUpdateEnquiryStatu
                 <th>Company / Requirements</th>
                 <th>Requested Date</th>
                 <th>Status (Click to Update)</th>
+                <th style={{ textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -440,6 +442,19 @@ const CatalogueRequestsSection = ({ enquiriesList = [], handleUpdateEnquiryStatu
                         <option value="In Progress">In Progress</option>
                         <option value="Resolved">Resolved</option>
                       </select>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteEnquiry(
+                          item.id,
+                          formatCatalogueRequestId(item.id, item.createdAt || item.date, index)
+                        )}
+                        title="Delete Catalogue Request"
+                        style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', padding: '0.4rem 0.65rem', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                      >
+                        <FiTrash2 /> Delete
+                      </button>
                     </td>
                   </tr>
                 );

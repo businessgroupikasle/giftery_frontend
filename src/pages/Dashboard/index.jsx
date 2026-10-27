@@ -406,8 +406,8 @@ const Dashboard = () => {
   const [savingProduct, setSavingProduct] = useState(false);
   const [productForm, setProductForm] = useState({
     name: '', description: '', price: '', comparePrice: '', stock: '0',
-    images: '', sku: '', tags: '', featured: false, isFeatured: false, isBestseller: false,
-    isPopular: false, isNewArrival: false, isMostLoved: false, isGiftSet: false,
+    images: '', sku: '', tags: '', isBestseller: false,
+    isPopular: false, isNewArrival: false, isGiftSet: false,
     categoryId: '', subCategoryId: '', isActive: true,
   });
 
@@ -693,12 +693,9 @@ const Dashboard = () => {
       stock: '0',
       images: '',
       sku: '',
-      featured: false,
-      isFeatured: false,
       isBestseller: false,
       isPopular: false,
       isNewArrival: false,
-      isMostLoved: false,
       isGiftSet: false,
       categoryId: '',
       subCategoryId: '',
@@ -770,12 +767,9 @@ const Dashboard = () => {
       stock: product.stock?.toString() || '0',
       images: Array.isArray(product.images) ? product.images.join('|||') : (product.images || ''),
       sku: product.sku || '',
-      featured: Boolean(product.featured || product.isFeatured),
-      isFeatured: Boolean(product.isFeatured || product.featured),
       isBestseller: Boolean(product.isBestseller),
       isPopular: Boolean(product.isPopular),
       isNewArrival: Boolean(product.isNewArrival),
-      isMostLoved: Boolean(product.isMostLoved),
       isGiftSet: Boolean(product.isGiftSet),
       categoryId: resolvedMainId,
       subCategoryId: resolvedSubId,
@@ -834,11 +828,9 @@ const Dashboard = () => {
       ? productForm.tags.split(',').map(s => s.trim()).filter(Boolean)
       : [];
 
-    const isFeaturedVal = Boolean(productForm.isFeatured || productForm.featured);
     const isBestsellerVal = Boolean(productForm.isBestseller);
     const isPopularVal = Boolean(productForm.isPopular);
     const isNewArrivalVal = Boolean(productForm.isNewArrival);
-    const isMostLovedVal = Boolean(productForm.isMostLoved);
     const isGiftSetVal = Boolean(productForm.isGiftSet);
 
     const payload = {
@@ -855,12 +847,9 @@ const Dashboard = () => {
       stock: parseInt(productForm.stock, 10) || 0,
       images: imagesArr,
       sku: productForm.sku ? productForm.sku.trim() : undefined,
-      featured: isFeaturedVal,
-      isFeatured: isFeaturedVal,
       isBestseller: isBestsellerVal,
       isPopular: isPopularVal,
       isNewArrival: isNewArrivalVal,
-      isMostLoved: isMostLovedVal,
       isGiftSet: isGiftSetVal,
       categoryId: productForm.categoryId,
       subCategoryId: productForm.subCategoryId || null,
@@ -1012,6 +1001,22 @@ const Dashboard = () => {
     });
   };
 
+  const handleDeleteEnquiry = (enquiryId, enquiryName) => {
+    setDeleteConfirmModal({
+      type: 'enquiry',
+      id: enquiryId,
+      name: enquiryName,
+    });
+  };
+
+  const handleDeleteOrder = (orderId, orderName) => {
+    setDeleteConfirmModal({
+      type: 'order',
+      id: orderId,
+      name: orderName,
+    });
+  };
+
   const confirmExecuteDelete = async () => {
     if (!deleteConfirmModal) return;
     const { type, id, name } = deleteConfirmModal;
@@ -1048,6 +1053,39 @@ const Dashboard = () => {
       } catch (err) {
         console.warn('Backend API category delete warning:', err.message);
         toast.success(`Category "${name}" removed from store`);
+      }
+    } else if (type === 'enquiry') {
+      try {
+        await axiosInstance.delete(ENDPOINTS.ENQUIRIES.DELETE(id));
+
+        ['customer_enquiries', 'giftery_enquiries'].forEach((key) => {
+          const stored = JSON.parse(localStorage.getItem(key) || '[]');
+          localStorage.setItem(key, JSON.stringify(stored.filter((enquiry) => enquiry.id !== id)));
+        });
+
+        setEnquiriesList(prev => prev.filter(enquiry => enquiry.id !== id));
+        window.dispatchEvent(new Event('enquiries_updated'));
+        toast.success(`Enquiry "${name}" deleted successfully!`);
+      } catch (err) {
+        console.error('Backend API enquiry delete error:', err);
+        const errMsg = err.response?.data?.message || err.message || 'Failed to delete enquiry';
+        toast.error(`Delete Error: ${errMsg}`);
+      }
+    } else if (type === 'order') {
+      try {
+        await axiosInstance.delete(ENDPOINTS.ORDERS.DELETE(id));
+
+        const stored = JSON.parse(localStorage.getItem('giftery_orders') || '[]');
+        const updated = stored.filter((order) => String(order.id || order.orderId) !== String(id));
+        localStorage.setItem('giftery_orders', JSON.stringify(updated));
+
+        setOrdersList(prev => prev.filter(order => String(order.id || order.orderId) !== String(id)));
+        window.dispatchEvent(new Event('orders_updated'));
+        toast.success(`Order "${name}" deleted successfully!`);
+      } catch (err) {
+        console.error('Backend API order delete error:', err);
+        const errMsg = err.response?.data?.message || err.message || 'Failed to delete order';
+        toast.error(`Delete Error: ${errMsg}`);
       }
     }
   };
@@ -1508,6 +1546,7 @@ const Dashboard = () => {
             <OrdersSection
               ordersList={ordersList}
               handleExportOrdersCSV={handleExportOrdersCSV}
+              handleDeleteOrder={handleDeleteOrder}
               onVisibleRecordsChange={setVisibleOrders}
             />
           )}
@@ -1528,6 +1567,7 @@ const Dashboard = () => {
             <EnquiriesSection
               enquiriesList={enquiriesList}
               handleUpdateEnquiryStatus={handleUpdateEnquiryStatus}
+              handleDeleteEnquiry={handleDeleteEnquiry}
               onVisibleRecordsChange={setVisibleEnquiries}
             />
           )}
@@ -1536,6 +1576,7 @@ const Dashboard = () => {
             <CatalogueRequestsSection
               enquiriesList={enquiriesList}
               handleUpdateEnquiryStatus={handleUpdateEnquiryStatus}
+              handleDeleteEnquiry={handleDeleteEnquiry}
             />
           )}
 
@@ -1773,7 +1814,7 @@ const Dashboard = () => {
             </h3>
 
             <p style={{ margin: '0 0 1.6rem 0', fontSize: '0.9rem', color: '#475569', lineHeight: '1.6' }}>
-              Delete <strong style={{ color: '#0f172a' }}>"{deleteConfirmModal.name}"</strong>? This action cannot be undone and will permanently remove this {deleteConfirmModal.type} from the store Catalogue.
+              Delete <strong style={{ color: '#0f172a' }}>"{deleteConfirmModal.name}"</strong>? This action cannot be undone and will permanently remove this {deleteConfirmModal.type}{deleteConfirmModal.type === 'enquiry' ? ' from customer enquiries.' : deleteConfirmModal.type === 'order' ? ' from order records.' : ' from the store Catalogue.'}
             </p>
 
             <div style={{ display: 'flex', gap: '0.85rem', justifyContent: 'center' }}>

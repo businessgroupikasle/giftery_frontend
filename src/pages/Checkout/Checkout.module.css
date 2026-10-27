@@ -279,6 +279,20 @@
   box-shadow: 0 0 0 3px rgba(223, 168, 67, 0.15);
 }
 
+.formInputError,
+.formInputError:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.fieldError {
+  margin-top: 0.35rem;
+  color: #dc2626;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .checkboxRow {
   display: flex;
   align-items: center;

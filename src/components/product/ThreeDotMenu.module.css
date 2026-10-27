@@ -46,16 +46,20 @@
   animation: popupAnimation 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Smaller button for the floating top-of-card menu */
+/* Match the floating wishlist action for a consistent card control stack. */
 .threeDotBtnCompact {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(226, 232, 240, 0.9);
+  color: #64748b;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 }
 
 .threeDotBtnCompact svg {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
 }
 
 /* Opens downward and never wider than the card it sits in (cqw = the card's width) */

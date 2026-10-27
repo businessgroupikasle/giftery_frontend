@@ -235,11 +235,7 @@ const Footer = () => {
           <div className={styles.paymentSection}>
             <span className={styles.weAcceptLabel}>We Accept</span>
             <div className={styles.paymentMethods}>
-              <span className={`${styles.payCard} ${styles.payVisa}`}>VISA</span>
-              <span className={`${styles.payCard} ${styles.payDiscover}`}>DISCOVER</span>
-              <span className={`${styles.payCard} ${styles.payAmex}`}>AMERICAN EXPRESS</span>
-              <span className={`${styles.payCard} ${styles.payMastercard}`}>MasterCard</span>
-              <span className={`${styles.payCard} ${styles.payGiropay}`}>giropay</span>
+              <span className={`${styles.payCard} ${styles.payRazorpay}`}>Razorpay</span>
             </div>
           </div>
         </div>

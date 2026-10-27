@@ -293,33 +293,12 @@
   user-select: none;
 }
 
-.payVisa {
-  background-color: #1a1f71;
+.payRazorpay {
+  background-color: #0b72e7;
   color: #ffffff;
   font-style: italic;
   font-weight: 900;
-}
-
-.payDiscover {
-  background-color: #ffffff;
-  color: #f68121;
-  border: 1px solid #cccccc;
-}
-
-.payAmex {
-  background-color: #006fcf;
-  color: #ffffff;
-}
-
-.payMastercard {
-  background-color: #eb001b;
-  color: #ffffff;
-}
-
-.payGiropay {
-  background-color: #002b66;
-  color: #ffffff;
-  font-style: italic;
+  padding-inline: 12px;
 }
 
 /* ── Responsive Layouts ─────────────────────────────────────── */

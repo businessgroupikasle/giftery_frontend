@@ -1411,6 +1411,79 @@
   min-width: 1180px;
 }
 
+.enquiriesTableViewport {
+  max-height: 610px;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  scrollbar-gutter: stable;
+}
+
+.enquiriesTableViewport .enquiriesTable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #ffffff;
+  box-shadow: 0 1px 0 #e2e8f0;
+}
+
+.enquiriesPaginationBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.enquiriesPaginationSummary {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.enquiriesPagination {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.enquiriesPagination button {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.enquiriesPagination button:hover:not(:disabled) {
+  border-color: #d99b26;
+  color: #b7790b;
+  background: #fffbeb;
+}
+
+.enquiriesPagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.enquiriesPagination .enquiriesPageActive {
+  color: #ffffff;
+  background: #0f172a;
+  border-color: #0f172a;
+}
+
+.enquiriesPageEllipsis {
+  padding: 0 0.2rem;
+  color: #94a3b8;
+}
+
 .ordersTable th,
 .ordersTable code,
 .ordersTable a,

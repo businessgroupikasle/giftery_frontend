@@ -7,23 +7,6 @@ import { ROUTES } from '@constants/routes';
 import { isValidEmail } from '../../utils/validation';
 import styles from './ForgotPassword.module.css';
 
-const GiftLogoSvg = () => (
-  <svg className={styles.brandLogo} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M20 12V36" stroke="url(#forgotGoldGrad)" strokeWidth="2.5" strokeLinecap="round" />
-    <rect x="6" y="17" width="28" height="19" rx="2" stroke="url(#forgotGoldGrad)" strokeWidth="2.2" fill="url(#forgotGoldGrad)" fillOpacity="0.12" />
-    <rect x="4" y="12" width="32" height="5" rx="1.5" fill="url(#forgotGoldGrad)" stroke="url(#forgotGoldGrad)" strokeWidth="1.5" />
-    <path d="M20 12C20 12 16 4 11 4C7.5 4 6 6.5 7 9.5C8 12 20 12 20 12Z" stroke="url(#forgotGoldGrad)" strokeWidth="2" strokeLinejoin="round" fill="url(#forgotGoldGrad)" fillOpacity="0.2" />
-    <path d="M20 12C20 12 24 4 29 4C32.5 4 34 6.5 33 9.5C32 12 20 12 20 12Z" stroke="url(#forgotGoldGrad)" strokeWidth="2" strokeLinejoin="round" fill="url(#forgotGoldGrad)" fillOpacity="0.2" />
-    <defs>
-      <linearGradient id="forgotGoldGrad" x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#F7D58B" />
-        <stop offset="0.5" stopColor="#DFA843" />
-        <stop offset="1" stopColor="#B8832A" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
-
 const extractError = (err, fallback = 'An error occurred. Please try again.') => {
   if (err?.response?.data?.message) {
     return err.response.data.message;
@@ -189,8 +172,14 @@ const ForgotPassword = () => {
 
       <div className={styles.card}>
         <div className={styles.cardHeader}>
-          <GiftLogoSvg />
-          <h1 className={styles.brandTitle}>GIFTERY</h1>
+          <Link to={ROUTES.HOME} className={styles.brandLogoLink} aria-label="Go to Giftery home page">
+            <img
+              src="/images/store-logo-light.png"
+              alt="Giftery"
+              className={styles.brandLogo}
+              onError={(event) => { event.currentTarget.src = '/images/store-logo.png'; }}
+            />
+          </Link>
           <p className={styles.brandSubtitle}>Account Security & Recovery</p>
           <h2 className={styles.sectionTitle}>
             {step === 1 && 'Forgot Password'}

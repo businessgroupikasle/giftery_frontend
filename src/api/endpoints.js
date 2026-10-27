@@ -99,6 +99,7 @@ export const ENDPOINTS = {
     DETAIL: (id) => `/orders/${id}`,
     CREATE: '/orders',
     UPDATE_STATUS: (id) => `/orders/${id}/status`,
+    DELETE: (id) => `/orders/${id}`,
     CANCEL: (id) => `/orders/${id}/cancel`,
     TRACK: (id) => `/orders/${id}/track`,
   },
@@ -174,6 +175,7 @@ export const ENDPOINTS = {
     SUBMIT: '/enquiries',
     LIST: '/enquiries',
     UPDATE_STATUS: (id) => `/enquiries/${id}/status`,
+    DELETE: (id) => `/enquiries/${id}`,
   },
   UPLOADS: {
     SINGLE: '/uploads',

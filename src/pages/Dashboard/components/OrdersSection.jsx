@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { FiShoppingBag, FiMoreVertical, FiEye, FiX, FiSearch, FiFilter } from 'react-icons/fi';
+import { FiShoppingBag, FiMoreVertical, FiEye, FiTrash2, FiX, FiSearch, FiFilter } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import axiosInstance from '@api/axiosInstance';
 import { formatOrderId, filterByDateRange } from '@utils/formatters';
@@ -9,7 +9,7 @@ import DateRangeFilter from './DateRangeFilter';
 
 const INITIAL_ORDERS = [];
 
-const OrdersSection = ({ ordersList = [], onVisibleRecordsChange }) => {
+const OrdersSection = ({ ordersList = [], handleDeleteOrder, onVisibleRecordsChange }) => {
   const [orderFilter, setOrderFilter] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
@@ -306,14 +306,24 @@ const OrdersSection = ({ ordersList = [], onVisibleRecordsChange }) => {
                     </select>
                   </td>
                   <td>
-                    <button
-                      type="button"
-                      className={styles.dotsBtn}
-                      title="View Details"
-                      onClick={() => setSelectedOrder(o)}
-                    >
-                      <FiEye />
-                    </button>
+                    <div className={styles.tableActions}>
+                      <button
+                        type="button"
+                        className={styles.dotsBtn}
+                        title="View Details"
+                        onClick={() => setSelectedOrder(o)}
+                      >
+                        <FiEye />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteOrder(o.id || o.orderId, displayId)}
+                        title="Delete Order"
+                        style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', padding: '0.4rem 0.65rem', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                      >
+                        <FiTrash2 /> Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

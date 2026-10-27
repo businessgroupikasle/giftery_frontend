@@ -8,21 +8,26 @@ import {
   FiEye,
   FiTag,
   FiFilter,
+  FiTrash2,
   FiX,
 } from 'react-icons/fi';
 import { formatEnquiryId, filterByDateRange } from '../../../utils/formatters';
 import styles from '../Dashboard.module.css';
 import DateRangeFilter from './DateRangeFilter';
 
+const ENQUIRIES_PER_PAGE = 10;
+
 const EnquiriesSection = ({
   enquiriesList = [],
   handleUpdateEnquiryStatus,
+  handleDeleteEnquiry,
   onVisibleRecordsChange,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [dateFilter, setDateFilter] = useState('all');
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Filter enquiries based on date range, search term & status filter
   const dateFilteredEnquiries = useMemo(
@@ -48,6 +53,27 @@ const EnquiriesSection = ({
 
     return matchesStatus && matchesSearch;
   }), [dateFilteredEnquiries, statusFilter, searchTerm]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredEnquiries.length / ENQUIRIES_PER_PAGE));
+  const paginatedEnquiries = useMemo(() => {
+    const startIndex = (currentPage - 1) * ENQUIRIES_PER_PAGE;
+    return filteredEnquiries.slice(startIndex, startIndex + ENQUIRIES_PER_PAGE);
+  }, [filteredEnquiries, currentPage]);
+
+  const paginationItems = useMemo(() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
+    if (currentPage <= 4) return [1, 2, 3, 4, 5, 'end-ellipsis', totalPages];
+    if (currentPage >= totalPages - 3) return [1, 'start-ellipsis', ...Array.from({ length: 5 }, (_, index) => totalPages - 4 + index)];
+    return [1, 'start-ellipsis', currentPage - 1, currentPage, currentPage + 1, 'end-ellipsis', totalPages];
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, dateFilter]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   // Let the header Export download exactly the records shown here
   useEffect(() => {
@@ -156,7 +182,7 @@ const EnquiriesSection = ({
         </div>
 
         {/* Table View */}
-        <div className={styles.tableWrapper} style={{ marginTop: '1rem' }}>
+        <div className={`${styles.tableWrapper} ${styles.enquiriesTableViewport}`} style={{ marginTop: '1rem' }}>
           {filteredEnquiries.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', background: '#f8fafc', borderRadius: '12px', color: '#64748b' }}>
               <FiHelpCircle style={{ fontSize: '2.5rem', color: '#cbd5e1', marginBottom: '0.5rem' }} />
@@ -178,12 +204,12 @@ const EnquiriesSection = ({
                 </tr>
               </thead>
               <tbody>
-                {filteredEnquiries.map((e, idx) => (
+                {paginatedEnquiries.map((e, idx) => (
                   <tr key={e.id}>
                     {/* 1. Enquiry ID */}
                     <td>
                       <code style={{ background: '#f1f5f9', color: '#d99b26', padding: '0.25rem 0.55rem', borderRadius: '6px', fontSize: '0.82rem', fontWeight: '800', letterSpacing: '0.5px' }}>
-                        {e.displayId || formatEnquiryId(e.id, e.createdAt, idx)}
+                        {e.displayId || formatEnquiryId(e.id, e.createdAt, (currentPage - 1) * ENQUIRIES_PER_PAGE + idx)}
                       </code>
                     </td>
 
@@ -266,6 +292,15 @@ const EnquiriesSection = ({
                           <FiEye /> View
                         </button>
 
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteEnquiry(e.id, e.displayId || formatEnquiryId(e.id, e.createdAt, (currentPage - 1) * ENQUIRIES_PER_PAGE + idx))}
+                          title="Delete Enquiry"
+                          style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', padding: '0.35rem 0.6rem', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                        >
+                          <FiTrash2 /> Delete
+                        </button>
+
                         {/* Status Change Selector */}
                         <select
                           value={e.status || 'New'}
@@ -293,6 +328,33 @@ const EnquiriesSection = ({
             </table>
           )}
         </div>
+
+        {filteredEnquiries.length > 0 && (
+          <div className={styles.enquiriesPaginationBar}>
+            <span className={styles.enquiriesPaginationSummary}>
+              Showing {(currentPage - 1) * ENQUIRIES_PER_PAGE + 1}–{Math.min(currentPage * ENQUIRIES_PER_PAGE, filteredEnquiries.length)} of {filteredEnquiries.length} enquiries
+            </span>
+            <nav className={styles.enquiriesPagination} aria-label="Enquiries pagination">
+              <button type="button" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={currentPage === 1}>
+                Previous
+              </button>
+              {paginationItems.map((item) => typeof item === 'number' ? (
+                <button
+                  type="button"
+                  key={item}
+                  onClick={() => setCurrentPage(item)}
+                  className={currentPage === item ? styles.enquiriesPageActive : ''}
+                  aria-current={currentPage === item ? 'page' : undefined}
+                >
+                  {item}
+                </button>
+              ) : <span key={item} className={styles.enquiriesPageEllipsis}>…</span>)}
+              <button type="button" onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} disabled={currentPage === totalPages}>
+                Next
+              </button>
+            </nav>
+          </div>
+        )}
       </div>
 
       {/* ── ENQUIRY DETAILS MODAL ── */}
@@ -327,6 +389,8 @@ const EnquiriesSection = ({
             <button
               type="button"
               onClick={() => setSelectedEnquiry(null)}
+              aria-label="Close enquiry details"
+              title="Close"
               style={{
                 position: 'absolute',
                 top: '1.25rem',
@@ -342,9 +406,11 @@ const EnquiriesSection = ({
                 justifyContent: 'center',
                 color: '#64748b',
                 fontWeight: 'bold',
+                fontSize: '1rem',
+                lineHeight: 1,
               }}
             >
-
+              <FiX aria-hidden="true" />
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>

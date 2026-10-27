@@ -10,7 +10,7 @@ import { ROUTES } from '@constants/routes';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { addressService } from '@services/addressService';
-import { isValidMobile, isValidPincode, isValidFullName } from '@utils/validation';
+import { isValidEmail, isValidPincode, isValidFullName } from '@utils/validation';
 import { unwrapApiData } from '@utils/apiResponse';
 import { couponService } from '@services/couponService';
 import useStoreSettings from '@hooks/useStoreSettings';
@@ -60,6 +60,14 @@ const Checkout = () => {
     country: 'India',
     saveAddress: false,
   });
+  const [addressErrors, setAddressErrors] = useState({});
+
+  const validateContactField = (name, value) => {
+    if (name === 'fullName' && !isValidFullName(value)) return 'Please enter a valid full name.';
+    if (name === 'email' && !isValidEmail(value)) return 'Please enter a valid email address.';
+    if (name === 'phone' && !/^\d{10}$/.test(String(value || ''))) return 'Please enter a valid 10-digit mobile number';
+    return '';
+  };
 
   // Fetch saved addresses from Backend on mount or auth change
   useEffect(() => {
@@ -106,6 +114,7 @@ const Checkout = () => {
   }, [isAuthenticated, user?.id]);
 
   const handleSelectSavedAddress = (addr) => {
+    setAddressErrors({});
     setSelectedAddressId(addr.id);
     setAddressForm({
       fullName: addr.fullName || user?.name || '',
@@ -122,6 +131,7 @@ const Checkout = () => {
   };
 
   const handleSelectNewAddress = () => {
+    setAddressErrors({});
     setSelectedAddressId('new');
     setAddressForm({
       fullName: user?.name || '',
@@ -296,9 +306,12 @@ const Checkout = () => {
   const handleAddressChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name === 'phone') {
-      const clean = value.replace(/[^0-9+]/g, '');
-      if (clean.length > 13) return;
+      const clean = value.replace(/[^0-9]/g, '');
+      if (clean.length > 15) return;
       setAddressForm((prev) => ({ ...prev, phone: clean }));
+      if (addressErrors.phone) {
+        setAddressErrors((prev) => ({ ...prev, phone: validateContactField('phone', clean) }));
+      }
       return;
     }
     if (name === 'pincode') {
@@ -311,6 +324,14 @@ const Checkout = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+    if (addressErrors[name] && ['fullName', 'email'].includes(name)) {
+      setAddressErrors((prev) => ({ ...prev, [name]: validateContactField(name, value) }));
+    }
+  };
+
+  const handleContactBlur = (e) => {
+    const { name, value } = e.target;
+    setAddressErrors((prev) => ({ ...prev, [name]: validateContactField(name, value) }));
   };
 
   const handleQtyChange = (id, newQty) => {
@@ -342,16 +363,19 @@ const Checkout = () => {
 
   const goToPayment = (e) => {
     e.preventDefault();
-    if (!addressForm.fullName?.trim() || !addressForm.phone?.trim() || !addressForm.addressLine1?.trim() || !addressForm.city?.trim() || !addressForm.pincode?.trim()) {
+    const contactErrors = {
+      fullName: validateContactField('fullName', addressForm.fullName),
+      email: validateContactField('email', addressForm.email),
+      phone: validateContactField('phone', addressForm.phone),
+    };
+    setAddressErrors(contactErrors);
+
+    if (Object.values(contactErrors).some(Boolean)) {
+      toast.error('Please correct the highlighted contact details.');
+      return;
+    }
+    if (!addressForm.addressLine1?.trim() || !addressForm.city?.trim() || !addressForm.state?.trim() || !addressForm.pincode?.trim()) {
       toast.error('Please complete all required address fields (*)');
-      return;
-    }
-    if (!isValidFullName(addressForm.fullName)) {
-      toast.error('Full Name should allow only valid alphabetic characters and spaces.');
-      return;
-    }
-    if (!isValidMobile(addressForm.phone)) {
-      toast.error('Please enter a valid 10-digit mobile number (e.g. 9876543210 or +91 9876543210)');
       return;
     }
     if (!isValidPincode(addressForm.pincode)) {
@@ -652,7 +676,7 @@ const Checkout = () => {
 
               {/* ── STEP 2: DELIVERY ADDRESSING FORM ── */}
               {currentStep === 2 && (
-                <form onSubmit={goToPayment} className={styles.cardBox}>
+                <form onSubmit={goToPayment} className={styles.cardBox} noValidate>
                   <div className={styles.cardTitleRow}>
                     <h2 className={styles.cardTitle}>2. Delivery Address Information</h2>
                     <span className={styles.stepBadge}>Step 2 of 3</span>
@@ -710,9 +734,13 @@ const Checkout = () => {
                         required
                         value={addressForm.fullName}
                         onChange={handleAddressChange}
+                        onBlur={handleContactBlur}
                         placeholder="John Doe"
-                        className={styles.formInput}
+                        className={`${styles.formInput} ${addressErrors.fullName ? styles.formInputError : ''}`}
+                        aria-invalid={Boolean(addressErrors.fullName)}
+                        aria-describedby={addressErrors.fullName ? 'checkout-full-name-error' : undefined}
                       />
+                      {addressErrors.fullName && <span id="checkout-full-name-error" className={styles.fieldError} role="alert">{addressErrors.fullName}</span>}
                     </div>
 
                     {/* Email */}
@@ -724,9 +752,13 @@ const Checkout = () => {
                         required
                         value={addressForm.email}
                         onChange={handleAddressChange}
+                        onBlur={handleContactBlur}
                         placeholder="john@example.com"
-                        className={styles.formInput}
+                        className={`${styles.formInput} ${addressErrors.email ? styles.formInputError : ''}`}
+                        aria-invalid={Boolean(addressErrors.email)}
+                        aria-describedby={addressErrors.email ? 'checkout-email-error' : undefined}
                       />
+                      {addressErrors.email && <span id="checkout-email-error" className={styles.fieldError} role="alert">{addressErrors.email}</span>}
                     </div>
 
                     {/* Phone Number */}
@@ -736,13 +768,17 @@ const Checkout = () => {
                         type="tel"
                         name="phone"
                         required
-                        maxLength={13}
-                        inputMode="tel"
+                        maxLength={15}
+                        inputMode="numeric"
                         value={addressForm.phone}
                         onChange={handleAddressChange}
+                        onBlur={handleContactBlur}
                         placeholder="9876543210"
-                        className={styles.formInput}
+                        className={`${styles.formInput} ${addressErrors.phone ? styles.formInputError : ''}`}
+                        aria-invalid={Boolean(addressErrors.phone)}
+                        aria-describedby={addressErrors.phone ? 'checkout-phone-error' : undefined}
                       />
+                      {addressErrors.phone && <span id="checkout-phone-error" className={styles.fieldError} role="alert">{addressErrors.phone}</span>}
                     </div>
 
                     {/* Pincode */}

@@ -30,11 +30,9 @@ import styles from './ShopByCategory.module.css';
 
 const filterCategories = [
   { id: 'bestsellers', label: 'Best Sellers' },
-  { id: 'popular', label: 'Popular Products' },
-  { id: 'featured', label: 'Featured Products' },
-  { id: 'new', label: 'New Arrivals' },
-  { id: 'loved', label: 'Most Loved' },
   { id: 'giftsets', label: 'Gift Sets' },
+  { id: 'popular', label: 'Popular Products' },
+  { id: 'new', label: 'New Arrivals' },
 ];
 
 const sampleProducts = [
@@ -131,12 +129,9 @@ const ShopByCategory = () => {
         rating: p.rating ?? null,
         image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : (p.image || '/images/product-placeholder.svg'),
         images: Array.isArray(p.images) ? p.images : [p.image || '/images/product-placeholder.svg'],
-        isFeatured: Boolean(p.featured || p.isFeatured),
-        featured: Boolean(p.featured || p.isFeatured),
         isBestseller: Boolean(p.isBestseller),
         isPopular: Boolean(p.isPopular),
         isNewArrival: Boolean(p.isNewArrival),
-        isMostLoved: Boolean(p.isMostLoved),
         isGiftSet: Boolean(p.isGiftSet),
         tags: Array.isArray(p.tags) ? p.tags : [],
         categoryName: p.category?.name || p.categoryName || '',
@@ -156,11 +151,18 @@ const ShopByCategory = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const autoRotateTimer = window.setTimeout(() => {
+      const currentIndex = filterCategories.findIndex((category) => category.id === activeFilter);
+      const nextIndex = (currentIndex + 1) % filterCategories.length;
+      setActiveFilter(filterCategories[nextIndex].id);
+    }, 4000);
+
+    return () => window.clearTimeout(autoRotateTimer);
+  }, [activeFilter]);
+
   const getFilteredProducts = () => {
     return productsList.filter(product => {
-      if (activeFilter === 'featured') {
-        return Boolean(product.featured || product.isFeatured);
-      }
       if (activeFilter === 'bestsellers') {
         return Boolean(product.isBestseller);
       }
@@ -169,9 +171,6 @@ const ShopByCategory = () => {
       }
       if (activeFilter === 'new') {
         return Boolean(product.isNewArrival);
-      }
-      if (activeFilter === 'loved') {
-        return Boolean(product.isMostLoved);
       }
       if (activeFilter === 'giftsets') {
         return Boolean(product.isGiftSet);
@@ -273,6 +272,7 @@ const ShopByCategory = () => {
                 type="button"
                 onClick={() => setActiveFilter(cat.id)}
                 className={`${styles.filterPill} ${activeFilter === cat.id ? styles.filterPillActive : ''}`}
+                aria-pressed={activeFilter === cat.id}
               >
                 <span>{cat.label}</span>
               </button>
