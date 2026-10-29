@@ -6,12 +6,12 @@ import { ENDPOINTS } from '@api/endpoints';
  */
 export const cartService = {
   getCart: async () => {
-    const res = await axiosInstance.get(ENDPOINTS.CART.GET);
+    const res = await axiosInstance.get(ENDPOINTS.CART.GET, { signal: new AbortController().signal });
     return res.data?.cart || res.cart || res;
   },
 
-  addItem: async ({ productId, quantity = 1 }) => {
-    const res = await axiosInstance.post(ENDPOINTS.CART.ADD, { productId, quantity });
+  addItem: async ({ productId, quantity = 1, customization }) => {
+    const res = await axiosInstance.post(ENDPOINTS.CART.ADD, { productId, quantity, ...(customization ? { customization } : {}) });
     return res.data?.cart || res.cart || res;
   },
 

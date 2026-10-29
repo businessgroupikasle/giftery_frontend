@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FiShoppingCart, FiTrash2, FiX } from 'react-icons/fi';
 import Layout from '@components/layout/Layout';
-import { removeFromCart, updateQuantity, clearCartAsync, addToCart } from '@store/slices/cartSlice';
+import { removeFromCart, updateQuantityAsync, clearCartAsync, addToCart } from '@store/slices/cartSlice';
+import PrivateImage from '@components/PrivateImage';
 import { formatCurrency } from '@utils/formatters';
 import { getImageUrl } from '@utils/imageUrl';
 import { ROUTES } from '@constants/routes';
@@ -42,7 +43,7 @@ const Cart = () => {
   }, []);
 
   const suggestedProducts = useMemo(() => {
-    const cartIds = new Set(cartItems.map((item) => item.id));
+    const cartIds = new Set(cartItems.map((item) => item.productId || item.id));
     return recommendationCatalogue.filter((product) => !cartIds.has(product.id)).slice(0, 6).map((product) => ({
       id: product.id,
       name: product.name,
@@ -131,14 +132,22 @@ const Cart = () => {
   const taxAmount = storeSettings.taxPercentage > 0 ? (taxableAmount * storeSettings.taxPercentage) / 100 : 0;
   const grandTotal = taxableAmount + taxAmount + shippingFee;
 
-  const handleQtyChange = (id, newQty) => {
+  const handleQtyChange = async (id, newQty) => {
     if (newQty < 1) return;
-    dispatch(updateQuantity({ id, quantity: newQty }));
+    try {
+      await dispatch(updateQuantityAsync({ id, quantity: newQty })).unwrap();
+    } catch (error) {
+      toast.error(error || 'Unable to update quantity.');
+    }
   };
 
-  const handleRemoveItem = (id, name) => {
-    dispatch(removeFromCart(id));
-    toast.info(`Removed "${name}" from cart`);
+  const handleRemoveItem = async (id, name) => {
+    try {
+      await dispatch(removeFromCart(id)).unwrap();
+      toast.info(`Removed "${name}" from cart`);
+    } catch (error) {
+      toast.error(error || 'Unable to remove item.');
+    }
   };
 
   const handleClearCart = async () => {
@@ -343,15 +352,17 @@ const Cart = () => {
                           <div className={styles.colProduct}>
                             <div className={styles.productFlex}>
                               <div className={styles.itemImgBox}>
-                                <img
-                                  src={getImageUrl(item.image)}
+                                <PrivateImage
+                                  assetId={item.customization?.previewAssetId}
+                                  customized={Boolean(item.customization)}
+                                  src={item.image}
                                   alt={item.name}
-                                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/product-placeholder.svg'; }}
                                 />
                               </div>
                               <div className={styles.itemDetails}>
                                 <h3 className={styles.itemName}>{item.name}</h3>
                                 {item.variant && <p className={styles.itemVariant}>{item.variant}</p>}
+                                {item.customization && <p className={styles.itemVariant}>Customized product</p>}
                               </div>
                             </div>
                           </div>
@@ -543,10 +554,14 @@ const Cart = () => {
                         <button
                           type="button"
                           className={styles.miniCartBtn}
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            dispatch(addToCart({ id: prod.id, name: prod.name, price: prod.price, image: prod.image, slug: prod.slug }));
-                            toast.success(`Added ${prod.name} to cart`);
+                            try {
+                              await dispatch(addToCart({ id: prod.id, name: prod.name, price: prod.price, image: prod.image, slug: prod.slug })).unwrap();
+                              toast.success(`Added ${prod.name} to cart`);
+                            } catch (error) {
+                              toast.error(error || 'Unable to add item to cart.');
+                            }
                           }}
                           aria-label={`Add ${prod.name} to cart`}
                           title="Add to cart"

@@ -1,6 +1,8 @@
 import { FiDownload, FiPrinter, FiX } from 'react-icons/fi';
 import { formatDate, formatOrderId } from '@utils/formatters';
 import { readStoreSettings } from '@hooks/useStoreSettings';
+import PrivateImage from '@components/PrivateImage';
+import OriginalArtwork from '@components/OriginalArtwork';
 import styles from './InvoiceModal.module.css';
 
 const STATUS_COLORS = {
@@ -51,8 +53,8 @@ const getItemImage = (item) => item.image || item.product?.images?.[0] || item.p
 const getItemMeta = (item) => [
   item.sku || item.product?.sku ? 'SKU: ' + (item.sku || item.product?.sku) : 'Product ID: ' + (item.productId || item.id || item.product?.id || 'N/A'),
   item.variant && item.variant !== 'Standard Edition' ? 'Variant: ' + item.variant : '',
-  item.isCustomized || item.logo || item.customText ? 'Customized product' : '',
-  item.customText ? 'Custom text: ' + item.customText : '',
+  item.isCustomized || item.customization || item.logo || item.customText ? 'Customized product' : '',
+  item.customization?.text?.value || item.customText ? 'Custom text: ' + (item.customization?.text?.value || item.customText) : '',
 ].filter(Boolean);
 
 const addressLines = (address) => [
@@ -67,7 +69,7 @@ const buildInvoiceHtml = (order, user) => {
   const rows = data.items.map((item, index) => {
     const quantity = Number(item.quantity || 1);
     const price = Number(item.price || item.unitPrice || item.product?.price || 0);
-    return `<tr><td>${index + 1}</td><td><strong>${escapeHtml(item.name || item.product?.name || 'Gift Item')}</strong><br><small>${escapeHtml(getItemMeta(item).join(' | '))}</small></td><td class="num">${quantity}</td><td class="num">${escapeHtml(money(price))}</td><td class="num">${escapeHtml(money(price * quantity))}</td></tr>`;
+    return `<tr><td>${index + 1}</td><td><strong>${escapeHtml(item.name || item.product?.name || 'Gift Item')}</strong><br><small>${escapeHtml(getItemMeta(item).join(' | '))}</small>${item.customization ? `<pre style="white-space:pre-wrap;overflow-wrap:anywhere">${escapeHtml(JSON.stringify(item.customization, null, 2))}</pre>` : ''}</td><td class="num">${quantity}</td><td class="num">${escapeHtml(money(price))}</td><td class="num">${escapeHtml(money(price * quantity))}</td></tr>`;
   }).join('');
   const address = addressLines(data.address).map(escapeHtml).join('<br>');
   return `<!doctype html><html><head><meta charset="utf-8"><title>Invoice ${escapeHtml(data.invoiceId)}</title><style>
@@ -116,9 +118,9 @@ const InvoiceModal = ({ order, user, onClose }) => {
       </div>
       <div className={styles.invoice}>
         <header className={styles.header}><div><div className={styles.brand}>{data.settings.storeName || 'GIFTERY'}</div><p>{data.settings.storeTagline || 'Corporate Gifts & Personalised Products'}</p></div><div className={styles.invoiceMeta}><h2 id="invoice-title">Tax Invoice</h2><strong>{data.invoiceId}</strong><span>{formatDate(order.createdAt || new Date())}</span></div></header>
-        <div className={styles.summaryStrip}><div><span>Order Status</span><strong style={{ color: STATUS_COLORS[data.status] }}>{data.status}</strong></div><div><span>Payment Method</span><strong>{data.paymentMethod}</strong></div><div><span>Payment Status</span><strong>{data.paymentStatus}</strong></div></div>
+        <div className={styles.summaryStrip}><div><span>Order Status</span><strong className={styles.statusBadge} style={{ color: STATUS_COLORS[data.status] }}>{data.status}</strong></div><div><span>Payment Method</span><strong>{data.paymentMethod}</strong></div><div><span>Payment Status</span><strong>{data.paymentStatus}</strong></div></div>
         <div className={styles.infoGrid}><div><h3>Bill To</h3><strong>{data.customerName}</strong><span>{data.customerEmail}</span>{data.address.phone && <span>{data.address.phone}</span>}</div><div><h3>Ship To</h3><strong>{data.address.fullName || data.address.name || data.customerName}</strong>{addressLines(data.address).map((line) => <span key={line}>{line}</span>)}</div></div>
-        <div className={styles.tableWrap}><table><thead><tr><th>Product Details</th><th>Unit Price</th><th>Qty</th><th>Line Total</th></tr></thead><tbody>{data.items.length ? data.items.map((item, index) => { const qty = Number(item.quantity || 1); const price = Number(item.price || item.unitPrice || item.product?.price || 0); const meta = getItemMeta(item); return <tr key={item.id || index}><td><div className={styles.productCell}><img src={getItemImage(item)} alt="" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = '/images/product-placeholder.svg'; }} /><div><strong>{item.name || item.product?.name || 'Gift Item'}</strong>{meta.map((detail) => <span key={detail}>{detail}</span>)}</div></div></td><td>{money(price)}</td><td><strong>{qty}</strong></td><td><strong>{money(price * qty)}</strong></td></tr>; }) : <tr><td colSpan="4">No item details available</td></tr>}</tbody></table></div>
+        <div className={styles.tableWrap}><table><thead><tr><th>Product Details</th><th>Unit Price</th><th>Qty</th><th>Line Total</th></tr></thead><tbody>{data.items.length ? data.items.map((item, index) => { const qty = Number(item.quantity || 1); const price = Number(item.price || item.unitPrice || item.product?.price || 0); const meta = getItemMeta(item); return <tr key={item.id || index}><td><div className={styles.productCell}><PrivateImage customized={Boolean(item.customization)} assetId={item.customization?.previewAssetId} src={getItemImage(item)} alt="" /><div><strong>{item.name || item.product?.name || 'Gift Item'}</strong>{meta.map((detail) => <span key={detail}>{detail}</span>)}{item.customization?.imageAssetId && <OriginalArtwork assetId={item.customization.imageAssetId} className={styles.originalArtworkLink} />}{item.customization && <details><summary>Customization details</summary><pre className={styles.customizationPre} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{JSON.stringify(item.customization, null, 2)}</pre></details>}</div></div></td><td>{money(price)}</td><td><strong>{qty}</strong></td><td><strong>{money(price * qty)}</strong></td></tr>; }) : <tr><td colSpan="4">No item details available</td></tr>}</tbody></table></div>
         <div className={styles.bottomGrid}><div className={styles.paymentBox}><h3>Payment Details</h3><span>Method: <strong>{data.paymentMethod}</strong></span><span>Status: <strong>{data.paymentStatus}</strong></span>{data.transactionId && <span>Transaction ID: <strong>{data.transactionId}</strong></span>}</div><div className={styles.totals}><div><span>Subtotal</span><strong>{money(data.subtotal)}</strong></div>{data.discount > 0 && <div className={styles.discount}><span>Discount</span><strong>-{money(data.discount)}</strong></div>}<div><span>Shipping</span><strong>{data.shipping > 0 ? money(data.shipping) : 'FREE'}</strong></div>{data.tax > 0 && <div><span>GST ({data.taxPercentage}%)</span><strong>{money(data.tax)}</strong></div>}<div className={styles.grandTotal}><span>Total Amount</span><strong>{money(data.total)}</strong></div></div></div>
         <p className={styles.note}>This is a computer-generated invoice. {data.settings.storeAddress && <span>{data.settings.storeAddress}</span>} {data.settings.supportEmail && <span>{data.settings.supportEmail}</span>}</p>
       </div>

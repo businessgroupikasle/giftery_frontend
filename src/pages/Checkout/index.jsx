@@ -4,7 +4,9 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FiTrash2, FiX } from 'react-icons/fi';
 import Layout from '@components/layout/Layout';
-import { clearCartAsync, updateQuantity, removeFromCart } from '@store/slices/cartSlice';
+import { confirmCartForCheckout, fetchCartAsync, updateQuantityAsync, removeFromCart } from '@store/slices/cartSlice';
+import { checkoutItems } from '@store/slices/cartSync';
+import PrivateImage from '@components/PrivateImage';
 import { createPublicId, formatCurrency, formatOrderId } from '@utils/formatters';
 import { ROUTES } from '@constants/routes';
 import axiosInstance from '@api/axiosInstance';
@@ -148,9 +150,10 @@ const Checkout = () => {
   };
 
   // Payment State
-  const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay' | 'cod' | 'card'
+  const [paymentMethod, setPaymentMethod] = useState('cod');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
+  const [serverPricing, setServerPricing] = useState(null);
 
   const storeSettings = useStoreSettings();
 
@@ -264,7 +267,9 @@ const Checkout = () => {
 
   // Totals
   const itemCount = cartItems.length;
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 1), 0);
+  const pricingKey = JSON.stringify({ items: cartItems.map(({ id, productId, quantity, price, customization }) => ({ id, productId, quantity, price, customization })), coupon: appliedCoupon?.code || null });
+  const confirmedPricing = serverPricing?.key === pricingKey ? serverPricing.pricing : null;
+  const subtotal = confirmedPricing?.subtotal ?? cartItems.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 1), 0);
 
   let discountAmount = 0;
   if (appliedCoupon) {
@@ -283,12 +288,14 @@ const Checkout = () => {
       discountAmount = Math.min(subtotal, numVal);
     }
   }
+  if (confirmedPricing) discountAmount = confirmedPricing.discountAmount;
 
   const isFreeShipping = subtotal >= storeSettings.freeShippingThreshold;
-  const shippingFee = (isFreeShipping || subtotal === 0) ? 0 : storeSettings.standardShippingFee;
+  const shippingFee = confirmedPricing?.shippingFee ?? ((isFreeShipping || subtotal === 0) ? 0 : storeSettings.standardShippingFee);
+  const taxPercentage = confirmedPricing?.taxPercentage ?? storeSettings.taxPercentage;
   const taxableAmount = Math.max(0, subtotal - discountAmount);
-  const taxAmount = storeSettings.taxPercentage > 0 ? (taxableAmount * storeSettings.taxPercentage) / 100 : 0;
-  const grandTotal = taxableAmount + taxAmount + shippingFee;
+  const taxAmount = confirmedPricing?.taxAmount ?? (taxPercentage > 0 ? (taxableAmount * taxPercentage) / 100 : 0);
+  const grandTotal = confirmedPricing?.totalAmount ?? (taxableAmount + taxAmount + shippingFee);
 
   // Dynamically load Razorpay SDK script
   useEffect(() => {
@@ -334,21 +341,29 @@ const Checkout = () => {
     setAddressErrors((prev) => ({ ...prev, [name]: validateContactField(name, value) }));
   };
 
-  const handleQtyChange = (id, newQty) => {
+  const handleQtyChange = async (id, newQty) => {
     if (newQty < 1) return;
     if (isBuyNow) {
       navigate('/checkout', { state: { buyNowItem: { ...buyNowItem, quantity: newQty } }, replace: true });
     } else {
-      dispatch(updateQuantity({ id, quantity: newQty }));
+      try {
+        await dispatch(updateQuantityAsync({ id, quantity: newQty })).unwrap();
+      } catch (error) {
+        toast.error(error || 'Unable to update quantity.');
+      }
     }
   };
 
-  const handleRemoveItem = (id, name) => {
+  const handleRemoveItem = async (id, name) => {
     if (isBuyNow) {
       navigate(ROUTES.HOME);
     } else {
-      dispatch(removeFromCart(id));
-      toast.info(`Removed "${name}" from cart`);
+      try {
+        await dispatch(removeFromCart(id)).unwrap();
+        toast.info(`Removed "${name}" from cart`);
+      } catch (error) {
+        toast.error(error || 'Unable to remove item.');
+      }
     }
   };
 
@@ -388,7 +403,7 @@ const Checkout = () => {
   // Complete Order Handler (Razorpay or COD)
   const createConfirmedOrder = async (orderData, paymentId = null) => {
     const response = await axiosInstance.post(ENDPOINTS.ORDERS.CREATE, {
-      items: orderData.items,
+      ...checkoutItems(isBuyNow, orderData.items),
       totalAmount: orderData.totalAmount,
       subtotal: orderData.subtotal,
       discountAmount: orderData.discountAmount,
@@ -397,6 +412,7 @@ const Checkout = () => {
       taxAmount: orderData.taxAmount,
       shippingAddress: orderData.shippingAddress,
       paymentMethod: orderData.paymentMethod,
+      couponCode: orderData.couponCode,
       ...(paymentId ? { paymentId } : {}),
     });
     const payload = unwrapApiData(response);
@@ -404,8 +420,24 @@ const Checkout = () => {
   };
 
   const handleCompleteOrder = async () => {
+    if (paymentMethod !== 'cod') {
+      setPaymentError({ title: 'Online Payment Unavailable', message: 'Online payments are temporarily unavailable. Please use Cash on Delivery.', code: 'PAYMENT_UNAVAILABLE' });
+      return;
+    }
     setIsProcessing(true);
     setPaymentError(null);
+
+    if (!isBuyNow) {
+      try {
+        await dispatch(confirmCartForCheckout(cartItems)).unwrap();
+      } catch (error) {
+        const message = typeof error === 'string' ? error : 'Unable to verify your cart.';
+        setIsProcessing(false);
+        setPaymentError({ title: 'Cart Verification Failed', message, code: 'CART_SYNC_FAILED' });
+        toast.error(message);
+        return;
+      }
+    }
 
     const orderData = {
       orderId: createPublicId('ORD'),
@@ -413,7 +445,7 @@ const Checkout = () => {
       subtotal,
       discountAmount,
       shippingFee,
-      taxPercentage: storeSettings.taxPercentage,
+      taxPercentage,
       taxAmount: taxAmount,
       freeShippingThreshold: storeSettings.freeShippingThreshold,
       couponCode: appliedCoupon?.code || null,
@@ -524,6 +556,11 @@ const Checkout = () => {
       toast.success('Order placed successfully!');
     } catch (error) {
       setIsProcessing(false);
+      if (error.errors?.code === 'PRICE_MISMATCH' && error.errors.pricing) {
+        setServerPricing({ key: pricingKey, pricing: error.errors.pricing });
+        setPaymentError({ title: 'Order Total Updated', message: 'The server recalculated your total. Review the updated amount and place the order again.', code: 'PRICE_MISMATCH' });
+        return;
+      }
       const message = error.message || 'The order could not be saved. Please retry.';
       setPaymentError({ title: 'Order Failed', message, code: 'ORDER_CREATE_FAILED' });
       toast.error(message);
@@ -543,13 +580,16 @@ const Checkout = () => {
       customerName: addressForm.fullName || storedUser.name || 'Customer',
       customerEmail: addressForm.email || storedUser.email || '',
       customerPhone: addressForm.phone || '',
+      ownerUserId: user?.id || null,
     };
 
     const existingOrders = JSON.parse(localStorage.getItem('giftery_orders') || '[]');
-    localStorage.setItem(
-      'giftery_orders',
-      JSON.stringify([newPlacedOrder, ...existingOrders.filter((order) => order.id !== newPlacedOrder.id)])
-    );
+    if (newPlacedOrder.ownerUserId) {
+      localStorage.setItem(
+        'giftery_orders',
+        JSON.stringify([newPlacedOrder, ...existingOrders.filter((order) => order.id !== newPlacedOrder.id)])
+      );
+    }
     window.dispatchEvent(new Event('orders_updated'));
 
     if (addressForm.saveAddress && isAuthenticated) {
@@ -572,7 +612,11 @@ const Checkout = () => {
     orderCompletedRef.current = true;
     setOrderCompleted(newPlacedOrder);
     if (!isBuyNow) {
-      await dispatch(clearCartAsync());
+      try {
+        await dispatch(fetchCartAsync()).unwrap();
+      } catch {
+        toast.warning('Order placed, but the cart could not be refreshed.');
+      }
     }
     setIsProcessing(false);
   };
@@ -652,9 +696,10 @@ const Checkout = () => {
                   <div className={styles.cartReviewList}>
                     {cartItems.map((item) => (
                       <div key={item.id} className={styles.cartReviewItem}>
-                        <img src={item.image} alt={item.name} className={styles.cartReviewImg} />
+                        <PrivateImage customized={Boolean(item.customization)} assetId={item.customization?.previewAssetId} src={item.image} alt={item.name} className={styles.cartReviewImg} />
                         <div className={styles.cartReviewInfo}>
                           <h4 className={styles.reviewItemName}>{item.name}</h4>
+                          {item.customization && <span>Customized product</span>}
                           <span className={styles.reviewItemPrice}>₹{item.price?.toLocaleString('en-IN')}.00</span>
                         </div>
                         <div className={styles.qtyStepperMini}>
@@ -891,7 +936,7 @@ const Checkout = () => {
                     {/* Razorpay Option */}
                     <div
                       className={`${styles.paymentMethodCard} ${paymentMethod === 'razorpay' ? styles.activePaymentCard : ''}`}
-                      onClick={() => setPaymentMethod('razorpay')}
+                      aria-disabled="true"
                     >
                       <div className={styles.radioRadio}>
                         {paymentMethod === 'razorpay' && <div className={styles.radioDot} />}
@@ -899,10 +944,10 @@ const Checkout = () => {
                       <div className={styles.paymentCardContent}>
                         <div className={styles.paymentCardTitleRow}>
                           <strong className={styles.paymentCardTitle}>Razorpay Instant Payment</strong>
-                          <span className={styles.recommendedBadge}>RECOMMENDED</span>
+                          <span className={styles.recommendedBadge}>UNAVAILABLE</span>
                         </div>
                         <p className={styles.paymentCardDesc}>
-                          Pay via UPI (GPay, PhonePe, Paytm), Credit/Debit Cards, NetBanking & Wallets securely.
+                          Online payment is temporarily unavailable. Please use Cash on Delivery.
                         </p>
                         <div className={styles.razorpayLogosRow}>
                           <span className={styles.payBadgeIcon}>GPay</span>
@@ -1000,9 +1045,10 @@ const Checkout = () => {
                 <div className={styles.sidebarItemsList}>
                   {cartItems.map((item) => (
                     <div key={item.id} className={styles.sidebarItemRow}>
-                      <img src={item.image} alt={item.name} className={styles.sidebarImg} />
+                      <PrivateImage customized={Boolean(item.customization)} assetId={item.customization?.previewAssetId} src={item.image} alt={item.name} className={styles.sidebarImg} />
                       <div className={styles.sidebarInfo}>
                         <strong className={styles.sidebarItemName}>{item.name}</strong>
+                        {item.customization && <span>Customized product</span>}
                         <span className={styles.sidebarItemQty}>Qty: {item.quantity}</span>
                       </div>
                       <span className={styles.sidebarItemPrice}>₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
@@ -1068,7 +1114,7 @@ const Checkout = () => {
                     </span>
                   </div>
                   <div className={styles.sidebarRow}>
-                    <span>GST ({storeSettings.taxPercentage}%)</span>
+                    <span>GST ({taxPercentage}%)</span>
                     <span>₹{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                   <div className={styles.sidebarDivider} />

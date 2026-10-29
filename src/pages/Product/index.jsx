@@ -16,6 +16,7 @@ import { FiHeart, FiShoppingCart, FiZap } from 'react-icons/fi';
 import { getImageUrl } from '@utils/imageUrl';
 import { trackEcommerce } from '@utils/analytics';
 import styles from './Product.module.css';
+import CustomizationEditor from './CustomizationEditor';
 
 /* ── Fallback Master Products Dataset (for rich Catalogue fallback by slug) ── */
 const MASTER_PRODUCTS = [
@@ -125,7 +126,7 @@ const Product = () => {
   const navigate = useNavigate();
   const { addToWishlist } = useWishlist();
   const requireAuth = useRequireAuth();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -133,7 +134,8 @@ const Product = () => {
   const [selectedImage, setSelectedImage] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [quantityInput, setQuantityInput] = useState('1');
-  const [uploadedLogo, setUploadedLogo] = useState(null);
+  const [editorState, setEditorState] = useState(null);
+  const [adding, setAdding] = useState(false);
   const [activeTab, setActiveTab] = useState('description');
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [showQuoteForm, setShowQuoteForm] = useState(false);
@@ -293,13 +295,15 @@ const Product = () => {
     subcategory = product.subcategory || 'Gifts',
     images,
     specifications = product.specifications || null,
-    customization = product.customization || null,
     shippingReturns = product.shippingReturns || null,
     minOrder = product.minOrder || 1,
     inStock = product.stock !== undefined ? Number(product.stock) > 0 : true,
   } = product;
 
   const maxStock = product.stock !== undefined && product.stock !== null ? Number(product.stock) : 9999;
+  const editorKey = `${id || slug}:${user?.id || 'guest'}`;
+  const editorBlocked = isAuthenticated && (!user?.id || editorState?.editorKey !== editorKey || editorState.blocked);
+  const purchaseDisabled = maxStock <= 0 || editorBlocked || adding;
 
   const getCategoryLink = (catName) => {
     if (!catName) return ROUTES.CORPORATE_GIFTS;
@@ -504,14 +508,6 @@ const Product = () => {
 
   const galleryImages = parseImagesArray(images || product?.image, 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80');
 
-  const handleLogoUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setUploadedLogo(file.name);
-      toast.success(`Uploaded: ${file.name}`);
-    }
-  };
-
   const handleIncreaseQty = () => {
     if (quantity >= maxStock) {
       toast.error(`Only ${maxStock} units available in stock! Cannot add more.`);
@@ -558,8 +554,13 @@ const Product = () => {
     }
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!requireAuth()) return;
+    if (editorBlocked || adding) return;
+    if (editorState?.hasCustomization && !editorState.saved) {
+      toast.error('Save your customization before adding it to the cart.');
+      return;
+    }
     if (maxStock <= 0) {
       toast.error('Sorry, this product is currently out of stock!');
       return;
@@ -567,40 +568,40 @@ const Product = () => {
     if (quantity > maxStock) {
       toast.error(`Only ${maxStock} units available in stock! Adjusted quantity to ${maxStock}.`);
       setQuantity(maxStock);
-      dispatch(addToCart({
-        id: id || slug,
-        name,
-        price,
-        image: selectedImage || galleryImages[0],
-        slug,
-        quantity: maxStock,
-        logo: uploadedLogo,
-        sku: product.sku || '',
-        isCustomized: Boolean(uploadedLogo),
-        customization,
-        maxStock,
-      }));
       return;
     }
-    dispatch(addToCart({
+    const item = {
       id: id || slug,
       name,
       price,
       image: selectedImage || galleryImages[0],
       slug,
       quantity,
-      logo: uploadedLogo,
       sku: product.sku || '',
-      isCustomized: Boolean(uploadedLogo),
-      customization,
+      isCustomized: Boolean(editorState?.hasCustomization),
+      customization: editorState?.hasCustomization ? editorState.design : null,
       maxStock,
-    }));
+    };
+    setAdding(true);
+    try {
+      await dispatch(addToCart(item)).unwrap();
+    } catch (err) {
+      toast.error((typeof err === 'string' ? err : err?.message) || 'Could not add the item to the cart.');
+      return;
+    } finally {
+      setAdding(false);
+    }
     toast.success(`Added ${quantity} x ${name} to Cart!`);
     trackEcommerce.addToCart(product, quantity);
   };
 
   const handleBuyNow = () => {
     if (!requireAuth()) return;
+    if (editorBlocked || adding) return;
+    if (editorState?.hasCustomization && !editorState.saved) {
+      toast.error('Save your customization before continuing.');
+      return;
+    }
     if (maxStock <= 0) {
       toast.error('Sorry, this product is currently out of stock!');
       return;
@@ -614,13 +615,24 @@ const Product = () => {
       image: selectedImage || galleryImages[0] || '/images/product-placeholder.svg',
       slug,
       sku: product.sku || '',
-      variant: product.variant || 'Standard Edition',
-      logo: uploadedLogo,
-      isCustomized: Boolean(uploadedLogo),
-      customization,
+      variant: product.variant,
+      isCustomized: Boolean(editorState?.hasCustomization),
+      customization: editorState?.hasCustomization ? editorState.design : null,
       quantity: quantity > maxStock ? maxStock : (quantity || 1),
     };
     navigate('/checkout', { state: { buyNowItem } });
+  };
+
+  const handleRelatedAdd = async (event, rel) => {
+    event.stopPropagation();
+    if (!requireAuth() || adding) return;
+    setAdding(true);
+    try {
+      await dispatch(addToCart({ id: rel.id, name: rel.name, price: rel.price, image: rel.image, slug: rel.slug })).unwrap();
+      toast.success(`Added ${rel.name}`);
+    } catch (err) {
+      toast.error((typeof err === 'string' ? err : err?.message) || 'Could not add the item to the cart.');
+    } finally { setAdding(false); }
   };
 
   const handleWishlistToggle = () => {
@@ -790,8 +802,8 @@ const Product = () => {
                   type="button"
                   className={styles.addToCartGoldBtn}
                   onClick={handleAddToCart}
-                  disabled={maxStock <= 0}
-                  style={{ opacity: maxStock <= 0 ? 0.6 : 1, cursor: maxStock <= 0 ? 'not-allowed' : 'pointer' }}
+                  disabled={purchaseDisabled}
+                  style={{ opacity: purchaseDisabled ? 0.6 : 1, cursor: purchaseDisabled ? 'not-allowed' : 'pointer' }}
                 >
                   <FiShoppingCart aria-hidden="true" />
                   <span>{maxStock <= 0 ? 'OUT OF STOCK' : 'ADD TO CART'}</span>
@@ -800,12 +812,12 @@ const Product = () => {
                   type="button"
                   className={styles.addToCartGoldBtn}
                   onClick={handleBuyNow}
-                  disabled={maxStock <= 0}
+                  disabled={purchaseDisabled}
                   style={{
                     background: '#1e293b',
                     color: '#ffffff',
-                    opacity: maxStock <= 0 ? 0.6 : 1,
-                    cursor: maxStock <= 0 ? 'not-allowed' : 'pointer',
+                    opacity: purchaseDisabled ? 0.6 : 1,
+                    cursor: purchaseDisabled ? 'not-allowed' : 'pointer',
                   }}
                 >
                   <FiZap aria-hidden="true" />
@@ -818,6 +830,12 @@ const Product = () => {
 
             </div>
           </div>
+
+          {isAuthenticated && user?.id ? (
+            <CustomizationEditor key={editorKey} editorKey={editorKey} productId={id || slug} productImage={selectedImage || galleryImages[0]} onImageChange={setSelectedImage} isAuthenticated={isAuthenticated} requireAuth={requireAuth} onChange={setEditorState} onAddToCart={handleAddToCart} adding={adding} outOfStock={maxStock <= 0} />
+          ) : !isAuthenticated ? (
+            <section className={styles.customizationSignIn}><h2>Customize your gift </h2><p>Sign in to create and save a private design.</p><button type="button" onClick={requireAuth}>Sign in to personalize</button></section>
+          ) : <p role="status">Loading account details before customization...</p>}
 
           {/* ── 3. TRUST & VALUE BADGES BAR ── */}
           <div className={styles.trustBadgesGrid}>
@@ -920,7 +938,7 @@ const Product = () => {
                       <h4 className={styles.relName}>{rel.name}</h4>
                       <div className={styles.relPriceRow}>
                         <span className={styles.relPrice}>₹{rel.price?.toLocaleString('en-IN')}.00</span>
-                        <button type="button" className={styles.miniCartBtn} aria-label={`Add ${rel.name} to cart`} title="Add to cart" onClick={(e) => { e.stopPropagation(); if (!requireAuth()) return; dispatch(addToCart({ id: rel.id, name: rel.name, price: rel.price, image: rel.image, slug: rel.slug })); toast.success(`Added ${rel.name}`); }}>
+                        <button type="button" className={styles.miniCartBtn} aria-label={`Add ${rel.name} to cart`} title="Add to cart" disabled={adding} onClick={(e) => handleRelatedAdd(e, rel)}>
                           <FiShoppingCart aria-hidden="true" />
                         </button>
                       </div>

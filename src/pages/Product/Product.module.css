@@ -126,6 +126,16 @@
   box-shadow: 0 0 0 2px rgba(223, 168, 67, 0.2);
 }
 
+.thumbBtn:hover {
+  transform: translateY(-1px);
+}
+
+.thumbBtn:focus-visible {
+  outline: 3px solid rgba(217, 155, 38, 0.65);
+  outline-offset: 2px;
+  border-color: var(--color-primary);
+}
+
 .mainImageBox {
   flex: 1;
   aspect-ratio: 1 / 1;
@@ -137,6 +147,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: box-shadow var(--transition-base), border-color var(--transition-fast);
 }
 
 .mainImg {
@@ -144,6 +155,15 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
+}
+
+.mainImageBox:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.07);
+  border-color: #cbd5e1;
+}
+
+.mainImageBox:hover .mainImg {
+  transform: scale(1.04);
 }
 
 .wishlistOverlayBtn {
@@ -277,6 +297,10 @@
 .customizationSection {
   margin-bottom: 1.25rem;
 }
+.customizationSignIn { margin-bottom: 1.75rem; padding: 1.5rem; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; }
+.customizationSignIn h2 { margin: 0 0 .5rem; font-size: 1.3rem; }
+.customizationSignIn p { color: #64748b; font-size: .85rem; }
+.customizationSignIn button { padding: .7rem 1rem; border: 0; border-radius: 8px; background: #dfa843; color: #111827; font-weight: 700; cursor: pointer; }
 
 .sectionLabel {
   font-size: 0.85rem;
@@ -379,6 +403,22 @@
   background: #e2e8f0;
 }
 
+.stepperBox button:active:not(:disabled) {
+  background: #cbd5e1;
+  transform: scale(0.96);
+}
+
+.stepperBox button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.stepperBox input:focus-visible {
+  outline: 3px solid rgba(217, 155, 38, 0.65);
+  outline-offset: 2px;
+  border-color: var(--color-primary);
+}
+
 .stepperBox input {
   width: 48px;
   height: 36px;
@@ -435,6 +475,16 @@
   transform: translateY(-1px);
 }
 
+.addToCartGoldBtn:focus-visible {
+  outline: 3px solid rgba(217, 155, 38, 0.65);
+  outline-offset: 2px;
+}
+
+.addToCartGoldBtn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(223, 168, 67, 0.3);
+}
+
 .requestQuoteOutlineBtn {
   flex: 1;
   background: #ffffff;
@@ -452,6 +502,16 @@
 
 .requestQuoteOutlineBtn:hover {
   background: rgba(223, 168, 67, 0.08);
+}
+
+.requestQuoteOutlineBtn:focus-visible {
+  outline: 3px solid rgba(217, 155, 38, 0.65);
+  outline-offset: 2px;
+}
+
+.requestQuoteOutlineBtn:active:not(:disabled) {
+  background: rgba(223, 168, 67, 0.14);
+  transform: scale(0.97);
 }
 
 .quoteOverlay { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 1rem; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(6px); }
@@ -728,6 +788,7 @@
 
 .relCard:hover {
   transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
 }
 
 .relImgBox {

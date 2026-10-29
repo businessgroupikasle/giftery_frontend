@@ -20,7 +20,7 @@ import {
 import { toast } from 'react-toastify';
 import { ROUTES } from '@constants/routes';
 import { useCartContext } from '@context/CartContext';
-import { addItem } from '@store/slices/cartSlice';
+import { addToCart } from '@store/slices/cartSlice';
 import { addToWishlistAlias, removeFromWishlistAlias, selectWishlistItems } from '@store/slices/wishlistSlice';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
@@ -188,7 +188,7 @@ const ShopByCategory = () => {
     });
   };
 
-  const handleAddToCart = (e, product) => {
+  const handleAddToCart = async (e, product) => {
     e.preventDefault();
     e.stopPropagation();
     if (!requireAuth()) return;
@@ -207,9 +207,13 @@ const ShopByCategory = () => {
       quantity: 1,
     };
 
-    dispatch(addItem(cartPayload));
-    if (openCart) openCart();
-    toast.success(` ${product.name} added to cart! Proceed to Checkout!`);
+    try {
+      await dispatch(addToCart(cartPayload)).unwrap();
+      if (openCart) openCart();
+      toast.success(` ${product.name} added to cart! Proceed to Checkout!`);
+    } catch (error) {
+      toast.error(error || 'Unable to add item to cart.');
+    }
   };
 
   const handleToggleWishlist = (product) => {

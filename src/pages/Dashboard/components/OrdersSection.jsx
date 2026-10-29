@@ -162,6 +162,7 @@ const OrdersSection = ({ ordersList = [], handleDeleteOrder, onVisibleRecordsCha
               key={status}
               type="button"
               onClick={() => setOrderFilter(status)}
+              className={styles.filterTab}
               style={{
                 padding: '0.35rem 0.85rem',
                 borderRadius: '20px',
@@ -319,6 +320,7 @@ const OrdersSection = ({ ordersList = [], handleDeleteOrder, onVisibleRecordsCha
                         type="button"
                         onClick={() => handleDeleteOrder(o.id || o.orderId, displayId)}
                         title="Delete Order"
+                        className={styles.deleteBtn}
                         style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', padding: '0.4rem 0.65rem', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
                       >
                         <FiTrash2 /> Delete

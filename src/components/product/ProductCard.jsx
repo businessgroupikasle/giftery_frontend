@@ -124,10 +124,14 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
         <div className={styles.actionsRow}>
           <button
             className={styles.addToCartBtn}
-            onClick={() => {
+            onClick={async () => {
               if (!requireAuth()) return;
-              dispatch(addToCart({ id, name, price, image, slug }));
-              toast.success(`Added "${name}" to cart!`);
+              try {
+                await dispatch(addToCart({ id, name, price, image, slug })).unwrap();
+                toast.success(`Added "${name}" to cart!`);
+              } catch (error) {
+                toast.error(error || 'Unable to add item to cart.');
+              }
             }}
           >
             <FiShoppingCart aria-hidden="true" />

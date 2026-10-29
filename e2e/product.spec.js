@@ -36,6 +36,16 @@ test.describe('Product purchase functionality', () => {
   test('adds the selected quantity to the authenticated cart', async ({ page }) => {
     await seedAuthenticatedUser(page);
     await mockApi(page, { product });
+    let cartItems = [];
+    let addRequest;
+    await page.route('**/api/v1/cart', async (route) => {
+      if (route.request().method() === 'POST') {
+        addRequest = route.request().postDataJSON();
+        cartItems = [{ id: 'cart-item-101', productId: product.id, product, quantity: addRequest.quantity }];
+      }
+      await route.fulfill({ json: { success: true, data: { cart: { items: cartItems } } } });
+    });
+    await page.route('**/api/v1/customizations/drafts/*', (route) => route.fulfill({ json: { success: true, data: null } }));
     await page.goto(`/product/${product.slug}`);
 
     const quantity = page.locator('input[type="number"]').first();
@@ -44,6 +54,7 @@ test.describe('Product purchase functionality', () => {
     await page.getByRole('button', { name: 'ADD TO CART' }).click();
 
     await expect(page.getByText(/Added 2 x Executive Gift Box to Cart!/i)).toBeVisible();
+    expect(addRequest).toEqual({ productId: product.id, quantity: 2 });
     const cart = await page.evaluate(() => JSON.parse(localStorage.getItem('giftery_cart_state')));
     expect(cart.items[0]).toMatchObject({ id: 'product-101', quantity: 2, price: 1200 });
   });

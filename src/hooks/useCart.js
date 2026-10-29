@@ -4,12 +4,10 @@ import {
   selectCartItems,
   selectCartTotal,
   selectCartCount,
-  addItem,
-  removeItem,
-  clearCart,
+  addToCartAsync,
+  removeFromCartAsync,
+  clearCartAsync,
 } from '@store/slices/cartSlice';
-import axiosInstance from '@api/axiosInstance';
-import { ENDPOINTS } from '@api/endpoints';
 
 /**
  * useCart — Cart state and actions
@@ -22,23 +20,15 @@ const useCart = () => {
 
   const addToCart = useCallback(async (product, quantity = 1) => {
     const item = { productId: product.id, product, quantity };
-    dispatch(addItem(item));
-    try {
-      await axiosInstance.post(ENDPOINTS.CART.ADD, { productId: product.id, quantity });
-    } catch {
-      // Optimistic update — rollback on real app if needed
-    }
+    return dispatch(addToCartAsync(item)).unwrap();
   }, [dispatch]);
 
   const removeFromCart = useCallback(async (itemId) => {
-    dispatch(removeItem(itemId));
-    try {
-      await axiosInstance.delete(ENDPOINTS.CART.REMOVE(itemId));
-    } catch { /* silent */ }
+    return dispatch(removeFromCartAsync(itemId)).unwrap();
   }, [dispatch]);
 
   const emptyCart = useCallback(() => {
-    dispatch(clearCart());
+    return dispatch(clearCartAsync()).unwrap();
   }, [dispatch]);
 
   return { items, total, count, addToCart, removeFromCart, emptyCart };

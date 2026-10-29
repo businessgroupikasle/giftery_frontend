@@ -45,17 +45,10 @@ const Orders = () => {
         localOrders = [];
       }
 
-      // Determine current user email
-      const storedUser = JSON.parse(localStorage.getItem('giftery_user') || localStorage.getItem('ec_user') || '{}');
-      const currentUserEmail = (reduxUser?.email || storedUser.email || '').toLowerCase().trim();
-
-      // Filter local orders relevant to this user account
-      const filteredLocal = currentUserEmail
-        ? localOrders.filter((o) => {
-            if (!o.customerEmail) return true;
-            return o.customerEmail.toLowerCase().trim() === currentUserEmail;
-          })
-        : localOrders;
+      // Recipient email is editable and is not proof of order ownership.
+      const filteredLocal = reduxUser?.id
+        ? localOrders.filter((o) => o.ownerUserId && String(o.ownerUserId) === String(reduxUser.id))
+        : [];
 
       // Merge API orders and Local orders uniquely (PostgreSQL DB orders take precedence)
       const mergedMap = new Map();

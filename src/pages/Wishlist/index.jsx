@@ -82,7 +82,12 @@ const Wishlist = () => {
 
 
   const handleAddToCart = async (item) => {
-    dispatch(addToCart({ id: item.id, name: item.name, price: item.price, image: item.image, slug: item.slug }));
+    try {
+      await dispatch(addToCart({ id: item.id, name: item.name, price: item.price, image: item.image, slug: item.slug })).unwrap();
+    } catch (error) {
+      toast.error(error || 'Unable to add item to cart.');
+      return;
+    }
     dispatch(removeFromWishlist(item.id));
 
     try {
