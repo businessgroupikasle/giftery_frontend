@@ -1,0 +1,14 @@
+.page { min-height: 50vh; }
+.title { margin: 0 0 1.25rem; font-size: 1.6rem; color: #0f172a; }
+.empty { color: #64748b; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.card { display: grid; overflow: hidden; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; }
+.thumb { display: block; width: 100%; aspect-ratio: 1; object-fit: contain; background: #f8fafc; }
+.info { display: grid; gap: .25rem; padding: .85rem; font-size: .82rem; min-width: 0; }
+.info strong { color: #0f172a; font-size: .92rem; overflow-wrap: anywhere; }
+.info a { color: #475569; }
+.info small { color: #64748b; }
+.actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .45rem; }
+.actions a, .actions button { min-height: 36px; padding: .35rem .75rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #334155; font: inherit; font-size: .78rem; font-weight: 700; text-decoration: none; cursor: pointer; }
+.actions .primary { border-color: var(--color-primary); background: var(--color-primary); color: #111827; }
+.actions .danger { border-color: #fecaca; color: #b91c1c; }

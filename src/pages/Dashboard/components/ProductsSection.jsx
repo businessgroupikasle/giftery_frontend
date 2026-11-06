@@ -1,4 +1,5 @@
 import BulkImportModal from './BulkImportModal';
+import CustomizationConfigFields from './CustomizationConfigFields';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { FiUpload, FiSearch, FiPlus, FiX } from 'react-icons/fi';
 import axiosInstance from '@api/axiosInstance';
@@ -654,6 +655,12 @@ const ProductsSection = ({
                   style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.85rem', color: '#0f172a', background: '#ffffff', boxSizing: 'border-box', resize: 'vertical' }}
                 />
               </div>
+
+              <CustomizationConfigFields
+                key={editingProduct?.id || 'new-product'}
+                value={productForm.customizationConfig}
+                onChange={(value) => handleProductFormChange({ target: { name: 'customizationConfig', value } })}
+              />
 
               {/* Row 6: Product Tags & Search Keywords */}
               <div>

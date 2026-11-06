@@ -63,7 +63,8 @@ const recalculateCart = (state) => {
 const normalizeCartItem = (item) => {
   const p = item.product || {};
   const targetId = String(p.id || item.productId || item.id || `item-${Date.now()}`);
-  const unitPrice = Number(p.price || item.price || item.salePrice || 0);
+  // The server's line price includes any customization charge for this product.
+  const unitPrice = Number(item.unitPrice ?? (p.price || item.price || item.salePrice || 0));
   const qty = Number(item.quantity) || 1;
   const img = Array.isArray(p.images)
     ? p.images[0]
@@ -74,13 +75,15 @@ const normalizeCartItem = (item) => {
     dbItemId: item.id, // Database CartItem ID if available
     productId: targetId,
     name: p.name || item.name || 'Gift Item',
-    variant: item.variant || 'Standard Edition',
+    variant: item.customization ? '' : (item.variant || 'Standard Edition'),
     price: unitPrice,
     salePrice: unitPrice,
     image: img,
     slug: p.slug || item.slug || '',
     quantity: qty,
     customization: item.customization || null,
+    customizationId: item.customizationId || null,
+    customizationCharge: Number(item.customizationCharge) || 0,
     isCustomized: Boolean(item.customization),
     maxStock: p.stock !== undefined ? Number(p.stock) : (item.maxStock || 9999),
   };
@@ -108,7 +111,7 @@ export const fetchCartAsync = createAsyncThunk('cart/fetchCartAsync', async (_, 
 export const addToCartAsync = createAsyncThunk('cart/addToCartAsync', async (payload, { dispatch, getState, rejectWithValue }) => {
   const token = getToken();
   if (!token) {
-    if (payload.customization) return rejectWithValue('Please sign in to add a customized product.');
+    if (payload.customizationId) return rejectWithValue('Please sign in to add a customized product.');
     dispatch(cartSlice.actions.addItem(payload));
     return;
   }
@@ -116,7 +119,7 @@ export const addToCartAsync = createAsyncThunk('cart/addToCartAsync', async (pay
     return await enqueueCart(async () => {
       if (getToken() !== token || getState().auth.token !== token) throw new Error('Your session changed. Please try again.');
       const revision = getState().cart.revision;
-      const cart = await cartService.addItem({ productId: payload.productId || payload.id || payload.product?.id, quantity: Number(payload.quantity) || 1, customization: payload.customization });
+      const cart = await cartService.addItem({ productId: payload.productId || payload.id || payload.product?.id, quantity: Number(payload.quantity) || 1, customizationId: payload.customizationId });
       if (!Array.isArray(cart?.items)) throw new Error('The cart response did not include items.');
       if (getToken() !== token || getState().auth.token !== token || getState().cart.revision !== revision) throw new Error('Cart changed during the update. Refresh your cart to see the saved result.');
       dispatch(cartSlice.actions.setCart(cart.items));

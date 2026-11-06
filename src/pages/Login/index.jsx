@@ -6,7 +6,6 @@ import {
   FiMail,
   FiLock,
   FiUser,
-  FiPhone,
   FiEye,
   FiEyeOff,
   FiArrowRight,
@@ -20,7 +19,9 @@ import GoogleSignInButton from '@components/auth/GoogleSignInButton';
 import authService from '@services/authService';
 import { ROUTES } from '@constants/routes';
 import { MESSAGES } from '@constants/messages';
-import { isValidEmail, isValidMobile, isValidFullName } from '../../utils/validation';
+import { isValidEmail, isValidFullName } from '../../utils/validation';
+import PhoneInput from '@components/ui/PhoneInput';
+import { DEFAULT_PHONE_COUNTRY, getPhoneError, normalizePhone } from '@utils/phone';
 import styles from './Login.module.css';
 
 const GiftLogoSvg = () => (
@@ -44,6 +45,7 @@ const Login = () => {
   const [authError, setAuthError] = useState('');
   const [nameError, setNameError] = useState('');
   const [phoneError, setPhoneError] = useState('');
+  const [phoneCountry, setPhoneCountry] = useState(DEFAULT_PHONE_COUNTRY);
 
   // Forgot Password Modal State
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -119,9 +121,9 @@ const Login = () => {
     setPhoneError('');
     setActiveTab(tab);
     if (tab === 'login' && location.pathname !== ROUTES.LOGIN) {
-      navigate(ROUTES.LOGIN, { replace: true });
+      navigate(ROUTES.LOGIN, { replace: true, state: location.state });
     } else if (tab === 'register' && location.pathname !== ROUTES.REGISTER) {
-      navigate(ROUTES.REGISTER, { replace: true });
+      navigate(ROUTES.REGISTER, { replace: true, state: location.state });
     }
   };
 
@@ -140,16 +142,13 @@ const Login = () => {
         setNameError('');
       }
     }
-    if (name === 'phone') {
-      if (value && !/^\d*$/.test(value)) {
-        setPhoneError('Phone number should allow only numeric digits (no letters or special characters).');
-      } else if (value && value.length === 10 && !/^[6-9]\d{9}$/.test(value)) {
-        setPhoneError('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
-      } else {
-        setPhoneError('');
-      }
-    }
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhoneChange = ({ country, number }) => {
+    setPhoneCountry(country);
+    setForm((prev) => ({ ...prev, phone: number }));
+    if (phoneError) setPhoneError(getPhoneError(country, number));
   };
 
   const handleNameBlur = () => {
@@ -161,15 +160,7 @@ const Login = () => {
   };
 
   const handlePhoneBlur = () => {
-    if (form.phone) {
-      if (!/^\d+$/.test(form.phone)) {
-        setPhoneError('Phone number should allow only numeric digits (no letters or special characters).');
-      } else if (!isValidMobile(form.phone)) {
-        setPhoneError('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
-      } else {
-        setPhoneError('');
-      }
-    }
+    setPhoneError(getPhoneError(phoneCountry, form.phone));
   };
 
   const handleRequestOTP = async () => {
@@ -186,7 +177,7 @@ const Login = () => {
 
     setSendingOTP(true);
     try {
-      await authService.requestOTP({ email: form.email, name: form.name, phone: form.phone });
+      await authService.requestOTP({ email: form.email, name: form.name, phone: normalizePhone(phoneCountry, form.phone) || undefined });
       setOtpSent(true);
       setOtpVerified(false);
       setOtpSecondsLeft(10 * 60);
@@ -293,24 +284,9 @@ const Login = () => {
           setLoading(false);
           return;
         }
-        if (!form.phone || !form.phone.trim()) {
-          const errorMsg = 'Please enter a valid 10-digit mobile number';
-          setAuthError(errorMsg);
-          setPhoneError(errorMsg);
-          toast.error(errorMsg);
-          setLoading(false);
-          return;
-        }
-        if (!/^\d+$/.test(form.phone)) {
-          const errorMsg = 'Phone number should allow only numeric digits (no letters or special characters).';
-          setAuthError(errorMsg);
-          setPhoneError(errorMsg);
-          toast.error(errorMsg);
-          setLoading(false);
-          return;
-        }
-        if (!isValidMobile(form.phone)) {
-          const errorMsg = 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.';
+        const phoneProblem = getPhoneError(phoneCountry, form.phone, { required: true });
+        if (phoneProblem) {
+          const errorMsg = phoneProblem;
           setAuthError(errorMsg);
           setPhoneError(errorMsg);
           toast.error(errorMsg);
@@ -360,7 +336,7 @@ const Login = () => {
           name: form.name,
           email: form.email,
           password: form.password,
-          phone: form.phone.trim(),
+          phone: normalizePhone(phoneCountry, form.phone),
           otp: form.otp,
         });
 
@@ -369,7 +345,7 @@ const Login = () => {
           customerId: res?.user?.customerId || res?.data?.user?.customerId || createPublicId('CUS'),
           name: form.name.trim(),
           email: form.email.trim(),
-          phone: form.phone.trim(),
+          phone: normalizePhone(phoneCountry, form.phone),
           role: 'CUSTOMER',
           ordersCount: 0,
           totalSpent: 0,
@@ -527,19 +503,18 @@ const Login = () => {
           {/* Mobile Number Field (Register only) */}
           {activeTab === 'register' && (
             <div className={styles.inputGroup}>
-              <label className={styles.inputLabel}>Mobile / Phone Number</label>
-              <div className={styles.inputWrapper}>
-                <span className={styles.inputIcon}><FiPhone /></span>
-                <input
-                  type="tel"
-                  name="phone"
-                  placeholder="e.g. 9876543210"
-                  maxLength={10}
-                  value={form.phone || ''}
-                  onChange={handleChange}
-                  onBlur={handlePhoneBlur}
-                  className={`${styles.inputField} ${phoneError ? styles.inputFieldError : ''}`}
+              <label className={styles.inputLabel} htmlFor="register-phone">Mobile / Phone Number</label>
+              <div className={styles.phoneRow}>
+                <PhoneInput
+                  id="register-phone"
                   required
+                  country={phoneCountry}
+                  value={form.phone || ''}
+                  onChange={handlePhoneChange}
+                  onBlur={handlePhoneBlur}
+                  inputClassName={`${styles.inputField} ${phoneError ? styles.inputFieldError : ''}`}
+                  inputStyle={{ paddingLeft: '0.85rem' }}
+                  invalid={Boolean(phoneError)}
                 />
               </div>
               {phoneError && (

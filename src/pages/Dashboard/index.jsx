@@ -17,6 +17,7 @@ import DashboardOverview from './components/DashboardOverview';
 import ProductsSection from './components/ProductsSection';
 import CategoriesSection from './components/CategoriesSection';
 import OrdersSection from './components/OrdersSection';
+import CustomizationsSection from './components/CustomizationsSection';
 import CorporateQuotesSection from './components/CorporateQuotesSection';
 import CustomersSection from './components/CustomersSection';
 import EnquiriesSection from './components/EnquiriesSection';
@@ -530,6 +531,8 @@ const Dashboard = () => {
         amount: `₹${totalNum.toLocaleString('en-IN')}`,
         rawAmount: totalNum,
         status: statusStr,
+        paymentMethod: String(o.paymentMethod || o.payment?.method || 'COD').toUpperCase(),
+        paymentStatus: String(o.paymentStatus || o.payment?.status || 'PENDING').toUpperCase() === 'SUCCEEDED' ? 'PAID' : String(o.paymentStatus || o.payment?.status || 'PENDING').toUpperCase(),
         shippingAddress: o.shippingAddress || null,
       };
     });
@@ -685,6 +688,7 @@ const Dashboard = () => {
       description: '',
       specifications: '',
       customization: '',
+      customizationConfig: null,
       shippingReturns: '',
       tags: '',
       rating: '4.8',
@@ -759,6 +763,7 @@ const Dashboard = () => {
       description: product.description || '',
       specifications: typeof product.specifications === 'object' ? JSON.stringify(product.specifications, null, 2) : (product.specifications || ''),
       customization: product.customization || '',
+      customizationConfig: product.customizationConfig || null,
       shippingReturns: product.shippingReturns || '',
       tags: Array.isArray(product.tags) ? product.tags.join(', ') : (product.tags || ''),
       rating: product.rating?.toString() || '4.8',
@@ -839,6 +844,7 @@ const Dashboard = () => {
       description: productForm.description ? productForm.description.trim() : productForm.name.trim(),
       specifications: productForm.specifications || undefined,
       customization: productForm.customization || undefined,
+      ...(productForm.customizationConfig ? { customizationConfig: productForm.customizationConfig } : {}),
       shippingReturns: productForm.shippingReturns || undefined,
       tags: tagsArr,
       rating: parseFloat(productForm.rating) || 4.8,
@@ -1359,6 +1365,7 @@ const Dashboard = () => {
                 {activeTab === 'products' && 'Products Management'}
                 {activeTab === 'categories' && 'Categories Management'}
                 {activeTab === 'orders' && 'Orders Management'}
+                {activeTab === 'customizations' && 'Customized Products'}
                 {activeTab === 'corporate-quotes' && 'Corporate Gift Quote Requests'}
                 {activeTab === 'customers' && 'Customers & Registered Users'}
                 {activeTab === 'enquiries' && 'Customer Enquiries & Contact Messages'}
@@ -1479,7 +1486,7 @@ const Dashboard = () => {
               </button>
 
               {/* Export Excel Button (Hidden on Catalogue Requests and Reports, which have their own export buttons, and on Coupons, which has no export) */}
-              {!['appointments', 'catalogue-requests', 'coupons', 'reports'].includes(activeTab) && (
+              {!['appointments', 'catalogue-requests', 'coupons', 'reports', 'customizations'].includes(activeTab) && (
                 <button
                   className={`${styles.headerActionBtn} ${styles.excelBtn}`}
                   onClick={handleHeaderExport}
@@ -1552,6 +1559,8 @@ const Dashboard = () => {
               onVisibleRecordsChange={setVisibleOrders}
             />
           )}
+
+          {activeTab === 'customizations' && <CustomizationsSection />}
 
           {activeTab === 'customers' && (
             <CustomersSection

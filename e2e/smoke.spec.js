@@ -51,15 +51,18 @@ test.describe('Application smoke and routing', () => {
     await expect(page.getByRole('button', { name: 'Submit & Download' })).toBeDisabled();
   });
 
-  test('contact form requires a valid phone number', async ({ page }) => {
+  test('contact form phone number is optional but must be valid when entered', async ({ page }) => {
     await page.goto('/contact');
 
-    const phone = page.getByPlaceholder('10-digit Mobile Number *');
-    await expect(phone).toHaveAttribute('required', '');
+    const phone = page.getByPlaceholder('Mobile Number (optional)');
+    await expect(phone).not.toHaveAttribute('required', '');
     await phone.focus();
     await phone.blur();
+    await expect(page.getByText(/valid mobile number/)).toHaveCount(0);
 
-    await expect(page.getByText('Please enter a valid 10-digit mobile number', { exact: true })).toBeVisible();
+    await phone.fill('123');
+    await phone.blur();
+    await expect(page.getByText('Please enter a valid mobile number for India (+91).', { exact: true })).toBeVisible();
     await expect(phone).toHaveAttribute('aria-invalid', 'true');
   });
 });

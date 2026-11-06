@@ -10,8 +10,8 @@ export const cartService = {
     return res.data?.cart || res.cart || res;
   },
 
-  addItem: async ({ productId, quantity = 1, customization }) => {
-    const res = await axiosInstance.post(ENDPOINTS.CART.ADD, { productId, quantity, ...(customization ? { customization } : {}) });
+  addItem: async ({ productId, quantity = 1, customizationId }) => {
+    const res = await axiosInstance.post(ENDPOINTS.CART.ADD, { productId, quantity, ...(customizationId ? { customizationId } : {}) });
     return res.data?.cart || res.cart || res;
   },
 

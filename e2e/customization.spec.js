@@ -1,109 +1,131 @@
+// Mock-API UI checks that run without a backend. The full flow is in customization-live.spec.js.
+import { Buffer } from 'node:buffer';
 import { test, expect } from '@playwright/test';
 import { mockApi, seedAuthenticatedUser } from './helpers/app.js';
 
+const images = ['/images/about_hero_gift_set.png', '/images/product-placeholder.svg'];
 const product = {
   id: 'product-101', slug: 'custom-gift', name: 'Custom Gift', price: 1200,
-  stock: 10, minOrder: 1, images: ['/images/about_hero_gift_set.png'],
+  stock: 10, minOrder: 1, images,
   category: { id: 'cat-1', name: 'Corporate Gifts', slug: 'corporate-gifts' },
 };
+const emptyDesigns = { success: true, data: { data: [], meta: {} } };
 
-test('mobile editor keeps the product mockup and text overlay within the viewport', async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 812 });
-  await seedAuthenticatedUser(page);
+const mockStudio = async (page, overrides = {}) => {
+  await page.route('**/api/v1/customizations/**', async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    const method = route.request().method();
+    if (overrides[path]) { await overrides[path](route); return; }
+    if (path.endsWith('/customizations/assets')) { await route.fulfill({ json: { success: true, data: [] } }); return; }
+    if (path.endsWith('/customizations/designs') && method === 'GET') { await route.fulfill({ json: emptyDesigns }); return; }
+    if (path.endsWith('/customizations/designs') && method === 'POST') {
+      const body = route.request().postDataJSON();
+      await route.fulfill({ status: 201, json: { success: true, data: { id: 'design-1', revision: 1, status: 'DRAFT', ...body } } });
+      return;
+    }
+    await route.fulfill({ status: 404, json: { message: 'Not found' } });
+  });
+};
+
+test('guests see the entry point and are sent to sign in, not the editor', async ({ page }) => {
   await mockApi(page, { product });
-  await page.route('**/api/v1/customizations/drafts/**', (route) => route.fulfill({ json: { data: null } }));
   await page.goto(`/product/${product.slug}`);
-
-  const editor = page.getByRole('region', { name: 'Customize your gift ' });
-  const mockup = editor.getByAltText('Selected product mockup');
-  await expect(mockup).toHaveAttribute('src', product.images[0]);
-  await expect.poll(() => mockup.evaluate((img) => img.naturalWidth)).toBeGreaterThan(0);
-  await editor.getByLabel('Personalized text').fill('Mobile gift');
-  const overlay = editor.getByText('Mobile gift', { exact: true });
-  await expect(overlay).toBeVisible();
-  await overlay.scrollIntoViewIfNeeded();
-
-  const imageBox = await mockup.boundingBox();
-  const overlayBox = await overlay.boundingBox();
-  expect(overlayBox.x).toBeGreaterThanOrEqual(imageBox.x);
-  expect(overlayBox.x + overlayBox.width).toBeLessThanOrEqual(imageBox.x + imageBox.width);
-  expect(overlayBox.y).toBeGreaterThanOrEqual(imageBox.y);
-  expect(overlayBox.y + overlayBox.height).toBeLessThanOrEqual(imageBox.y + imageBox.height);
-
-  for (const element of [editor, mockup, editor.getByLabel('Personalized text'), editor.getByRole('button', { name: 'Save draft' })]) {
-    const box = await element.boundingBox();
-    expect(box.x).toBeGreaterThanOrEqual(0);
-    expect(box.x + box.width).toBeLessThanOrEqual(375);
-  }
+  await expect(page.getByRole('heading', { name: 'Customize This Product' })).toBeVisible();
+  await expect(page.getByLabel('Your text')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Start Customizing' }).click();
+  await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByTestId('design-stage')).toHaveCount(0);
 });
 
-test('uploads artwork, saves and restores a positioned design, and sends it to cart', async ({ page }) => {
+test('guests opening a studio link directly are sent to sign in', async ({ page }) => {
+  await mockApi(page, { product });
+  await page.goto(`/customize/${product.slug}?design=someone-elses-design`);
+  await expect(page).toHaveURL(/\/login/);
+});
+
+test('ordinary purchasing does not depend on the customization service', async ({ page }) => {
   await seedAuthenticatedUser(page);
   await mockApi(page, { product });
-
-  let draft = null;
-  let cartPayload;
-  const requests = [];
-  let uploads = 0;
-  await page.route('**/api/v1/customizations/**', async (route) => {
-    const request = route.request();
-    const path = new URL(request.url()).pathname;
-    requests.push({ method: request.method(), path, authorization: request.headers().authorization });
-    if (path.endsWith('/assets') && request.method() === 'POST') {
-      uploads += 1;
-      expect(request.headers()['content-type']).toContain('multipart/form-data');
-      await route.fulfill({ json: { data: { id: uploads === 1 ? 'artwork-1' : 'preview-1' } } });
-    } else if (path.endsWith('/assets/artwork-1')) {
-      await route.fulfill({ path: 'public/images/about_hero_gift_set.png', contentType: 'image/png' });
-    } else if (path.endsWith(`/drafts/${product.id}`) && request.method() === 'PUT') {
-      draft = request.postDataJSON().design;
-      await route.fulfill({ json: { data: { design: draft } } });
-    } else if (path.endsWith(`/drafts/${product.id}`)) {
-      await route.fulfill({ json: { data: draft ? { design: draft } : null } });
-    } else {
-      await route.fulfill({ status: 404, json: { message: 'Unexpected customization request' } });
-    }
-  });
-  await page.route('**/api/v1/cart', async (route) => {
-    if (route.request().method() === 'POST') {
-      cartPayload = route.request().postDataJSON();
-      requests.push({ method: 'POST', path: '/cart', authorization: route.request().headers().authorization });
-      await route.fulfill({ json: { data: { cart: { items: [{ id: 'line-1', product, quantity: cartPayload.quantity, customization: cartPayload.customization }] } } } });
-    } else {
-      await route.fulfill({ json: { data: { cart: { items: [] } } } });
-    }
-  });
-
+  await page.route('**/api/v1/customizations/**', (route) => route.fulfill({ status: 500, json: { message: 'Unavailable' } }));
   await page.goto(`/product/${product.slug}`);
-  const editor = page.getByRole('region', { name: 'Customize your gift ' });
-  await expect(editor.getByAltText('Selected product mockup')).toHaveAttribute('src', product.images[0]);
-  await expect(editor.getByAltText('Selected product mockup')).toHaveJSProperty('complete', true);
-  expect(await editor.getByAltText('Selected product mockup').evaluate((img) => img.naturalWidth)).toBeGreaterThan(0);
-  await editor.locator('input[type=file]').setInputFiles('public/images/about_hero_gift_set.png');
-  await expect(editor.getByAltText('Your artwork')).toBeVisible();
-  await editor.getByLabel(/Horizontal position/).fill('35');
-  await editor.getByLabel('Personalized text').fill('Happy birthday');
-  await expect(editor.getByRole('button', { name: 'Add saved design to cart' })).toBeDisabled();
-  await editor.getByRole('button', { name: 'Text', exact: true }).click();
-  await editor.getByLabel(/Vertical position/).fill('75');
-  await expect(editor.getByText('Happy birthday', { exact: true })).toHaveCSS('top', /px/);
+  await expect(page.getByRole('button', { name: 'ADD TO CART' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'BUY NOW' })).toBeEnabled();
+  await page.getByRole('button', { name: 'BUY NOW' }).click();
+  await expect(page).toHaveURL(/\/checkout/);
+});
 
-  await page.getByRole('button', { name: 'ADD TO CART' }).click();
-  await expect(page.getByText('Save your customization before adding it to the cart.')).toBeVisible();
-  expect(cartPayload).toBeUndefined();
-  await editor.getByRole('button', { name: 'Save draft' }).click();
-  await expect(editor.getByRole('status')).toHaveText('Draft saved.');
-  expect(draft).toMatchObject({ productImage: product.images[0], imageAssetId: 'artwork-1', previewAssetId: 'preview-1', image: { x: 35 }, text: { value: 'Happy birthday', y: 75 } });
-  expect(uploads).toBe(2);
+test('products with customization turned off show no entry point', async ({ page }) => {
+  await mockApi(page, { product: { ...product, customizationConfig: { enabled: false } } });
+  await page.goto(`/product/${product.slug}`);
+  await expect(page.getByRole('heading', { name: product.name })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start Customizing' })).toHaveCount(0);
+});
 
-  await page.reload();
-  await expect(editor.getByRole('status')).toHaveText('Saved draft restored.');
-  await expect(editor.getByLabel('Personalized text')).toHaveValue('Happy birthday');
-  await expect(editor.getByAltText('Your artwork')).toBeVisible();
-  await expect(editor.getByLabel(/Vertical position/)).toHaveValue('75');
-  await editor.getByRole('button', { name: 'Add saved design to cart' }).click();
-  await expect.poll(() => cartPayload).toMatchObject({ productId: product.id, quantity: 1, customization: draft });
-  await expect(page.getByText(/Added 1 x Custom Gift to Cart!/)).toBeVisible();
-  expect(requests.length).toBeGreaterThan(4);
-  expect(requests.every((request) => request.authorization === 'Bearer test-access-token')).toBe(true);
+test('the editor stays within a phone screen and keeps the mockup notice visible', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAuthenticatedUser(page);
+  await mockApi(page, { product });
+  await mockStudio(page);
+  await page.goto(`/customize/${product.slug}?step=text`);
+  await page.getByRole('button', { name: '+ Name' }).click();
+  await expect(page.locator('[data-element-type="text"]')).toBeVisible();
+  await expect(page.getByText(/Visual mockup only/)).toBeVisible();
+  const stage = await page.getByTestId('design-stage').boundingBox();
+  expect(stage.x).toBeGreaterThanOrEqual(0);
+  expect(stage.x + stage.width).toBeLessThanOrEqual(390);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test('fonts apply on the mockup and undo restores the previous one', async ({ page }) => {
+  await seedAuthenticatedUser(page);
+  await mockApi(page, { product });
+  await mockStudio(page);
+  await page.goto(`/customize/${product.slug}?step=text`);
+  await page.getByRole('button', { name: '+ Name' }).click();
+  const text = page.locator('[data-element-type="text"] div div');
+  await page.locator('[data-testid="properties-panel"] select').selectOption('Georgia');
+  await expect(text).toHaveCSS('font-family', /Georgia/);
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(text).toHaveCSS('font-family', /Montserrat/);
+  await page.getByRole('button', { name: 'Redo' }).click();
+  await expect(text).toHaveCSS('font-family', /Georgia/);
+});
+
+test('autosave failures are reported and the work stays on screen', async ({ page }) => {
+  await seedAuthenticatedUser(page);
+  await mockApi(page, { product });
+  await mockStudio(page, { '/api/v1/customizations/designs': (route) => (route.request().method() === 'POST'
+    ? route.fulfill({ status: 500, json: { message: 'Could not store the design' } })
+    : route.fulfill({ json: emptyDesigns })) });
+  await page.goto(`/customize/${product.slug}?step=text`);
+  await page.getByRole('button', { name: '+ Name' }).click();
+  await expect(page.getByTestId('save-status')).toHaveText(/Could not save/);
+  await expect(page.getByText('Could not store the design').first()).toBeVisible();
+  await expect(page.locator('[data-element-type="text"]')).toBeVisible();
+});
+
+test('a design from elsewhere that cannot be loaded shows a recoverable message', async ({ page }) => {
+  await seedAuthenticatedUser(page);
+  await mockApi(page, { product });
+  await mockStudio(page);
+  await page.goto(`/customize/${product.slug}?design=missing`);
+  await expect(page.getByRole('alert')).toContainText('could not be found');
+  await expect(page.getByRole('link', { name: 'Back to product' })).toBeVisible();
+  await expect(page.getByTestId('design-stage')).toHaveCount(0);
+});
+
+test('unsupported files are rejected before upload', async ({ page }) => {
+  await seedAuthenticatedUser(page);
+  await mockApi(page, { product });
+  let uploads = 0;
+  await mockStudio(page, { '/api/v1/customizations/assets': (route) => {
+    if (route.request().method() === 'POST') uploads += 1;
+    return route.fulfill({ json: { success: true, data: [] } });
+  } });
+  await page.goto(`/customize/${product.slug}?step=logo`);
+  await page.getByLabel('Choose logos or drag them here').setInputFiles({ name: 'notes.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF') });
+  await expect(page.getByText(/choose a PNG, JPG, JPEG or SVG file/)).toBeVisible();
+  await page.getByLabel('Choose logos or drag them here').setInputFiles({ name: 'huge.png', mimeType: 'image/png', buffer: Buffer.alloc(5 * 1024 * 1024 + 1) });
+  await expect(page.getByText(/must be 5 MB or smaller/)).toBeVisible();
+  expect(uploads).toBe(0);
 });

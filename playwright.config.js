@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: 'customization-live.spec.js', // needs the real API: see playwright.live.config.js
   outputDir: './test-results/artifacts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

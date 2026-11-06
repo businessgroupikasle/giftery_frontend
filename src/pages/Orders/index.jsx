@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import Layout from '@components/layout/Layout';
+import PrivateImage from '@components/PrivateImage';
 import useFetch from '@hooks/useFetch';
 import { ENDPOINTS } from '@api/endpoints';
 import { formatDate, formatOrderId } from '@utils/formatters';
 import styles from './Orders.module.css';
 import InvoiceModal from './InvoiceModal';
+import { CustomizationStatus } from '@components/customization/CustomizationDetails';
 
-const STATUS_COLORS = {
-  PENDING: '#f59e0b',
-  CONFIRMED: '#3b82f6',
-  PROCESSING: '#8b5cf6',
-  SHIPPED: '#06b6d4',
-  DELIVERED: '#10b981',
-  CANCELLED: '#ef4444',
-  REFUNDED: '#6b7280',
+const STATUS_COPY = {
+  PENDING: 'Order placed',
+  CONFIRMED: 'Order confirmed',
+  PROCESSING: 'Preparing your order',
+  SHIPPED: 'Your order is on the way',
+  DELIVERED: 'Your item has been delivered',
+  CANCELLED: 'This order was cancelled',
+  REFUNDED: 'This order was refunded',
 };
 
 const Orders = () => {
@@ -26,7 +28,6 @@ const Orders = () => {
 
   useEffect(() => {
     const loadOrders = () => {
-      // Unpack nested API data structure safely
       const apiOrders = Array.isArray(data?.data?.data)
         ? data.data.data
         : (Array.isArray(data?.data?.orders)
@@ -37,58 +38,45 @@ const Orders = () => {
               ? data.orders
               : (Array.isArray(data) ? data : []))));
 
-      // Retrieve local orders saved during checkout
       let localOrders = [];
       try {
         localOrders = JSON.parse(localStorage.getItem('giftery_orders') || '[]');
-      } catch (e) {
+      } catch {
         localOrders = [];
       }
 
-      // Recipient email is editable and is not proof of order ownership.
       const filteredLocal = reduxUser?.id
-        ? localOrders.filter((o) => o.ownerUserId && String(o.ownerUserId) === String(reduxUser.id))
+        ? localOrders.filter((order) => order.ownerUserId && String(order.ownerUserId) === String(reduxUser.id))
         : [];
-
-      // Merge API orders and Local orders uniquely (PostgreSQL DB orders take precedence)
       const mergedMap = new Map();
 
-      // 1. Add local orders
-      filteredLocal.forEach((o) => {
-        const idKey = String(o.id || o.orderId || '');
-        if (idKey) mergedMap.set(idKey, o);
+      filteredLocal.forEach((order) => {
+        const idKey = String(order.id || order.orderId || '');
+        if (idKey) mergedMap.set(idKey, order);
       });
 
-      // 2. Override with live PostgreSQL DB orders (DB is the source of truth)
-      apiOrders.forEach((ao) => {
-        const idKey = String(ao.id || ao.orderId || '');
-        if (idKey) {
-          const localMatch = mergedMap.get(idKey);
-          mergedMap.set(idKey, {
-            ...localMatch,
-            ...ao,
-            status: (ao.status || localMatch?.status || 'PENDING').toUpperCase(),
-          });
-        }
+      apiOrders.forEach((apiOrder) => {
+        const idKey = String(apiOrder.id || apiOrder.orderId || '');
+        if (!idKey) return;
+        const localMatch = mergedMap.get(idKey);
+        mergedMap.set(idKey, {
+          ...localMatch,
+          ...apiOrder,
+          status: (apiOrder.status || localMatch?.status || 'PENDING').toUpperCase(),
+        });
       });
 
-      const mergedList = Array.from(mergedMap.values()).sort(
-        (a, b) => new Date(b.createdAt || Date.now()) - new Date(a.createdAt || Date.now())
-      );
-
-      setOrders(mergedList);
+      setOrders(Array.from(mergedMap.values()).sort(
+        (first, second) => new Date(second.createdAt || Date.now()) - new Date(first.createdAt || Date.now())
+      ));
       setLoading(false);
     };
 
     loadOrders();
-
     const handleLiveSync = () => {
-      if (typeof refetchOrders === 'function') {
-        refetchOrders();
-      }
+      refetchOrders?.();
       loadOrders();
     };
-
     window.addEventListener('orders_updated', handleLiveSync);
     window.addEventListener('storage', handleLiveSync);
     return () => {
@@ -102,55 +90,78 @@ const Orders = () => {
   return (
     <Layout>
       <div className={`container section ${styles.page}`}>
-        <h1 className={styles.title}>My Orders</h1>
-        {isLoading && <p>Loading your orders…</p>}
+        <div className={styles.pageHeader}>
+          <div>
+            <h1 className={styles.title}>My Orders</h1>
+            <p>Track fulfilment, payment, and complete order details.</p>
+          </div>
+          {!isLoading && <span className={styles.orderCount}>{orders.length} {orders.length === 1 ? 'order' : 'orders'}</span>}
+        </div>
 
-        {!isLoading && orders.length === 0 && (
-          <p className="text-muted">You haven't placed any orders yet.</p>
-        )}
+        {isLoading && <p className={styles.emptyState}>Loading your orders…</p>}
+        {!isLoading && orders.length === 0 && <p className={styles.emptyState}>You haven't placed any orders yet.</p>}
 
         {!isLoading && orders.length > 0 && (
           <div className={styles.list}>
-            {orders.map((order, idx) => {
-              const displayId = formatOrderId(order.id || order.orderId, { prefix: '#', index: idx, createdAt: order.createdAt });
-              const itemsList = Array.isArray(order.items) ? order.items : [];
-              const orderStatus = order.status || 'PENDING';
+            {orders.map((order, index) => {
+              const displayId = formatOrderId(order.orderNumber || order.orderId || order.id, { prefix: '#', index, createdAt: order.createdAt });
+              const items = Array.isArray(order.items) ? order.items : [];
+              const primaryItem = items[0] || {};
+              const orderStatus = String(order.status || 'PENDING').toUpperCase();
+              const rawPaymentStatus = String(order.paymentStatus || order.payment?.status || 'PENDING').toUpperCase();
+              const paymentStatus = rawPaymentStatus === 'SUCCEEDED' ? 'PAID' : rawPaymentStatus;
+              const paymentMethod = String(order.paymentMethod || order.payment?.method || 'COD').toUpperCase();
               const orderTotal = Number(order.totalAmount || order.total || 0);
+              const openDetails = () => setSelectedOrder(order);
 
               return (
-                <div key={order.id || order.orderId || idx} className={styles.order}>
-                  <div className={styles.orderHeader}>
-                    <div>
-                      <span className={styles.orderId}>{displayId}</span>
-                      <span className={styles.orderDate}>{formatDate(order.createdAt || new Date())}</span>
+                <article
+                  key={order.id || order.orderId || index}
+                  className={styles.orderCard}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View details for ${displayId}`}
+                  onClick={openDetails}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      openDetails();
+                    }
+                  }}
+                >
+                  <div className={styles.productBlock}>
+                    <PrivateImage
+                      customized={Boolean(primaryItem.customization)}
+                      assetId={primaryItem.customization?.previewAssetId}
+                      src={primaryItem.image || primaryItem.product?.images?.[0]}
+                      alt={primaryItem.name || primaryItem.product?.name || 'Ordered product'}
+                      className={styles.productImage}
+                    />
+                    <div className={styles.productCopy}>
+                      <strong>{primaryItem.name || primaryItem.product?.name || 'Gift item'}</strong>
+                      <span>Qty: {primaryItem.quantity || 1}{primaryItem.variant ? ` · ${primaryItem.variant}` : ''}</span>
+                      {primaryItem.customization && <span className={styles.customization}>Customized · <CustomizationStatus status={primaryItem.customizationStatus} /></span>}
+                      {items.length > 1 && <span className={styles.moreItems}>+{items.length - 1} more item{items.length > 2 ? 's' : ''}</span>}
                     </div>
-                    <span className={styles.status} style={{ color: STATUS_COLORS[orderStatus] || '#f59e0b' }}>
-                      {orderStatus}
-                    </span>
                   </div>
 
-                  <div className={styles.orderItems}>
-                    {itemsList.slice(0, 3).map((item, idx) => (
-                      <span key={item.id || idx} className={styles.itemName}>
-                        {item.name || item.product?.name || 'Gift Item'} ×{item.quantity || 1}
-                      </span>
-                    ))}
-                    {itemsList.length > 3 && (
-                      <span className="text-muted">+{itemsList.length - 3} more</span>
-                    )}
+                  <div className={styles.orderMeta}>
+                    <strong>{displayId}</strong>
+                    <span>{formatDate(order.createdAt || new Date())}</span>
                   </div>
 
-                  <div className={styles.orderFooter}>
+                  <div className={styles.amountBlock}>
                     <strong>₹{orderTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong>
-                    <button
-                      type="button"
-                      className={styles.detailsBtn}
-                      onClick={() => setSelectedOrder(order)}
-                    >
-                      View Details →
-                    </button>
+                    <span>{paymentMethod}</span>
+                    <span className={styles.paymentBadge} data-paid={paymentStatus === 'PAID'}>{paymentStatus}</span>
                   </div>
-                </div>
+
+                  <div className={styles.deliveryBlock} data-status={orderStatus}>
+                    <strong><i aria-hidden="true" />{orderStatus}</strong>
+                    <span>{STATUS_COPY[orderStatus] || 'Order status updated'}</span>
+                    <button type="button" onClick={(event) => { event.stopPropagation(); openDetails(); }}>View full details →</button>
+                  </div>
+                </article>
               );
             })}
           </div>

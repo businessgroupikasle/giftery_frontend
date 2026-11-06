@@ -45,7 +45,7 @@ test.describe('Product purchase functionality', () => {
       }
       await route.fulfill({ json: { success: true, data: { cart: { items: cartItems } } } });
     });
-    await page.route('**/api/v1/customizations/drafts/*', (route) => route.fulfill({ json: { success: true, data: null } }));
+    await page.route('**/api/v1/customizations/designs*', (route) => route.fulfill({ json: { success: true, data: { data: [], meta: {} } } }));
     await page.goto(`/product/${product.slug}`);
 
     const quantity = page.locator('input[type="number"]').first();

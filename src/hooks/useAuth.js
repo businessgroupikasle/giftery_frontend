@@ -5,12 +5,13 @@ import {
   selectIsAuthenticated,
   selectAuthLoading,
   setCredentials,
+  updateUser,
   logout,
 } from '@store/slices/authSlice';
 import { clearWishlist, fetchWishlistAsync } from '@store/slices/wishlistSlice';
 import { clearCart, fetchCartAsync } from '@store/slices/cartSlice';
 import authService from '@services/authService';
-import { clearAuth } from '@utils/storage';
+import { clearAuth, getUser, setUser } from '@utils/storage';
 
 /**
  * useAuth — Hook for authentication state and actions
@@ -62,7 +63,13 @@ const useAuth = () => {
     dispatch(clearCart());
   }, [dispatch]);
 
-  return { user, isAuthenticated, loading, login, loginWithGoogle, register, logout: logoutUser };
+  /** Keeps the signed-in user current after a profile edit, here and across page reloads. */
+  const updateUserState = useCallback((changes) => {
+    setUser({ ...getUser(), ...changes });
+    dispatch(updateUser(changes));
+  }, [dispatch]);
+
+  return { updateUserState, user, isAuthenticated, loading, login, loginWithGoogle, register, logout: logoutUser };
 };
 
 export default useAuth;

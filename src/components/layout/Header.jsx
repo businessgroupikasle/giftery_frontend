@@ -319,6 +319,14 @@ const Header = () => {
                   <span>My Orders</span>
                 </Link>
 
+                <Link to={ROUTES.MY_DESIGNS} className={styles.dropdownOption}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"></path>
+                  </svg>
+                  <span>My Designs</span>
+                </Link>
+
                 {/* <Link to={ROUTES.PROFILE} className={styles.dropdownOption}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="3"></circle>
@@ -421,6 +429,13 @@ const Header = () => {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 My Orders
+              </Link>
+              <Link
+                to={ROUTES.MY_DESIGNS}
+                className={styles.mobileNavLink}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                My Designs
               </Link>
               {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
                 <Link

@@ -1569,6 +1569,39 @@
   transform: scale(1.05);
 }
 
+/* Shared "view details" action for every admin table */
+.viewBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+}
+
+.viewBtn svg {
+  flex: 0 0 auto;
+  font-size: 0.95rem;
+}
+
+.viewBtn:hover {
+  border-color: #0f172a;
+  background: #0f172a;
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.viewBtn:focus-visible {
+  outline: 3px solid rgba(217, 155, 38, 0.65);
+  outline-offset: 2px;
+}
+
 /* Mini Cards Row under Table */
 .miniAlertsGrid {
   display: grid;
@@ -2248,3 +2281,5 @@
   .cardHeaderRow { min-width: 0; flex-wrap: wrap; }
   .ordersTable { min-width: 620px; }
 }
+
+.customizationThumb { display: block; width: 56px; height: 56px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; }

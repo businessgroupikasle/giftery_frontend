@@ -297,10 +297,24 @@
 .customizationSection {
   margin-bottom: 1.25rem;
 }
-.customizationSignIn { margin-bottom: 1.75rem; padding: 1.5rem; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; }
-.customizationSignIn h2 { margin: 0 0 .5rem; font-size: 1.3rem; }
-.customizationSignIn p { color: #64748b; font-size: .85rem; }
-.customizationSignIn button { padding: .7rem 1rem; border: 0; border-radius: 8px; background: #dfa843; color: #111827; font-weight: 700; cursor: pointer; }
+.customizeEntry { margin-bottom: 1.75rem; padding: 1.5rem; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; }
+.customizeEntryIntro { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+.customizeEntry h2 { margin: 0 0 .4rem; font-size: 1.3rem; color: #0f172a; }
+.customizeEntry p { margin: 0; color: #64748b; font-size: .85rem; line-height: 1.5; }
+.customizeStartBtn { min-height: 46px; padding: .7rem 1.6rem; border: 0; border-radius: 8px; background: #dfa843; color: #111827; font-weight: 800; letter-spacing: .02em; cursor: pointer; transition: background var(--transition-fast); }
+.customizeStartBtn:hover { background: #b8832a; }
+.customizeStartBtn:focus-visible { outline: 3px solid rgba(217, 155, 38, 0.65); outline-offset: 2px; }
+.savedDesigns { margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid #f1f5f9; }
+.savedDesigns h3 { margin: 0 0 .6rem; font-size: .9rem; color: #0f172a; }
+.savedDesigns ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .6rem; margin: 0; padding: 0; list-style: none; }
+.savedDesigns li { display: flex; gap: .6rem; align-items: center; padding: .5rem; border: 1px solid #e2e8f0; border-radius: 10px; min-width: 0; }
+.savedDesignThumb { flex: 0 0 56px; width: 56px; height: 56px; object-fit: contain; border-radius: 6px; background: #f1f5f9; }
+.savedDesignInfo { display: grid; gap: .1rem; min-width: 0; font-size: .8rem; }
+.savedDesignInfo strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #0f172a; }
+.savedDesignInfo small { color: #64748b; }
+.savedDesignInfo span { display: flex; gap: .75rem; }
+.savedDesignInfo a, .savedDesignInfo button { padding: 0; border: 0; background: none; color: #9a670d; font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; }
+.savedDesignInfo button { color: #b91c1c; }
 
 .sectionLabel {
   font-size: 0.85rem;

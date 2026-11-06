@@ -211,6 +211,13 @@
   min-width: 0;
 }
 
+/* The country code needs room beside the number on narrow screens. */
+@media (max-width: 560px) {
+  .fullRowOnPhone {
+    grid-column: 1 / -1;
+  }
+}
+
 .fieldError {
   margin: 0.3rem 0 0;
   color: #b91c1c;

@@ -6,6 +6,7 @@ import { FiShoppingCart, FiTrash2, FiX } from 'react-icons/fi';
 import Layout from '@components/layout/Layout';
 import { removeFromCart, updateQuantityAsync, clearCartAsync, addToCart } from '@store/slices/cartSlice';
 import PrivateImage from '@components/PrivateImage';
+import CustomizationDetails from '@components/customization/CustomizationDetails';
 import { formatCurrency } from '@utils/formatters';
 import { getImageUrl } from '@utils/imageUrl';
 import { ROUTES } from '@constants/routes';
@@ -362,7 +363,10 @@ const Cart = () => {
                               <div className={styles.itemDetails}>
                                 <h3 className={styles.itemName}>{item.name}</h3>
                                 {item.variant && <p className={styles.itemVariant}>{item.variant}</p>}
-                                {item.customization && <p className={styles.itemVariant}>Customized product</p>}
+                                {item.customization && <CustomizationDetails customization={item.customization} charge={item.customizationCharge} compact />}
+                                {item.customizationId && item.slug && (
+                                  <Link to={ROUTES.CUSTOMIZE_PATH(item.slug, item.customizationId)} className={styles.editDesignLink}>Edit design</Link>
+                                )}
                               </div>
                             </div>
                           </div>

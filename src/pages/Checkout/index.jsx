@@ -7,6 +7,7 @@ import Layout from '@components/layout/Layout';
 import { confirmCartForCheckout, fetchCartAsync, updateQuantityAsync, removeFromCart } from '@store/slices/cartSlice';
 import { checkoutItems } from '@store/slices/cartSync';
 import PrivateImage from '@components/PrivateImage';
+import CustomizationDetails from '@components/customization/CustomizationDetails';
 import { createPublicId, formatCurrency, formatOrderId } from '@utils/formatters';
 import { ROUTES } from '@constants/routes';
 import axiosInstance from '@api/axiosInstance';
@@ -16,6 +17,9 @@ import { isValidEmail, isValidPincode, isValidFullName } from '@utils/validation
 import { unwrapApiData } from '@utils/apiResponse';
 import { couponService } from '@services/couponService';
 import useStoreSettings from '@hooks/useStoreSettings';
+import OrderSuccess from './OrderSuccess';
+import PhoneInput from '@components/ui/PhoneInput';
+import { getPhoneError, normalizePhone, storedPhoneFields } from '@utils/phone';
 import styles from './Checkout.module.css';
 
 const Checkout = () => {
@@ -33,6 +37,7 @@ const Checkout = () => {
   const cartItems = isBuyNow ? [buyNowItem] : reduxItems;
   const [orderCompleted, setOrderCompleted] = useState(null);
   const orderCompletedRef = useRef(false);
+  const razorpayPendingOrderRef = useRef(null);
 
   useEffect(() => {
     if (cartItems.length === 0 && !orderCompletedRef.current) {
@@ -53,7 +58,7 @@ const Checkout = () => {
   const [addressForm, setAddressForm] = useState({
     fullName: user?.name || '',
     email: user?.email || '',
-    phone: user?.phone || '',
+    ...storedPhoneFields(user?.phone),
     addressLine1: '',
     landmark: '',
     city: '',
@@ -67,7 +72,7 @@ const Checkout = () => {
   const validateContactField = (name, value) => {
     if (name === 'fullName' && !isValidFullName(value)) return 'Please enter a valid full name.';
     if (name === 'email' && !isValidEmail(value)) return 'Please enter a valid email address.';
-    if (name === 'phone' && !/^\d{10}$/.test(String(value || ''))) return 'Please enter a valid 10-digit mobile number';
+    if (name === 'phone') return getPhoneError(addressForm.phoneCountry, value, { required: true });
     return '';
   };
 
@@ -86,7 +91,7 @@ const Checkout = () => {
           setAddressForm({
             fullName: active.fullName || user?.name || '',
             email: user?.email || '',
-            phone: active.phone || user?.phone || '',
+            ...storedPhoneFields(active.phone || user?.phone),
             addressLine1: active.street || active.addressLine1 || '',
             landmark: active.landmark || '',
             city: active.city || '',
@@ -101,7 +106,7 @@ const Checkout = () => {
             ...prev,
             fullName: user?.name || prev.fullName || '',
             email: user?.email || prev.email || '',
-            phone: user?.phone || prev.phone || '',
+            ...(user?.phone ? storedPhoneFields(user.phone) : {}),
             saveAddress: true,
           }));
         }
@@ -121,7 +126,7 @@ const Checkout = () => {
     setAddressForm({
       fullName: addr.fullName || user?.name || '',
       email: user?.email || '',
-      phone: addr.phone || user?.phone || '',
+      ...storedPhoneFields(addr.phone || user?.phone),
       addressLine1: addr.street || addr.addressLine1 || '',
       landmark: addr.landmark || '',
       city: addr.city || '',
@@ -138,7 +143,7 @@ const Checkout = () => {
     setAddressForm({
       fullName: user?.name || '',
       email: user?.email || '',
-      phone: user?.phone || '',
+      ...storedPhoneFields(user?.phone),
       addressLine1: '',
       landmark: '',
       city: '',
@@ -312,15 +317,6 @@ const Checkout = () => {
 
   const handleAddressChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (name === 'phone') {
-      const clean = value.replace(/[^0-9]/g, '');
-      if (clean.length > 15) return;
-      setAddressForm((prev) => ({ ...prev, phone: clean }));
-      if (addressErrors.phone) {
-        setAddressErrors((prev) => ({ ...prev, phone: validateContactField('phone', clean) }));
-      }
-      return;
-    }
     if (name === 'pincode') {
       const digitsOnly = value.replace(/[^0-9]/g, '');
       if (digitsOnly.length > 6) return;
@@ -333,6 +329,13 @@ const Checkout = () => {
     }));
     if (addressErrors[name] && ['fullName', 'email'].includes(name)) {
       setAddressErrors((prev) => ({ ...prev, [name]: validateContactField(name, value) }));
+    }
+  };
+
+  const handlePhoneChange = ({ country, number }) => {
+    setAddressForm((prev) => ({ ...prev, phone: number, phoneCountry: country }));
+    if (addressErrors.phone) {
+      setAddressErrors((prev) => ({ ...prev, phone: getPhoneError(country, number, { required: true }) }));
     }
   };
 
@@ -404,6 +407,7 @@ const Checkout = () => {
   const createConfirmedOrder = async (orderData, paymentId = null) => {
     const response = await axiosInstance.post(ENDPOINTS.ORDERS.CREATE, {
       ...checkoutItems(isBuyNow, orderData.items),
+      orderNumber: orderData.orderId,
       totalAmount: orderData.totalAmount,
       subtotal: orderData.subtotal,
       discountAmount: orderData.discountAmount,
@@ -420,10 +424,6 @@ const Checkout = () => {
   };
 
   const handleCompleteOrder = async () => {
-    if (paymentMethod !== 'cod') {
-      setPaymentError({ title: 'Online Payment Unavailable', message: 'Online payments are temporarily unavailable. Please use Cash on Delivery.', code: 'PAYMENT_UNAVAILABLE' });
-      return;
-    }
     setIsProcessing(true);
     setPaymentError(null);
 
@@ -453,7 +453,7 @@ const Checkout = () => {
       shippingAddress: {
         fullName: addressForm.fullName.trim(),
         email: addressForm.email.trim(),
-        phone: addressForm.phone.trim(),
+        phone: normalizePhone(addressForm.phoneCountry, addressForm.phone),
         street: [addressForm.addressLine1.trim(), addressForm.landmark?.trim()].filter(Boolean).join(', '),
         addressLine1: addressForm.addressLine1.trim(),
         landmark: addressForm.landmark ? addressForm.landmark.trim() : '',
@@ -469,13 +469,13 @@ const Checkout = () => {
 
     if (paymentMethod === 'razorpay') {
       try {
+        const pendingOrder = razorpayPendingOrderRef.current || await createConfirmedOrder(orderData);
+        if (!pendingOrder?.id) {
+          throw new Error('The store order could not be created. Please retry.');
+        }
+        razorpayPendingOrderRef.current = pendingOrder;
         const createResponse = await axiosInstance.post(ENDPOINTS.PAYMENTS.RAZORPAY_CREATE_ORDER, {
-          amount: grandTotal,
-          currency: 'INR',
-          notes: {
-            customerName: addressForm.fullName,
-            customerEmail: addressForm.email,
-          },
+          orderId: pendingOrder.id,
         });
         const createPayload = unwrapApiData(createResponse);
         const orderInfo = createPayload?.order || createPayload;
@@ -490,7 +490,7 @@ const Checkout = () => {
           throw new Error('Razorpay payment gateway failed to load. Please check your network or try Cash on Delivery.');
         }
 
-        const cleanPhone = addressForm.phone ? addressForm.phone.replace(/[^0-9]/g, '').slice(-10) : '';
+        const cleanPhone = normalizePhone(addressForm.phoneCountry, addressForm.phone) || '';
         const options = {
           key: razorpayKey,
           amount: Math.round(Number(orderInfo?.amount || grandTotal * 100)),
@@ -501,6 +501,7 @@ const Checkout = () => {
           handler: async (response) => {
             try {
               const verificationResponse = await axiosInstance.post(ENDPOINTS.PAYMENTS.RAZORPAY_VERIFY, {
+                orderId: pendingOrder.id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
@@ -510,8 +511,13 @@ const Checkout = () => {
                 throw new Error(verification?.message || 'Payment signature verification failed.');
               }
 
-              const confirmedOrder = await createConfirmedOrder(orderData, response.razorpay_payment_id);
-              await finishOrderSuccess(orderData, confirmedOrder, response.razorpay_payment_id);
+              razorpayPendingOrderRef.current = null;
+              await finishOrderSuccess(orderData, {
+                ...pendingOrder,
+                paymentMethod: 'RAZORPAY',
+                paymentStatus: 'PAID',
+                payment: { ...pendingOrder.payment, method: 'RAZORPAY', status: 'SUCCEEDED' },
+              }, response.razorpay_payment_id);
               toast.success(`Payment successful! Razorpay ID: ${response.razorpay_payment_id}`);
             } catch (error) {
               const message = error.message || 'Payment verification failed. Please contact support before retrying.';
@@ -579,7 +585,7 @@ const Checkout = () => {
       paymentId: confirmedOrder.paymentId || paymentId || null,
       customerName: addressForm.fullName || storedUser.name || 'Customer',
       customerEmail: addressForm.email || storedUser.email || '',
-      customerPhone: addressForm.phone || '',
+      customerPhone: normalizePhone(addressForm.phoneCountry, addressForm.phone) || '',
       ownerUserId: user?.id || null,
     };
 
@@ -596,7 +602,7 @@ const Checkout = () => {
       try {
         await addressService.createAddress({
           fullName: addressForm.fullName,
-          phone: addressForm.phone,
+          phone: normalizePhone(addressForm.phoneCountry, addressForm.phone),
           street: [addressForm.addressLine1, addressForm.landmark].filter(Boolean).join(', '),
           city: addressForm.city,
           state: addressForm.state,
@@ -623,24 +629,7 @@ const Checkout = () => {
   if (orderCompleted) {
     return (
       <Layout>
-        <div className={styles.successWrapper}>
-          <div className={styles.successCard}>
-            <h1 className={styles.successTitle}>Thank You For Your Order!</h1>
-            <p className={styles.successSub}>
-              Order ID: <strong>{formatOrderId(orderCompleted.orderId || orderCompleted.id, { prefix: '', createdAt: orderCompleted.createdAt })}</strong>
-            </p>
-            <div className={styles.successInfoBox}>
-              <p> <strong>Delivering To:</strong> {orderCompleted.shippingAddress.fullName}, {orderCompleted.shippingAddress.addressLine1}, {orderCompleted.shippingAddress.city} - {orderCompleted.shippingAddress.pincode}</p>
-              <p> <strong>Payment Method:</strong> {orderCompleted.paymentMethod.toUpperCase()}</p>
-              <p> <strong>Total Paid:</strong> ₹{orderCompleted.totalAmount.toLocaleString('en-IN')}.00</p>
-            </div>
-            <div className={styles.successActions}>
-              <Link to={ROUTES.HOME} className={styles.successHomeBtn}>
-                Return to Home
-              </Link>
-            </div>
-          </div>
-        </div>
+        <OrderSuccess order={orderCompleted} user={user} />
       </Layout>
     );
   }
@@ -699,7 +688,7 @@ const Checkout = () => {
                         <PrivateImage customized={Boolean(item.customization)} assetId={item.customization?.previewAssetId} src={item.image} alt={item.name} className={styles.cartReviewImg} />
                         <div className={styles.cartReviewInfo}>
                           <h4 className={styles.reviewItemName}>{item.name}</h4>
-                          {item.customization && <span>Customized product</span>}
+                          {item.customization && <CustomizationDetails customization={item.customization} charge={item.customizationCharge} compact />}
                           <span className={styles.reviewItemPrice}>₹{item.price?.toLocaleString('en-IN')}.00</span>
                         </div>
                         <div className={styles.qtyStepperMini}>
@@ -808,20 +797,17 @@ const Checkout = () => {
 
                     {/* Phone Number */}
                     <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Mobile / Phone Number * (10 Digits)</label>
-                      <input
-                        type="tel"
-                        name="phone"
+                      <label className={styles.formLabel} htmlFor="checkout-phone">Mobile / Phone Number *</label>
+                      <PhoneInput
+                        id="checkout-phone"
                         required
-                        maxLength={15}
-                        inputMode="numeric"
+                        country={addressForm.phoneCountry}
                         value={addressForm.phone}
-                        onChange={handleAddressChange}
+                        onChange={handlePhoneChange}
                         onBlur={handleContactBlur}
-                        placeholder="9876543210"
-                        className={`${styles.formInput} ${addressErrors.phone ? styles.formInputError : ''}`}
-                        aria-invalid={Boolean(addressErrors.phone)}
-                        aria-describedby={addressErrors.phone ? 'checkout-phone-error' : undefined}
+                        inputClassName={`${styles.formInput} ${addressErrors.phone ? styles.formInputError : ''}`}
+                        invalid={Boolean(addressErrors.phone)}
+                        describedBy={addressErrors.phone ? 'checkout-phone-error' : undefined}
                       />
                       {addressErrors.phone && <span id="checkout-phone-error" className={styles.fieldError} role="alert">{addressErrors.phone}</span>}
                     </div>
@@ -878,7 +864,7 @@ const Checkout = () => {
                         required
                         value={addressForm.city}
                         onChange={handleAddressChange}
-                        placeholder="Chennai"
+                        placeholder="Coimbatore"
                         className={styles.formInput}
                       />
                     </div>
@@ -936,7 +922,7 @@ const Checkout = () => {
                     {/* Razorpay Option */}
                     <div
                       className={`${styles.paymentMethodCard} ${paymentMethod === 'razorpay' ? styles.activePaymentCard : ''}`}
-                      aria-disabled="true"
+                      onClick={() => setPaymentMethod('razorpay')}
                     >
                       <div className={styles.radioRadio}>
                         {paymentMethod === 'razorpay' && <div className={styles.radioDot} />}
@@ -944,10 +930,10 @@ const Checkout = () => {
                       <div className={styles.paymentCardContent}>
                         <div className={styles.paymentCardTitleRow}>
                           <strong className={styles.paymentCardTitle}>Razorpay Instant Payment</strong>
-                          <span className={styles.recommendedBadge}>UNAVAILABLE</span>
+                          <span className={styles.recommendedBadge}>SECURE</span>
                         </div>
                         <p className={styles.paymentCardDesc}>
-                          Online payment is temporarily unavailable. Please use Cash on Delivery.
+                          Pay securely using UPI, cards, net banking, or supported wallets.
                         </p>
                         <div className={styles.razorpayLogosRow}>
                           <span className={styles.payBadgeIcon}>GPay</span>
@@ -1048,7 +1034,7 @@ const Checkout = () => {
                       <PrivateImage customized={Boolean(item.customization)} assetId={item.customization?.previewAssetId} src={item.image} alt={item.name} className={styles.sidebarImg} />
                       <div className={styles.sidebarInfo}>
                         <strong className={styles.sidebarItemName}>{item.name}</strong>
-                        {item.customization && <span>Customized product</span>}
+                        {item.customization && <CustomizationDetails customization={item.customization} charge={item.customizationCharge} compact />}
                         <span className={styles.sidebarItemQty}>Qty: {item.quantity}</span>
                       </div>
                       <span className={styles.sidebarItemPrice}>₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>

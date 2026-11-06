@@ -8,7 +8,9 @@ import { addToCart } from '@store/slices/cartSlice';
 import { addToWishlist } from '@store/slices/wishlistSlice';
 import { ROUTES } from '@constants/routes';
 import { toast } from 'react-toastify';
-import { isValidEmail, isValidMobile } from '../../utils/validation';
+import { isValidEmail } from '../../utils/validation';
+import PhoneInput from '@components/ui/PhoneInput';
+import { DEFAULT_PHONE_COUNTRY, getPhoneError, normalizePhone } from '@utils/phone';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import ThreeDotMenu from '@components/product/ThreeDotMenu';
@@ -525,6 +527,8 @@ const PersonalizedGifts = () => {
       return (b.rating || 0) - (a.rating || 0);
     });
 
+  const [quotePhoneCountry, setQuotePhoneCountry] = useState(DEFAULT_PHONE_COUNTRY);
+
   const handleQuoteSubmit = (e) => {
     e.preventDefault();
     if (!quoteForm.name || !quoteForm.email || !quoteForm.phone) {
@@ -535,8 +539,9 @@ const PersonalizedGifts = () => {
       toast.error('Please enter a valid email address');
       return;
     }
-    if (!isValidMobile(quoteForm.phone)) {
-      toast.error('Please enter a valid 10-digit mobile number');
+    const quotePhoneError = getPhoneError(quotePhoneCountry, quoteForm.phone, { required: true });
+    if (quotePhoneError) {
+      toast.error(quotePhoneError);
       return;
     }
 
@@ -545,7 +550,7 @@ const PersonalizedGifts = () => {
       name: quoteForm.name,
       company: quoteForm.company || 'Personalized Gift Request',
       email: quoteForm.email,
-      phone: quoteForm.phone || 'Not provided',
+      phone: normalizePhone(quotePhoneCountry, quoteForm.phone) || 'Not provided',
       quantity: quoteForm.quantity || '10-25 Units',
       notes: quoteForm.notes || 'Personalized Gift Custom Branding Quote',
       date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
@@ -873,13 +878,15 @@ const PersonalizedGifts = () => {
 
                   <div className={styles.formGroup}>
                     <label>Mobile Number</label>
-                    <input
-                      type="tel"
+                    <PhoneInput
                       required
-                      placeholder="+91 98765 43210"
+                      country={quotePhoneCountry}
                       value={quoteForm.phone}
-                      onChange={(e) => setQuoteForm({ ...quoteForm, phone: e.target.value })}
-                      className={styles.formControl}
+                      inputClassName={styles.formControl}
+                      onChange={({ country, number }) => {
+                        setQuotePhoneCountry(country);
+                        setQuoteForm((current) => ({ ...current, phone: number }));
+                      }}
                     />
                   </div>
 

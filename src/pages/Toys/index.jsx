@@ -11,6 +11,8 @@ import { ROUTES } from '@constants/routes';
 import { toast } from 'react-toastify';
 import ProductCard from '@components/product/ProductCard';
 import ThreeDotMenu from '@components/product/ThreeDotMenu';
+import PhoneInput from '@components/ui/PhoneInput';
+import { DEFAULT_PHONE_COUNTRY, getPhoneError, normalizePhone } from '@utils/phone';
 import styles from './Toys.module.css';
 
 const TOYS_SUBCATEGORIES = [
@@ -467,10 +469,17 @@ const Toys = () => {
     scrollToResults();
   };
 
+  const [quotePhoneCountry, setQuotePhoneCountry] = useState(DEFAULT_PHONE_COUNTRY);
+
   const handleQuoteSubmit = (e) => {
     e.preventDefault();
     if (!quoteForm.name || !quoteForm.email) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+    const quotePhoneError = getPhoneError(quotePhoneCountry, quoteForm.phone, { required: true });
+    if (quotePhoneError) {
+      toast.error(quotePhoneError);
       return;
     }
 
@@ -479,7 +488,7 @@ const Toys = () => {
       name: quoteForm.name,
       company: quoteForm.company || 'Toys & Games Bulk Request',
       email: quoteForm.email,
-      phone: quoteForm.phone || 'Not provided',
+      phone: normalizePhone(quotePhoneCountry, quoteForm.phone) || 'Not provided',
       quantity: quoteForm.quantity || '25-50 Units',
       notes: quoteForm.notes || 'Corporate Toys & Games Quote Request',
       date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
@@ -890,13 +899,15 @@ const Toys = () => {
 
                     <div className={styles.formGroup}>
                       <label>Mobile Number</label>
-                      <input
-                        type="tel"
+                      <PhoneInput
                         required
-                        placeholder="+91 98765 43210"
+                        country={quotePhoneCountry}
                         value={quoteForm.phone}
-                        onChange={(e) => setQuoteForm({ ...quoteForm, phone: e.target.value })}
-                        className={styles.formControl}
+                        inputClassName={styles.formControl}
+                        onChange={({ country, number }) => {
+                          setQuotePhoneCountry(country);
+                          setQuoteForm((current) => ({ ...current, phone: number }));
+                        }}
                       />
                     </div>
 

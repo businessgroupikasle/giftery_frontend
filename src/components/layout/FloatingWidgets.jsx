@@ -4,6 +4,8 @@ import { FiX } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
+import PhoneInput from '@components/ui/PhoneInput';
+import { DEFAULT_PHONE_COUNTRY, getPhoneError, normalizePhone } from '@utils/phone';
 import styles from './FloatingWidgets.module.css';
 
 const EMPTY_FORM = { name: '', email: '', phone: '', company: '' };
@@ -30,6 +32,7 @@ const FloatingWidgets = () => {
   const [catalogueForm, setCatalogueForm] = useState(EMPTY_FORM);
   const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [phoneCountry, setPhoneCountry] = useState(DEFAULT_PHONE_COUNTRY);
 
   const downloadCatalogue = () => {
     const link = document.createElement('a');
@@ -41,9 +44,7 @@ const FloatingWidgets = () => {
   };
 
   const updateField = (field) => (event) => {
-    const value = field === 'phone'
-      ? event.target.value.replace(/\D/g, '').slice(0, 10)
-      : event.target.value;
+    const { value } = event.target;
     setCatalogueForm((current) => ({ ...current, [field]: value }));
     if (field === 'name') setNameError(getFullNameError(value));
     if (field === 'email') setEmailError(getEmailError(value));
@@ -55,8 +56,7 @@ const FloatingWidgets = () => {
 
     const name = catalogueForm.name.trim();
     const email = catalogueForm.email.trim();
-    const phone = catalogueForm.phone.trim();
-    const indianPhonePattern = /^[6-9]\d{9}$/;
+    const phoneError = getPhoneError(phoneCountry, catalogueForm.phone, { required: true });
     const currentNameError = getFullNameError(name, true);
     const currentEmailError = getEmailError(email, true);
 
@@ -72,8 +72,8 @@ const FloatingWidgets = () => {
       return;
     }
 
-    if (!indianPhonePattern.test(phone)) {
-      toast.error('Please enter a valid 10-digit Indian mobile number.');
+    if (phoneError) {
+      toast.error(phoneError);
       return;
     }
 
@@ -82,7 +82,7 @@ const FloatingWidgets = () => {
       await axiosInstance.post(ENDPOINTS.ENQUIRIES.SUBMIT, {
         name,
         email,
-        phone,
+        phone: normalizePhone(phoneCountry, catalogueForm.phone),
         subject: 'Catalogue Request',
         message: `Company: ${catalogueForm.company.trim() || 'Not provided'}\nRequested the Giftery product catalogue.`,
       });
@@ -152,7 +152,7 @@ const FloatingWidgets = () => {
                 />
                 {emailError && <span id="floating-catalogue-email-error" className={styles.fieldError} role="alert">{emailError}</span>}
               </label>
-              <label>Phone Number<input required type="tel" inputMode="numeric" autoComplete="tel" minLength={10} maxLength={10} pattern="[6-9][0-9]{9}" title="Enter a valid 10-digit Indian mobile number" value={catalogueForm.phone} onChange={updateField('phone')} placeholder="e.g. 9876543210" /></label>
+              <label htmlFor="floating-catalogue-phone">Phone Number<PhoneInput id="floating-catalogue-phone" required label="Phone number" country={phoneCountry} value={catalogueForm.phone} onChange={({ country, number }) => { setPhoneCountry(country); setCatalogueForm((current) => ({ ...current, phone: number })); }} /></label>
               <label>Company Name <span>(Optional)</span><input value={catalogueForm.company} onChange={updateField('company')} placeholder="Enter company name" /></label>
               <button type="submit" disabled={downloading || Boolean(nameError) || Boolean(emailError)}>{downloading ? 'Saving...' : 'Submit & Download'}</button>
             </form>

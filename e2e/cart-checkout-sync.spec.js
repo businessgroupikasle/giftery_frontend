@@ -27,7 +27,7 @@ test('cart checkout verifies the server cart, omits items, and does not clear it
   await page.locator('input[name="phone"]').fill('9876543210');
   await page.locator('input[name="pincode"]').fill('600001');
   await page.locator('input[name="addressLine1"]').fill('12 Test Street');
-  await page.locator('input[name="city"]').fill('Chennai');
+  await page.locator('input[name="city"]').fill('Coimbatore');
   await page.locator('input[name="state"]').fill('Tamil Nadu');
   await page.getByRole('button', { name: /proceed to payment/i }).click();
   await page.getByText('Cash on Delivery (COD)', { exact: true }).click();

@@ -29,6 +29,8 @@ const ForgotPassword = lazy(() => import('@pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('@pages/ResetPassword'));
 const Register    = lazy(() => import('@pages/Register'));
 const Orders      = lazy(() => import('@pages/Orders'));
+const Customize   = lazy(() => import('@pages/Customize'));
+const MyDesigns   = lazy(() => import('@pages/MyDesigns'));
 const Profile     = lazy(() => import('@pages/Profile'));
 const Contact     = lazy(() => import('@pages/Contact'));
 const About       = lazy(() => import('@pages/About'));
@@ -194,6 +196,8 @@ const App = () => {
 
         {/* Protected */}
         <Route path={ROUTES.ORDERS}    element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+        <Route path={ROUTES.CUSTOMIZE} element={<ProtectedRoute><Customize /></ProtectedRoute>} />
+        <Route path={ROUTES.MY_DESIGNS} element={<ProtectedRoute><MyDesigns /></ProtectedRoute>} />
         <Route path={ROUTES.PROFILE}   element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
         {/* Admin & Super Admin */}

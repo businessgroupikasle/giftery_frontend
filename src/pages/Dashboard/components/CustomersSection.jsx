@@ -3,6 +3,8 @@ import { FiUsers, FiEdit2, FiX, FiSave, FiEye, FiSearch, FiFilter, FiTrash2, FiA
 import { toast } from 'react-toastify';
 import axiosInstance from '@api/axiosInstance';
 import { formatCustomerId, filterByDateRange } from '@utils/formatters';
+import PhoneInput from '@components/ui/PhoneInput';
+import { DEFAULT_PHONE_COUNTRY, getPhoneError, normalizePhone, storedPhoneFields } from '@utils/phone';
 import styles from '../Dashboard.module.css';
 import DateRangeFilter from './DateRangeFilter';
 
@@ -20,7 +22,7 @@ const CustomersSection = ({
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [dateFilter, setDateFilter] = useState('all');
   const [editModal, setEditModal] = useState(null);
-  const [editForm, setEditForm] = useState({ name: '', phone: '', status: 'Active' });
+  const [editForm, setEditForm] = useState({ name: '', phone: '', phoneCountry: DEFAULT_PHONE_COUNTRY, status: 'Active' });
   const [savingStatus, setSavingStatus] = useState(null);
   const [deleteModal, setDeleteModal] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
@@ -35,7 +37,7 @@ const CustomersSection = ({
   const openEditModal = (c) => {
     setEditForm({
       name: c.name || '',
-      phone: c.phone && c.phone !== 'Not provided' ? c.phone : '',
+      ...storedPhoneFields(c.phone),
       status: c.status || (c.isActive === false ? 'Inactive' : 'Active'),
     });
     setEditModal(c);
@@ -90,11 +92,12 @@ const CustomersSection = ({
       toast.error('Please enter a valid customer name');
       return;
     }
-    const cleanPhone = String(editForm.phone || '').trim().replace(/\D/g, '');
-    if (!cleanPhone || cleanPhone.length !== 10 || !/^[6-9]/.test(cleanPhone)) {
-      toast.error('Phone number is mandatory. Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
+    const phoneProblem = getPhoneError(editForm.phoneCountry, editForm.phone, { required: true });
+    if (phoneProblem) {
+      toast.error(phoneProblem);
       return;
     }
+    const cleanPhone = normalizePhone(editForm.phoneCountry, editForm.phone);
 
     setSavingStatus(editModal.id);
 
@@ -438,22 +441,10 @@ const CustomersSection = ({
                           type="button"
                           onClick={() => setSelectedCustomerModal(c)}
                           title="View Customer Details"
-                          style={{
-                            background: '#f8fafc',
-                            border: '1px solid #cbd5e1',
-                            borderRadius: '6px',
-                            padding: '0.32rem 0.65rem',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.35rem',
-                            cursor: 'pointer',
-                            color: '#334155',
-                            fontSize: '0.74rem',
-                            fontWeight: '600',
-                            whiteSpace: 'nowrap',
-                          }}
+                          className={styles.viewBtn}
+                          style={{ padding: '0.32rem 0.65rem', fontSize: '0.74rem' }}
                         >
-                          <FiEye size={13} />
+                          <FiEye aria-hidden="true" />
                           <span>View</span>
                         </button>
                         {/* Edit */}
@@ -597,17 +588,14 @@ const CustomersSection = ({
                 <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '0.4rem' }}>
                   Phone <span style={{ color: '#ef4444' }}>*</span>
                 </label>
-                <input
-                  type="tel"
-                  maxLength={10}
+                <PhoneInput
+                  required
+                  label="Customer phone"
+                  country={editForm.phoneCountry}
                   value={editForm.phone}
-                  onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
-                  style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.9rem', color: '#1e293b', outline: 'none', boxSizing: 'border-box' }}
-                  placeholder="10-digit mobile number (e.g. 9876543210)"
+                  onChange={({ country, number }) => setEditForm((f) => ({ ...f, phone: number, phoneCountry: country }))}
+                  inputStyle={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.9rem', color: '#1e293b', outline: 'none', boxSizing: 'border-box' }}
                 />
-                <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.2rem', display: 'block' }}>
-                  Mandatory 10-digit mobile number starting with 6, 7, 8, or 9
-                </span>
               </div>
 
               {/* Status */}

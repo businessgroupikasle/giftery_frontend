@@ -16,7 +16,9 @@ import { FiHeart, FiShoppingCart, FiZap } from 'react-icons/fi';
 import { getImageUrl } from '@utils/imageUrl';
 import { trackEcommerce } from '@utils/analytics';
 import styles from './Product.module.css';
-import CustomizationEditor from './CustomizationEditor';
+import CustomizeEntry from './CustomizeEntry';
+import PhoneInput from '@components/ui/PhoneInput';
+import { DEFAULT_PHONE_COUNTRY, getPhoneError, normalizePhone, parseStoredPhone } from '@utils/phone';
 
 /* ── Fallback Master Products Dataset (for rich Catalogue fallback by slug) ── */
 const MASTER_PRODUCTS = [
@@ -134,13 +136,13 @@ const Product = () => {
   const [selectedImage, setSelectedImage] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [quantityInput, setQuantityInput] = useState('1');
-  const [editorState, setEditorState] = useState(null);
   const [adding, setAdding] = useState(false);
   const [activeTab, setActiveTab] = useState('description');
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [submittingQuote, setSubmittingQuote] = useState(false);
   const [quoteForm, setQuoteForm] = useState({ name: '', email: '', phone: '', company: '', message: '' });
+  const [quotePhoneCountry, setQuotePhoneCountry] = useState(DEFAULT_PHONE_COUNTRY);
 
   useEffect(() => {
     setQuantityInput(String(quantity));
@@ -301,9 +303,7 @@ const Product = () => {
   } = product;
 
   const maxStock = product.stock !== undefined && product.stock !== null ? Number(product.stock) : 9999;
-  const editorKey = `${id || slug}:${user?.id || 'guest'}`;
-  const editorBlocked = isAuthenticated && (!user?.id || editorState?.editorKey !== editorKey || editorState.blocked);
-  const purchaseDisabled = maxStock <= 0 || editorBlocked || adding;
+  const purchaseDisabled = maxStock <= 0 || adding;
 
   const getCategoryLink = (catName) => {
     if (!catName) return ROUTES.CORPORATE_GIFTS;
@@ -556,11 +556,7 @@ const Product = () => {
 
   const handleAddToCart = async () => {
     if (!requireAuth()) return;
-    if (editorBlocked || adding) return;
-    if (editorState?.hasCustomization && !editorState.saved) {
-      toast.error('Save your customization before adding it to the cart.');
-      return;
-    }
+    if (adding) return;
     if (maxStock <= 0) {
       toast.error('Sorry, this product is currently out of stock!');
       return;
@@ -578,8 +574,6 @@ const Product = () => {
       slug,
       quantity,
       sku: product.sku || '',
-      isCustomized: Boolean(editorState?.hasCustomization),
-      customization: editorState?.hasCustomization ? editorState.design : null,
       maxStock,
     };
     setAdding(true);
@@ -597,11 +591,7 @@ const Product = () => {
 
   const handleBuyNow = () => {
     if (!requireAuth()) return;
-    if (editorBlocked || adding) return;
-    if (editorState?.hasCustomization && !editorState.saved) {
-      toast.error('Save your customization before continuing.');
-      return;
-    }
+    if (adding) return;
     if (maxStock <= 0) {
       toast.error('Sorry, this product is currently out of stock!');
       return;
@@ -616,8 +606,6 @@ const Product = () => {
       slug,
       sku: product.sku || '',
       variant: product.variant,
-      isCustomized: Boolean(editorState?.hasCustomization),
-      customization: editorState?.hasCustomization ? editorState.design : null,
       quantity: quantity > maxStock ? maxStock : (quantity || 1),
     };
     navigate('/checkout', { state: { buyNowItem } });
@@ -641,10 +629,12 @@ const Product = () => {
   };
 
   const handleRequestQuote = () => {
+    const savedPhone = parseStoredPhone(user?.phone);
+    setQuotePhoneCountry(savedPhone.country);
     setQuoteForm({
       name: user?.name || '',
       email: user?.email || '',
-      phone: user?.phone && user.phone !== 'Not provided' ? user.phone.replace(/\D/g, '').slice(-10) : '',
+      phone: savedPhone.number,
       company: user?.company || '',
       message: '',
     });
@@ -652,20 +642,20 @@ const Product = () => {
   };
 
   const handleQuoteField = (field) => (event) => {
-    const value = field === 'phone' ? event.target.value.replace(/\D/g, '').slice(0, 10) : event.target.value;
+    const { value } = event.target;
     setQuoteForm((current) => ({ ...current, [field]: value }));
   };
 
   const handleQuoteSubmit = async (event) => {
     event.preventDefault();
     const email = quoteForm.email.trim();
-    const phone = quoteForm.phone.trim();
+    const phoneError = getPhoneError(quotePhoneCountry, quoteForm.phone, { required: true });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
       toast.error('Please enter a valid email address.');
       return;
     }
-    if (!/^[6-9]\d{9}$/.test(phone)) {
-      toast.error('Please enter a valid 10-digit Indian mobile number.');
+    if (phoneError) {
+      toast.error(phoneError);
       return;
     }
     setSubmittingQuote(true);
@@ -673,7 +663,7 @@ const Product = () => {
       await axiosInstance.post(ENDPOINTS.ENQUIRIES.SUBMIT, {
         name: quoteForm.name.trim(),
         email,
-        phone,
+        phone: normalizePhone(quotePhoneCountry, quoteForm.phone),
         subject: `Product Quote: ${name}`,
         message: `Product: ${name}\nProduct ID: ${id || slug}\nQuantity: ${quantity}\nCompany: ${quoteForm.company.trim() || 'Not provided'}\nRequirements: ${quoteForm.message.trim() || 'Please contact me with a quotation.'}`,
       });
@@ -831,11 +821,7 @@ const Product = () => {
             </div>
           </div>
 
-          {isAuthenticated && user?.id ? (
-            <CustomizationEditor key={editorKey} editorKey={editorKey} productId={id || slug} productImage={selectedImage || galleryImages[0]} onImageChange={setSelectedImage} isAuthenticated={isAuthenticated} requireAuth={requireAuth} onChange={setEditorState} onAddToCart={handleAddToCart} adding={adding} outOfStock={maxStock <= 0} />
-          ) : !isAuthenticated ? (
-            <section className={styles.customizationSignIn}><h2>Customize your gift </h2><p>Sign in to create and save a private design.</p><button type="button" onClick={requireAuth}>Sign in to personalize</button></section>
-          ) : <p role="status">Loading account details before customization...</p>}
+          <CustomizeEntry product={{ ...product, slug: product.slug || slug }} isAuthenticated={isAuthenticated} userId={user?.id} />
 
           {/* ── 3. TRUST & VALUE BADGES BAR ── */}
           <div className={styles.trustBadgesGrid}>
@@ -960,7 +946,7 @@ const Product = () => {
                 <form className={styles.quoteForm} onSubmit={handleQuoteSubmit}>
                   <label>Full Name<input required value={quoteForm.name} onChange={handleQuoteField('name')} placeholder="Enter your name" /></label>
                   <label>Email Address<input required type="email" value={quoteForm.email} onChange={handleQuoteField('email')} placeholder="name@company.com" /></label>
-                  <label>Phone Number<input required type="tel" inputMode="numeric" minLength={10} maxLength={10} pattern="[6-9][0-9]{9}" value={quoteForm.phone} onChange={handleQuoteField('phone')} placeholder="e.g. 9876543210" /></label>
+                  <label htmlFor="product-quote-phone">Phone Number<PhoneInput id="product-quote-phone" required label="Phone number" country={quotePhoneCountry} value={quoteForm.phone} onChange={({ country, number }) => { setQuotePhoneCountry(country); setQuoteForm((current) => ({ ...current, phone: number })); }} /></label>
                   <label>Company Name <span>(Optional)</span><input value={quoteForm.company} onChange={handleQuoteField('company')} placeholder="Enter company name" /></label>
                   <label>Requirements <span>(Optional)</span><textarea rows="3" value={quoteForm.message} onChange={handleQuoteField('message')} placeholder="Customization, delivery date, etc." /></label>
                   <button type="submit" disabled={submittingQuote}>{submittingQuote ? 'Submitting...' : 'Submit Quote Request'}</button>

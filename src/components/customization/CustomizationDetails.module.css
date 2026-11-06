@@ -1,0 +1,37 @@
+.compact { display: grid; gap: .1rem; margin-top: .2rem; font-size: .74rem; line-height: 1.4; color: #64748b; overflow-wrap: anywhere; }
+.compact strong { color: #7a5508; font-weight: 700; }
+
+.details { display: grid; gap: .7rem; margin-top: .5rem; padding: .75rem; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; font-size: .8rem; color: #334155; text-align: left; min-width: 0; }
+.heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem; }
+.heading strong { color: #0f172a; font-size: .86rem; }
+.note { margin: 0; padding: .45rem .6rem; border-radius: 6px; background: #f8fafc; color: #475569; font-size: .76rem; white-space: pre-line; }
+.group { display: grid; gap: .3rem; min-width: 0; }
+.group h5 { margin: 0; color: #64748b; font-size: .68rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.plain { margin: 0; overflow-wrap: anywhere; }
+.disclaimer { margin: 0; color: #92400e; font-size: .72rem; font-weight: 600; }
+.previewImage { width: 100%; max-width: 260px; border: 1px solid #e2e8f0; border-radius: 8px; }
+
+.assetList, .textList { display: grid; gap: .4rem; margin: 0; padding: 0; list-style: none; }
+.textList li { overflow-wrap: anywhere; white-space: pre-line; }
+.textList small { color: #94a3b8; }
+.assetRow { display: flex; gap: .55rem; align-items: center; min-width: 0; }
+.assetThumb { flex: 0 0 48px; width: 48px; height: 48px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; }
+.assetMeta { display: grid; gap: .1rem; min-width: 0; }
+.assetMeta strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .78rem; color: #0f172a; }
+.assetMeta small { color: #64748b; font-size: .7rem; }
+.assetActions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.download { display: inline-flex; align-items: center; gap: .25rem; width: fit-content; padding: 0; border: 0; background: none; color: #9a670d; font: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
+.download:hover:not(:disabled) { text-decoration: underline; }
+.download:disabled { opacity: .6; cursor: progress; }
+.download:focus-visible { outline: 3px solid rgba(217, 155, 38, .65); outline-offset: 2px; }
+
+.instructionList { display: grid; gap: .4rem; margin: 0; }
+.instructionList dt { font-size: .72rem; font-weight: 700; color: #475569; }
+.instructionList dd { margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
+
+.status { display: inline-block; padding: .15rem .55rem; border-radius: 999px; font-size: .68rem; font-weight: 700; white-space: nowrap; }
+.statusPending { background: #fffbeb; color: #92400e; }
+.statusApproved { background: #eff6ff; color: #1d4ed8; }
+.statusProgress { background: #f5f3ff; color: #6d28d9; }
+.statusCompleted { background: #ecfdf5; color: #047857; }
+.statusRejected { background: #fef2f2; color: #b91c1c; }

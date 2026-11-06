@@ -158,6 +158,11 @@
   transition: all 0.2s ease;
 }
 
+/* Fields with no icon inside them don't need the icon's space. */
+.inputNoIcon {
+  padding-left: 1rem;
+}
+
 .input:focus {
   border-color: #d99b26;
   box-shadow: 0 0 0 3px rgba(217, 155, 38, 0.15);

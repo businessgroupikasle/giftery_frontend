@@ -626,77 +626,6 @@
   border: 1px solid #f1f5f9;
 }
 
-/* Order Success Modal Screen */
-.successWrapper {
-  min-height: 70vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
-}
-
-.successCard {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  padding: 3rem 2.5rem;
-  max-width: 520px;
-  width: 100%;
-  text-align: center;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-}
-
-.successIconCircle {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: #dcfce7;
-  color: #16a34a;
-  font-size: 2rem;
-  font-weight: 900;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1.25rem;
-}
-
-.successTitle {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 0.5rem 0;
-}
-
-.successSub {
-  font-size: 0.9rem;
-  color: #64748b;
-  margin: 0 0 1.5rem 0;
-}
-
-.successInfoBox {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 1.25rem;
-  text-align: left;
-  font-size: 0.85rem;
-  color: #334155;
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-  margin-bottom: 2rem;
-}
-
-.successHomeBtn {
-  display: inline-block;
-  background: #dfa843;
-  color: #ffffff;
-  padding: 0.85rem 2rem;
-  border-radius: 10px;
-  font-weight: 800;
-  text-decoration: none;
-}
-
 /* Responsive */
 @media (max-width: 900px) {
   .checkoutMainGrid {
@@ -801,10 +730,6 @@
     width: 100%;
     padding: 0.9rem 1rem;
     justify-content: center;
-  }
-  .successHomeBtn {
-    width: 100%;
-    text-align: center;
   }
 }
 

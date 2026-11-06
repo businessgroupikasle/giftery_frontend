@@ -238,7 +238,7 @@ const EnquiriesSection = ({
 
                     {/* 4. Phone Number */}
                     <td>
-                      {e.phone ? (
+                      {e.phone && e.phone !== 'N/A' ? (
                         <a
                           href={`tel:${e.phone}`}
                           style={{ color: '#334155', textDecoration: 'none', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
@@ -282,21 +282,10 @@ const EnquiriesSection = ({
                           type="button"
                           onClick={() => setSelectedEnquiry(e)}
                           title="View Details & Full Message"
-                          style={{
-                            background: '#eff6ff',
-                            color: '#2563eb',
-                            border: '1px solid #bfdbfe',
-                            borderRadius: '6px',
-                            padding: '0.35rem 0.6rem',
-                            fontSize: '0.78rem',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.3rem',
-                          }}
+                          className={styles.viewBtn}
+                          style={{ padding: '0.35rem 0.6rem' }}
                         >
-                          <FiEye /> View
+                          <FiEye aria-hidden="true" /> View
                         </button>
 
                         <button

@@ -10,7 +10,7 @@ test.describe('Authentication UI', () => {
   test('switches between sign-in and registration forms', async ({ page }) => {
     await page.getByRole('button', { name: 'Create Account' }).first().click();
     await expect(page.getByPlaceholder('e.g. Alexander Vance')).toBeVisible();
-    await expect(page.getByPlaceholder('e.g. 9876543210')).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Mobile number' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Sign In' }).first().click();
     await expect(page.getByPlaceholder('name@company.com')).toBeVisible();

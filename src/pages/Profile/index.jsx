@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { 
   FiUser, 
   FiMail, 
-  FiPhone, 
   FiLock, 
   FiEye, 
   FiEyeOff, 
@@ -16,7 +15,9 @@ import { Link } from 'react-router-dom';
 import Layout from '@components/layout/Layout';
 import useAuth from '@hooks/useAuth';
 import axiosInstance from '@api/axiosInstance';
-import { isValidMobile, isValidFullName } from '@utils/validation';
+import { isValidFullName } from '@utils/validation';
+import PhoneInput from '@components/ui/PhoneInput';
+import { getPhoneError, normalizePhone, parseStoredPhone } from '@utils/phone';
 import styles from './Profile.module.css';
 
 const Profile = () => {
@@ -25,7 +26,13 @@ const Profile = () => {
   // Personal Info Form
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
-  const [phone, setPhone] = useState(user?.phone && user?.phone !== 'Not provided' ? user?.phone : '');
+  const [phone, setPhone] = useState(() => parseStoredPhone(user?.phone).number);
+  const [phoneCountry, setPhoneCountry] = useState(() => parseStoredPhone(user?.phone).country);
+  const applyStoredPhone = (value) => {
+    const stored = parseStoredPhone(value);
+    setPhone(stored.number);
+    setPhoneCountry(stored.country);
+  };
   const [savingProfile, setSavingProfile] = useState(false);
 
   // Sync state when user object changes
@@ -33,7 +40,7 @@ const Profile = () => {
     if (user) {
       if (user.name) setName(user.name);
       if (user.email) setEmail(user.email);
-      if (user.phone && user.phone !== 'Not provided') setPhone(user.phone);
+      if (user.phone && user.phone !== 'Not provided') applyStoredPhone(user.phone);
     }
   }, [user]);
 
@@ -63,7 +70,7 @@ const Profile = () => {
         if (userData) {
           if (userData.name) setName(userData.name);
           if (userData.email) setEmail(userData.email);
-          if (userData.phone && userData.phone !== 'Not provided') setPhone(userData.phone);
+          if (userData.phone && userData.phone !== 'Not provided') applyStoredPhone(userData.phone);
         }
       } catch (err) {}
 
@@ -94,15 +101,17 @@ const Profile = () => {
       toast.error('Full Name should allow only valid alphabetic characters and spaces.');
       return;
     }
-    if (phone && !isValidMobile(phone)) {
-      toast.error('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9');
+    const phoneError = getPhoneError(phoneCountry, phone);
+    if (phoneError) {
+      toast.error(phoneError);
       return;
     }
+    const savedPhone = normalizePhone(phoneCountry, phone) || '';
 
     setSavingProfile(true);
     try {
-      const res = await axiosInstance.put('/users/profile', { name: name.trim(), phone: phone.trim() });
-      const updatedUser = res.data?.user || res.user || { ...user, name: name.trim(), phone: phone.trim() };
+      const res = await axiosInstance.put('/users/profile', { name: name.trim(), phone: savedPhone });
+      const updatedUser = res.data?.user || res.user || { ...user, name: name.trim(), phone: savedPhone };
       
       if (updateUserState) updateUserState(updatedUser);
       toast.success('Personal information saved successfully');
@@ -230,18 +239,15 @@ const Profile = () => {
 
               {/* Phone Number */}
               <div className={styles.fieldBox}>
-                <label className={styles.label}>Phone Number</label>
-                <div className={styles.inputWrap}>
-                  <FiPhone className={styles.inputIcon} />
-                  <input
-                    type="tel"
-                    maxLength={10}
-                    className={styles.input}
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    placeholder="Enter 10-digit mobile number"
-                  />
-                </div>
+                <label className={styles.label} htmlFor="profile-phone">Phone Number</label>
+                <PhoneInput
+                  id="profile-phone"
+                  label="Phone number"
+                  country={phoneCountry}
+                  value={phone}
+                  inputClassName={`${styles.input} ${styles.inputNoIcon}`}
+                  onChange={({ country, number }) => { setPhoneCountry(country); setPhone(number); }}
+                />
               </div>
 
               <button
@@ -367,7 +373,7 @@ const Profile = () => {
                   <label className={styles.label}>City</label>
                   <input
                     type="text"
-                    className={styles.input}
+                    className={`${styles.input} ${styles.inputNoIcon}`}
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="Coimbatore"
@@ -378,7 +384,7 @@ const Profile = () => {
                   <label className={styles.label}>State</label>
                   <input
                     type="text"
-                    className={styles.input}
+                    className={`${styles.input} ${styles.inputNoIcon}`}
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                     placeholder="Tamil Nadu"
@@ -393,7 +399,7 @@ const Profile = () => {
                   <input
                     type="text"
                     maxLength={6}
-                    className={styles.input}
+                    className={`${styles.input} ${styles.inputNoIcon}`}
                     value={pincode}
                     onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="641045"
@@ -404,7 +410,7 @@ const Profile = () => {
                   <label className={styles.label}>Country</label>
                   <input
                     type="text"
-                    className={styles.input}
+                    className={`${styles.input} ${styles.inputNoIcon}`}
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
                     placeholder="India"

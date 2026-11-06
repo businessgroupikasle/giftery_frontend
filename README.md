@@ -211,3 +211,20 @@ frontend/api/axiosInstance.js → baseURL: API_BASE
 - bcrypt password hashing (12 rounds)
 - Multer file type + size validation
 - Global error handler (no stack traces in production)
+
+## Customization studio
+
+Customers open `/customize/:slug` from a product page to design a product, and every draft is saved to their account. The API lives under `/api/v1/customizations` in the backend repository. Staff manage per-product options in the product form and ordered designs under **Customized Products** in the dashboard.
+
+Designs are visual mockups only. The product catalogue has no verified print specifications, so nothing in the studio claims exact print placement or print-ready output.
+
+Tests:
+
+```bash
+npm run test:unit      # design model and summaries
+npm run test:e2e       # UI against a mocked API
+
+# Full flow against the real API and PostgreSQL, using an isolated schema:
+#   1. cd ../backend && DATABASE_URL="<url>?schema=kilo_it_studio" npx prisma migrate deploy
+#   2. TEST_DATABASE_URL="<url>?schema=kilo_it_studio" npx playwright test --config playwright.live.config.js
+```

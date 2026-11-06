@@ -18,6 +18,9 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.error = null;
     },
+    updateUser: (state, action) => {
+      state.user = { ...state.user, ...action.payload };
+    },
     loadUserFromStorage: (state) => {
       state.user = getUser();
       state.token = getToken();
@@ -38,7 +41,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, logout, setLoading, setError, loadUserFromStorage } = authSlice.actions;
+export const { setCredentials, updateUser, logout, setLoading, setError, loadUserFromStorage } = authSlice.actions;
 
 // Selectors
 export const selectCurrentUser = (state) => state.auth.user;

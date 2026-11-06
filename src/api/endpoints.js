@@ -35,6 +35,18 @@ export const ENDPOINTS = {
     UPLOAD_AVATAR: '/users/avatar',
   },
 
+  // ── Customization studio ──────────────────────────────────
+  CUSTOMIZATIONS: {
+    DESIGNS: '/customizations/designs',
+    DESIGN: (id) => `/customizations/designs/${encodeURIComponent(id)}`,
+    DUPLICATE: (id) => `/customizations/designs/${encodeURIComponent(id)}/duplicate`,
+    FINALIZE: (id) => `/customizations/designs/${encodeURIComponent(id)}/finalize`,
+    ASSETS: '/customizations/assets',
+    ASSET: (id) => `/customizations/assets/${encodeURIComponent(id)}`,
+    ADMIN_ITEMS: '/customizations/admin/items',
+    ADMIN_ITEM_STATUS: (id) => `/customizations/admin/items/${encodeURIComponent(id)}/status`,
+  },
+
   // ── Addresses ─────────────────────────────────────────────
   ADDRESSES: {
     LIST: '/addresses',

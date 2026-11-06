@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { isValidEmail, isValidMobile } from '../../utils/validation';
+import { isValidEmail } from '../../utils/validation';
+import PhoneInput from '@components/ui/PhoneInput';
+import { DEFAULT_PHONE_COUNTRY, getPhoneError, normalizePhone } from '@utils/phone';
 import { Link } from 'react-router-dom';
 import Layout from '@components/layout/Layout';
 import { ROUTES } from '@constants/routes';
@@ -98,7 +100,6 @@ const CloseIcon = () => (
 const EMAIL_VALIDATION_MESSAGE = 'Please enter a valid email address';
 const MAIN_FORM_ERROR_MESSAGES = {
   fullName: 'Please enter your full name',
-  phone: 'Please enter a valid 10-digit mobile number',
   inquiryType: 'Please select an inquiry type',
   subject: 'Please enter a subject',
   message: 'Please enter your message',
@@ -120,7 +121,6 @@ const getCatalogueEmailError = (value, required = false) => (
 const APPOINTMENT_VALIDATION_MESSAGES = {
   name: 'Please enter a valid full name.',
   email: 'Please enter a valid email address.',
-  phone: 'Please enter a valid 10-digit mobile number.',
 };
 
 const getAppointmentFieldError = (name, value, required = false) => {
@@ -136,9 +136,6 @@ const getAppointmentFieldError = (name, value, required = false) => {
     return !getContactEmailError(normalizedValue) && /[a-zA-Z0-9]/.test(normalizedValue.split('@')[0])
       ? ''
       : APPOINTMENT_VALIDATION_MESSAGES.email;
-  }
-  if (name === 'phone') {
-    return isValidMobile(normalizedValue) ? '' : APPOINTMENT_VALIDATION_MESSAGES.phone;
   }
   return '';
 };
@@ -189,6 +186,9 @@ const Contact = () => {
   const [appointmentSubmitted, setAppointmentSubmitted] = useState(false);
   const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
   const [appointmentErrors, setAppointmentErrors] = useState({ name: '', email: '', phone: '' });
+  const [mainPhoneCountry, setMainPhoneCountry] = useState(DEFAULT_PHONE_COUNTRY);
+  const [appointmentPhoneCountry, setAppointmentPhoneCountry] = useState(DEFAULT_PHONE_COUNTRY);
+  const [cataloguePhoneCountry, setCataloguePhoneCountry] = useState(DEFAULT_PHONE_COUNTRY);
   const [appointmentData, setAppointmentData] = useState({
     name: '',
     email: '',
@@ -224,7 +224,6 @@ const Contact = () => {
   const handleAppointmentChange = (e) => {
     const { name, value } = e.target;
     let nextValue = value;
-    if (name === 'phone') nextValue = value.replace(/\D/g, '').slice(0, 10);
     if (name === 'name') nextValue = value.replace(/[^a-zA-Z\s.'-]/g, '');
 
     setAppointmentData((prev) => ({ ...prev, [name]: nextValue }));
@@ -245,6 +244,12 @@ const Contact = () => {
     }));
   };
 
+  const handleAppointmentPhoneChange = ({ country, number }) => {
+    setAppointmentPhoneCountry(country);
+    setAppointmentData((prev) => ({ ...prev, phone: number }));
+    setAppointmentErrors((prev) => ({ ...prev, phone: getPhoneError(country, number) }));
+  };
+
   const handleCatalogueSubmit = async (e) => {
     e.preventDefault();
     if (catalogueDownloading) return;
@@ -258,8 +263,9 @@ const Contact = () => {
       toast.error(currentCatalogueEmailError);
       return;
     }
-    if (!isValidMobile(catalogueForm.phone)) {
-      toast.error('Please enter a valid 10-digit mobile number');
+    const cataloguePhoneError = getPhoneError(cataloguePhoneCountry, catalogueForm.phone, { required: true });
+    if (cataloguePhoneError) {
+      toast.error(cataloguePhoneError);
       return;
     }
     setCatalogueDownloading(true);
@@ -267,7 +273,7 @@ const Contact = () => {
       await axiosInstance.post(ENDPOINTS.ENQUIRIES.SUBMIT, {
         name: catalogueForm.name.trim(),
         email: catalogueForm.email.trim(),
-        phone: catalogueForm.phone.trim(),
+        phone: normalizePhone(cataloguePhoneCountry, catalogueForm.phone),
         subject: 'Corporate Catalogue Request',
         message: `Company: ${catalogueForm.company.trim() || 'Not specified'}\nRequested corporate gifting catalogue from Contact Page.`,
       });
@@ -295,7 +301,7 @@ const Contact = () => {
     const validationErrors = {
       name: getAppointmentFieldError('name', appointmentData.name, true),
       email: getAppointmentFieldError('email', appointmentData.email, true),
-      phone: getAppointmentFieldError('phone', appointmentData.phone, true),
+      phone: getPhoneError(appointmentPhoneCountry, appointmentData.phone, { required: true }),
     };
     setAppointmentErrors(validationErrors);
     const firstError = validationErrors.name || validationErrors.email || validationErrors.phone;
@@ -308,7 +314,7 @@ const Contact = () => {
     const payload = {
       name: appointmentData.name.trim(),
       email: appointmentData.email.trim(),
-      phone: appointmentData.phone.trim(),
+      phone: normalizePhone(appointmentPhoneCountry, appointmentData.phone),
       subject: `Studio Appointment: ${appointmentData.location}`,
       message: `Appointment requested for ${appointmentData.date} at ${appointmentData.timeSlot}. Store: ${appointmentData.location}. Notes: ${appointmentData.notes || 'None'}`,
       type: 'appointment',
@@ -359,7 +365,6 @@ const Contact = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     let nextValue = value;
-    if (name === 'phone') nextValue = value.replace(/\D/g, '').slice(0, 10);
     if (name === 'fullName') nextValue = value.replace(/[^a-zA-Z\s.'-]/g, '');
 
     setFormData((prev) => ({ ...prev, [name]: nextValue }));
@@ -371,19 +376,15 @@ const Contact = () => {
       if (name === 'fullName' && (!/^[a-zA-Z\s.'-]+$/.test(nextValue.trim()) || !/[a-zA-Z]/.test(nextValue))) {
         nextError = MAIN_FORM_ERROR_MESSAGES.fullName;
       }
-      if (name === 'phone' && !isValidMobile(nextValue)) nextError = MAIN_FORM_ERROR_MESSAGES.phone;
       if (name === 'inquiryType' && !VALID_INQUIRY_TYPES.has(nextValue)) nextError = MAIN_FORM_ERROR_MESSAGES.inquiryType;
       setFormErrors((prev) => ({ ...prev, [name]: nextError }));
     }
   };
 
-  const handleMainFormBlur = (e) => {
-    const { name, value } = e.target;
-    if (name !== 'phone') return;
-    setFormErrors((prev) => ({
-      ...prev,
-      phone: isValidMobile(value) ? '' : MAIN_FORM_ERROR_MESSAGES.phone,
-    }));
+  const handleMainPhoneChange = ({ country, number }) => {
+    setMainPhoneCountry(country);
+    setFormData((prev) => ({ ...prev, phone: number }));
+    setFormErrors((prev) => ({ ...prev, phone: getPhoneError(country, number) }));
   };
 
   const handleSubmit = async (e) => {
@@ -393,7 +394,7 @@ const Contact = () => {
       fullName: fullName && /^[a-zA-Z\s.'-]+$/.test(fullName) && /[a-zA-Z]/.test(fullName)
         ? ''
         : MAIN_FORM_ERROR_MESSAGES.fullName,
-      phone: isValidMobile(formData.phone) ? '' : MAIN_FORM_ERROR_MESSAGES.phone,
+      phone: getPhoneError(mainPhoneCountry, formData.phone),
       inquiryType: VALID_INQUIRY_TYPES.has(formData.inquiryType) ? '' : MAIN_FORM_ERROR_MESSAGES.inquiryType,
       subject: formData.subject.trim() ? '' : MAIN_FORM_ERROR_MESSAGES.subject,
       message: formData.message.trim() ? '' : MAIN_FORM_ERROR_MESSAGES.message,
@@ -404,11 +405,12 @@ const Contact = () => {
 
     if (currentEmailError || Object.values(validationErrors).some(Boolean)) return;
 
+    const submittedPhone = normalizePhone(mainPhoneCountry, formData.phone);
     try {
       const res = await axiosInstance.post(ENDPOINTS.ENQUIRIES.SUBMIT, {
         name: formData.fullName,
         email: formData.email,
-        phone: formData.phone,
+        ...(submittedPhone ? { phone: submittedPhone } : {}),
         subject: formData.subject || formData.inquiryType || 'General Inquiry',
         message: formData.message,
       });
@@ -421,7 +423,7 @@ const Contact = () => {
         displayId: fallbackId,
         name: formData.fullName,
         email: formData.email,
-        phone: formData.phone,
+        phone: submittedPhone || '',
         subject: formData.subject || formData.inquiryType || 'General Inquiry',
         message: formData.message,
         status: 'New',
@@ -611,26 +613,21 @@ const Contact = () => {
                     </div>
 
                     {/* Row 2 */}
-                    <div className={styles.formField}>
-                      <input
-                        className={`${styles.formInput} ${formErrors.phone ? styles.formInputError : ''}`}
-                        type="tel"
-                        name="phone"
-                        placeholder="10-digit Mobile Number *"
-                        required
-                        maxLength={10}
-                        pattern="[6-9][0-9]{9}"
-                        inputMode="numeric"
+                    <div className={`${styles.formField} ${styles.fullRowOnPhone}`}>
+                      <PhoneInput
+                        inputClassName={`${styles.formInput} ${formErrors.phone ? styles.formInputError : ''}`}
+                        country={mainPhoneCountry}
                         value={formData.phone}
-                        onChange={handleChange}
-                        onBlur={handleMainFormBlur}
-                        aria-invalid={Boolean(formErrors.phone)}
-                        aria-describedby={formErrors.phone ? 'contact-phone-error' : undefined}
+                        placeholder="Mobile Number (optional)"
+                        onChange={handleMainPhoneChange}
+                        onBlur={() => setFormErrors((prev) => ({ ...prev, phone: getPhoneError(mainPhoneCountry, formData.phone) }))}
+                        invalid={Boolean(formErrors.phone)}
+                        describedBy={formErrors.phone ? 'contact-phone-error' : undefined}
                       />
                       {formErrors.phone && <p id="contact-phone-error" className={styles.fieldError} role="alert">{formErrors.phone}</p>}
                     </div>
                     <input
-                      className={styles.formInput}
+                      className={`${styles.formInput} ${styles.fullRowOnPhone}`}
                       type="text"
                       name="company"
                       placeholder="Company Name"
@@ -977,20 +974,16 @@ const Contact = () => {
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>Phone Number *</label>
-                    <input
-                      type="tel"
-                      name="phone"
+                    <PhoneInput
+                      country={appointmentPhoneCountry}
                       value={appointmentData.phone}
-                      onChange={handleAppointmentChange}
-                      onBlur={handleAppointmentBlur}
-                      aria-invalid={Boolean(appointmentErrors.phone)}
-                      aria-describedby={appointmentErrors.phone ? "appointment-phone-error" : undefined}
-                      placeholder="10-digit mobile number"
                       required
-                      maxLength={10}
-                      pattern="[6-9][0-9]{9}"
-                      inputMode="numeric"
-                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: `1px solid ${appointmentErrors.phone ? '#dc2626' : '#cbd5e1'}`, outline: 'none', fontSize: '0.88rem' }}
+                      label="Phone number"
+                      onChange={handleAppointmentPhoneChange}
+                      onBlur={() => setAppointmentErrors((prev) => ({ ...prev, phone: getPhoneError(appointmentPhoneCountry, appointmentData.phone, { required: true }) }))}
+                      invalid={Boolean(appointmentErrors.phone)}
+                      describedBy={appointmentErrors.phone ? 'appointment-phone-error' : undefined}
+                      inputStyle={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: `1px solid ${appointmentErrors.phone ? '#dc2626' : '#cbd5e1'}`, outline: 'none', fontSize: '0.88rem' }}
                     />
                     {appointmentErrors.phone && (
                       <p id="appointment-phone-error" className={styles.fieldError} role="alert">
@@ -1205,18 +1198,16 @@ const Contact = () => {
                   <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>
                     Phone Number *
                   </label>
-                  <input
-                    type="tel"
-                    required
-                    maxLength={10}
-                    pattern="[6-9][0-9]{9}"
-                    placeholder="10-digit number"
+                  <PhoneInput
+                    country={cataloguePhoneCountry}
                     value={catalogueForm.phone}
-                    onChange={(e) => {
-                      const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
-                      setCatalogueForm({ ...catalogueForm, phone: cleaned });
+                    required
+                    label="Phone number"
+                    onChange={({ country, number }) => {
+                      setCataloguePhoneCountry(country);
+                      setCatalogueForm((prev) => ({ ...prev, phone: number }));
                     }}
-                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
+                    inputStyle={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.88rem' }}
                   />
                 </div>
               </div>

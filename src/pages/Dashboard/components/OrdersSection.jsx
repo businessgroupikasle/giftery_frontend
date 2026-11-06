@@ -236,6 +236,7 @@ const OrdersSection = ({ ordersList = [], handleDeleteOrder, onVisibleRecordsCha
               <th>Items Count</th>
               <th>Product Details</th>
               <th>Amount</th>
+              <th>Payment</th>
               <th>Status (Click to Edit)</th>
               <th>Actions</th>
             </tr>
@@ -264,9 +265,17 @@ const OrdersSection = ({ ordersList = [], handleDeleteOrder, onVisibleRecordsCha
                   <td>{o.date || 'Recent'}</td>
                   <td>{itemCount} Items</td>
                   <td style={{ fontSize: '0.82rem', color: '#475569', maxWidth: '220px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={productSummary}>
+                    {Array.isArray(o.items) && o.items.some((item) => item.customization) && (
+                      <span style={{ display: 'inline-block', marginRight: '0.35rem', padding: '0.05rem 0.45rem', borderRadius: '999px', background: '#fffbeb', color: '#92400e', fontSize: '0.7rem', fontWeight: 700 }}>Customized</span>
+                    )}
                     {productSummary}
                   </td>
                   <td><strong style={{ color: '#d99b26' }}>{amountDisplay}</strong></td>
+                  <td>
+                    <span style={{ display: 'inline-block', padding: '0.2rem 0.55rem', borderRadius: '999px', background: o.paymentStatus === 'PAID' ? '#dcfce7' : '#fef3c7', color: o.paymentStatus === 'PAID' ? '#166534' : '#92400e', fontSize: '0.72rem', fontWeight: 800 }}>
+                      {o.paymentMethod || 'COD'} · {o.paymentStatus || 'PENDING'}
+                    </span>
+                  </td>
                   <td>
                     <select
                       value={displaySelectValue}
@@ -310,11 +319,12 @@ const OrdersSection = ({ ordersList = [], handleDeleteOrder, onVisibleRecordsCha
                     <div className={styles.tableActions}>
                       <button
                         type="button"
-                        className={styles.dotsBtn}
+                        className={styles.viewBtn}
                         title="View Details"
+                        aria-label={`View details for order ${displayId}`}
                         onClick={() => setSelectedOrder(o)}
                       >
-                        <FiEye />
+                        <FiEye aria-hidden="true" /> View
                       </button>
                       <button
                         type="button"
