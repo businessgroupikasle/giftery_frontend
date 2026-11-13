@@ -8,11 +8,14 @@ import App from './App';
 import { ThemeProvider } from '@context/ThemeContext';
 import { AuthProvider } from '@context/AuthContext';
 import { CartProvider } from '@context/CartContext';
+import { initProductsSync } from '@utils/productsSync';
 import 'react-toastify/dist/ReactToastify.css';
 import '@styles/variables.css';
 import '@styles/global.css';
 import '@styles/mixins.css';
 import '@styles/responsive.css';
+
+initProductsSync();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

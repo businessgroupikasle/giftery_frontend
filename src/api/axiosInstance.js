@@ -93,4 +93,6 @@ axiosInstance.get = (url, config = {}) => {
   };
 });
 
+export const clearGetCache = () => getRequestStore.clear();
+
 export default axiosInstance;

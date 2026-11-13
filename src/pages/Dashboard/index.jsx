@@ -784,6 +784,28 @@ const Dashboard = () => {
     setShowProductForm(true);
   };
 
+  // Homepage collection flags save immediately for existing products,
+  // so ticking a box shows up on the home page tabs without pressing Save.
+  const HOMEPAGE_FLAG_LABELS = {
+    isBestseller: 'Best Sellers',
+    isPopular: 'Popular Products',
+    isNewArrival: 'New Arrivals',
+    isGiftSet: 'Gift Sets',
+  };
+
+  const saveHomepageFlag = async (productId, name, checked) => {
+    const label = HOMEPAGE_FLAG_LABELS[name];
+    try {
+      await axiosInstance.put(ENDPOINTS.PRODUCTS.UPDATE(productId), { [name]: checked });
+      window.dispatchEvent(new Event('products_updated'));
+      toast.success(checked ? `Added to ${label} on the home page` : `Removed from ${label} on the home page`);
+    } catch (err) {
+      setProductForm(prev => ({ ...prev, [name]: !checked }));
+      const errMsg = err.response?.data?.message || err.message || 'Update failed';
+      toast.error(`Could not update ${label}: ${errMsg}`);
+    }
+  };
+
   const handleProductFormChange = (e) => {
     const { name, value, type, checked } = e.target;
     setProductForm(prev => {
@@ -793,6 +815,11 @@ const Dashboard = () => {
       }
       return updated;
     });
+
+    const isSavedProduct = editingProduct?.id && !String(editingProduct.id).startsWith('prod-');
+    if (type === 'checkbox' && HOMEPAGE_FLAG_LABELS[name] && isSavedProduct) {
+      saveHomepageFlag(editingProduct.id, name, checked);
+    }
   };
 
   const handleProductSubmit = async (e) => {
