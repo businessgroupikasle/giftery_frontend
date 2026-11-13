@@ -35,6 +35,8 @@ const filterCategories = [
   { id: 'new', label: 'New Arrivals' },
 ];
 
+const PRODUCTS_PER_TAB = 8;
+
 const sampleProducts = [
   {
     id: 'prod-corp-1',
@@ -103,22 +105,44 @@ const ShopByCategory = () => {
   const navigate = useNavigate();
   const requireAuth = useRequireAuth();
   const [activeFilter, setActiveFilter] = useState('bestsellers');
-  const [productsList, setProductsList] = useState([]);
+  const [productsByCollection, setProductsByCollection] = useState({});
   const filterPillsRef = useRef(null);
   const wishlistItems = useSelector(selectWishlistItems);
   const { openCart } = useCartContext();
 
-  const loadProducts = async () => {
-    try {
-      const res = await axiosInstance.get(ENDPOINTS.PRODUCTS.LIST + '?limit=100');
-      let apiProds = [];
-      if (Array.isArray(res)) apiProds = res;
-      else if (res?.data && Array.isArray(res.data)) apiProds = res.data;
-      else if (res?.data?.data && Array.isArray(res.data.data)) apiProds = res.data.data;
-      else if (res?.data?.products && Array.isArray(res.data.products)) apiProds = res.data.products;
-      else if (res?.products && Array.isArray(res.products)) apiProds = res.products;
+  const extractProducts = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.data)) return res.data.data;
+    if (Array.isArray(res?.data?.products)) return res.data.products;
+    if (Array.isArray(res?.products)) return res.products;
+    return [];
+  };
 
-      const formatted = apiProds.map(p => ({
+  // Each tab asks the server for its own flagged products, so a product shows up
+  // no matter how many products exist in the store (not just the newest 100).
+  const loadProducts = async () => {
+    const results = await Promise.allSettled(
+      filterCategories.map((cat) =>
+        axiosInstance.get(`${ENDPOINTS.PRODUCTS.LIST}?collection=${cat.id}&limit=${PRODUCTS_PER_TAB}`)
+      )
+    );
+
+    setProductsByCollection((prev) => {
+      const next = { ...prev };
+      results.forEach((result, index) => {
+        const collectionId = filterCategories[index].id;
+        if (result.status === 'fulfilled') {
+          next[collectionId] = extractProducts(result.value).map(formatProduct);
+        } else {
+          console.warn(`ShopByCategory ${collectionId} fetch note:`, result.reason?.message);
+        }
+      });
+      return next;
+    });
+  };
+
+  const formatProduct = (p) => ({
         id: p.id,
         name: p.name,
         slug: p.slug,
@@ -135,13 +159,7 @@ const ShopByCategory = () => {
         isGiftSet: Boolean(p.isGiftSet),
         tags: Array.isArray(p.tags) ? p.tags : [],
         categoryName: p.category?.name || p.categoryName || '',
-      }));
-
-      setProductsList(formatted);
-    } catch (e) {
-      console.warn('ShopByCategory live products fetch note:', e.message);
-    }
-  };
+  });
 
   useEffect(() => {
     loadProducts();
@@ -161,25 +179,7 @@ const ShopByCategory = () => {
     return () => window.clearTimeout(autoRotateTimer);
   }, [activeFilter]);
 
-  const getFilteredProducts = () => {
-    return productsList.filter(product => {
-      if (activeFilter === 'bestsellers') {
-        return Boolean(product.isBestseller);
-      }
-      if (activeFilter === 'popular') {
-        return Boolean(product.isPopular);
-      }
-      if (activeFilter === 'new') {
-        return Boolean(product.isNewArrival);
-      }
-      if (activeFilter === 'giftsets') {
-        return Boolean(product.isGiftSet);
-      }
-      return false;
-    }).slice(0, 8);
-  };
-
-  const displayProducts = getFilteredProducts();
+  const displayProducts = (productsByCollection[activeFilter] || []).slice(0, PRODUCTS_PER_TAB);
 
   const scrollFilters = (direction) => {
     filterPillsRef.current?.scrollBy({
