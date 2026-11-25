@@ -35,7 +35,23 @@ const SUBCATEGORIES_DATA = [
   { id: 'premium-gifts', name: 'Premium Gifts' },
   { id: 'cups-mugs', name: 'Cups & Mugs' },
   { id: 'keychains', name: 'Keychains' },
+  { id: '2-in-1-combo', name: '2-in-1 Combo' },
+  { id: '3-in-1-combo', name: '3-in-1 Combo' },
+  { id: '4-in-1-combo', name: '4-in-1 Combo' },
+  { id: '5-in-1-combo', name: '5-in-1 Combo' },
+  { id: '6-in-1-combo', name: '6-in-1 Combo' },
+  { id: '7-in-1-combo', name: '7-in-1 Combo' },
+  { id: '8-in-1-combo', name: '8-in-1 Combo' },
+  { id: '9-in-1-combo', name: '9-in-1 Combo' },
+  { id: '10-in-1-combo', name: '10-in-1 Combo' },
 ];
+
+// The API returns categories sorted by name, which would put "10-in-1 Combo" first.
+// Keep regular subcategories A-Z, then combos in numeric order (2, 3, ... 10).
+const isComboSubcategory = (sub) => /^\d+-in-1-combo$/.test(sub.slug || '');
+const compareSubcategories = (a, b) =>
+  Number(isComboSubcategory(a)) - Number(isComboSubcategory(b)) ||
+  a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
 
 const SubCategoryIcon = ({ type }) => {
   const stroke = "#334155";
@@ -370,7 +386,7 @@ const CorporateGifts = () => {
       }
     });
 
-    const subList = Array.from(subMap.values());
+    const subList = Array.from(subMap.values()).sort(compareSubcategories);
     if (subList.length === 0 && SUBCATEGORIES_DATA && SUBCATEGORIES_DATA.length > 1) {
       return SUBCATEGORIES_DATA.map(sub => {
         if (sub.id === 'all') return { ...sub, slug: 'all', count: liveProducts.length };

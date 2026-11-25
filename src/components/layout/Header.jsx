@@ -9,6 +9,9 @@ import useAuth from '@hooks/useAuth';
 import SignOutModal from '@components/common/SignOutModal';
 import styles from './Header.module.css';
 
+// Corporate Gifts combo subcategories: 2-in-1 Combo ... 10-in-1 Combo (slug: `${n}-in-1-combo`)
+const CORPORATE_COMBO_COUNTS = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+
 const GiftLogo = () => (
   <div style={{ display: 'inline-flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.15' }}>
     <span style={{
@@ -165,6 +168,15 @@ const Header = () => {
                 <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=premium-gifts`} onClick={() => setActiveDropdown(null)}>Premium Gifts</Link>
                 <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=cups-mugs`} onClick={() => setActiveDropdown(null)}>Cups & Mugs</Link>
                 <Link to={`${ROUTES.CORPORATE_GIFTS}?subCategory=keychains`} onClick={() => setActiveDropdown(null)}>Keychains</Link>
+                {CORPORATE_COMBO_COUNTS.map((n) => (
+                  <Link
+                    key={n}
+                    to={`${ROUTES.CORPORATE_GIFTS}?subCategory=${n}-in-1-combo`}
+                    onClick={() => setActiveDropdown(null)}
+                  >
+                    {n}-in-1 Combo
+                  </Link>
+                ))}
               </div>
             )}
           </div>
