@@ -228,7 +228,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className={styles.bottomBar}>
           <div className={styles.copyright}>
-            Copyright © {new Date().getFullYear()} <span className={styles.goldHighlight}>Giftery</span> | Crafted And Maintained By <a href="https://ikasleinnovations.com/" target="_blank" rel="noopener noreferrer" className={`${styles.goldHighlight} ${styles.companyLink}`}>Ikaslé Business Group</a>
+            Copyright © {new Date().getFullYear()} <span className={styles.goldHighlight}>Giftery</span> | Crafted And Maintained By <a href="https://www.ikasletechnologies.com/" target="_blank" rel="noopener noreferrer" className={`${styles.goldHighlight} ${styles.companyLink}`}>Ikaslé Business Group</a>
           </div>
 
           <div className={styles.paymentSection}>
