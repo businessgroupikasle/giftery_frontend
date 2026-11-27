@@ -53,6 +53,13 @@ const BulkOrdersSection = () => {
   }, [filter, debouncedSearch, page]);
 
   useEffect(() => { load(); }, [load]);
+
+  // While the server can't be reached (e.g. it is restarting), keep retrying in the background.
+  useEffect(() => {
+    if (state !== 'error') return undefined;
+    const timer = setInterval(load, 15000);
+    return () => clearInterval(timer);
+  }, [state, load]);
   useEffect(() => { setPage(1); }, [filter, debouncedSearch]);
 
   // A new inquiry from the storefront appears without a manual refresh.
@@ -64,8 +71,14 @@ const BulkOrdersSection = () => {
       toast.info(`New bulk inquiry: ${enquiry.quantity} × ${enquiry.productName}`);
       load();
     };
+    // The socket reconnects when the backend comes back after a restart; reload then.
+    const onReconnect = () => load();
     socket.on('enquiry:created', onCreated);
-    return () => socket.off('enquiry:created', onCreated);
+    socket.on('connect', onReconnect);
+    return () => {
+      socket.off('enquiry:created', onCreated);
+      socket.off('connect', onReconnect);
+    };
   }, [load]);
 
   const updateStatus = async (inquiry, status) => {
@@ -140,7 +153,7 @@ const BulkOrdersSection = () => {
       </div>
 
       {state === 'loading' && <p style={{ color: '#64748b' }}>Loading bulk inquiries…</p>}
-      {state === 'error' && <p role="alert" style={{ color: '#b91c1c' }}>Bulk inquiries could not be loaded. <button type="button" onClick={load}>Retry</button></p>}
+      {state === 'error' && <p role="alert" style={{ color: '#b91c1c' }}>Bulk inquiries could not be loaded. Retrying automatically… <button type="button" onClick={load}>Retry now</button></p>}
       {state === 'ready' && result.data.length === 0 && (
         <p style={{ color: '#64748b' }}>{search || filter !== 'ALL' ? 'No bulk inquiries match this view.' : 'No bulk order inquiries yet. They appear here when a customer sends one from a product page.'}</p>
       )}

@@ -80,9 +80,11 @@ test.describe('Dashboard overview KPI cards', () => {
     await page.getByRole('button', { name: /Filter/ }).click();
     await page.getByText('Today', { exact: true }).click();
     await expect(page.getByTitle('Open Orders')).toContainText('Today');
-    const last = requests.at(-1);
-    const span = Date.parse(last.get('to')) - Date.parse(last.get('from'));
-    expect(span).toBeLessThan(864e5);
+    // The request goes out just after the label changes; wait for it, then check it is the latest.
+    const spanOf = (params) => Date.parse(params.get('to')) - Date.parse(params.get('from'));
+    await expect.poll(() => requests.length && spanOf(requests.at(-1))).toBeLessThan(864e5);
+    await page.waitForTimeout(1000);
+    expect(spanOf(requests.at(-1))).toBeLessThan(864e5);
   });
 
   test('a failed load shows a retry instead of fake zeros', async ({ page }) => {
@@ -96,8 +98,25 @@ test.describe('Dashboard overview KPI cards', () => {
     await page.goto('/dashboard');
     await expect(page.getByRole('alert').filter({ hasText: "Couldn't load the live dashboard counts" })).toBeVisible({ timeout: 15000 });
     await expect(page.getByTitle('Open Products').locator('h2')).toHaveText('—');
+    await expect(page.getByTitle('Open Products')).not.toContainText('low stock');
+    await expect(page.getByTitle('Open Enquiries')).not.toContainText('0 new');
     serverUp = true;
     await page.getByRole('button', { name: 'Retry' }).click();
     await expect(page.getByTitle('Open Products').locator('h2')).toHaveText('10');
   });
+});
+
+test('cards recover on their own when the backend comes back', async ({ page }) => {
+  await seedAuthenticatedUser(page, 'SUPER_ADMIN');
+  await mockApi(page);
+  let serverUp = false;
+  await page.route('**/api/v1/dashboard/summary*', (route) => (serverUp
+    ? route.fulfill({ json: { success: true, data: summary } })
+    : route.fulfill({ status: 503, json: { success: false, message: 'down' } })));
+  await page.goto('/dashboard');
+  await expect(page.getByRole('alert').filter({ hasText: 'live dashboard counts' })).toBeVisible({ timeout: 15000 });
+
+  serverUp = true; // no Retry click: the background retry picks it up
+  await expect(page.getByTitle('Open Products').locator('h2')).toHaveText('10', { timeout: 25000 });
+  await expect(page.getByRole('alert').filter({ hasText: 'live dashboard counts' })).toHaveCount(0);
 });

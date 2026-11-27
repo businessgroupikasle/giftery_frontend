@@ -60,6 +60,7 @@ export const buildKpiCards = (s) => [
 ];
 
 const LIVE_EVENTS = ['order:created', 'enquiry:created', 'customer:created'];
+const RETRY_EVERY_MS = 15000;
 
 /** Live KPI cards for the dashboard overview, read from GET /dashboard/summary. */
 const OverviewKpiCards = ({ handleTabChange, dateFilter, refreshKey = 0 }) => {
@@ -95,21 +96,37 @@ const OverviewKpiCards = ({ handleTabChange, dateFilter, refreshKey = 0 }) => {
       timer = setTimeout(load, 400);
     };
     LIVE_EVENTS.forEach((event) => socket.on(event, onEvent));
+    // The socket reconnects when the backend comes back after a restart; reload then.
+    socket.on('connect', onEvent);
     return () => {
       clearTimeout(timer);
       LIVE_EVENTS.forEach((event) => socket.off(event, onEvent));
+      socket.off('connect', onEvent);
     };
   }, [load]);
+
+  // While the server can't be reached, keep trying quietly in the background.
+  useEffect(() => {
+    if (status !== 'error') return undefined;
+    const timer = setInterval(load, RETRY_EVERY_MS);
+    return () => clearInterval(timer);
+  }, [status, load]);
 
   const cards = useMemo(() => buildKpiCards(summary || {}), [summary]);
   const periodLabel = describeDateRange(dateFilter);
   const loading = status === 'loading';
+  // Never show made-up zeros: without a successful load, cards show only a dash.
+  const hasData = Boolean(summary) && !loading;
 
   return (
     <div className={local.wrapper}>
       {status === 'error' && (
         <div className={local.errorBar} role="alert">
-          <span>Couldn&apos;t load the live dashboard counts.</span>
+          <span>
+            {summary
+              ? "Couldn't refresh the live counts. Showing the last loaded numbers; retrying automatically."
+              : "Couldn't load the live dashboard counts. Retrying automatically."}
+          </span>
           <button type="button" onClick={load}><FiRefreshCw aria-hidden="true" /> Retry</button>
         </div>
       )}
@@ -130,9 +147,9 @@ const OverviewKpiCards = ({ handleTabChange, dateFilter, refreshKey = 0 }) => {
                 </div>
                 <span className={styles.kpiTitle}>{card.label}</span>
               </div>
-              <h2 className={styles.kpiValue}>{loading || (status === 'error' && !summary) ? '—' : card.value}</h2>
+              <h2 className={styles.kpiValue}>{hasData ? card.value : '—'}</h2>
               <div className={local.details}>
-                {card.details.map(([text, attention]) => (
+                {hasData && card.details.map(([text, attention]) => (
                   <span key={text} className={attention ? local.attention : undefined}>{text}</span>
                 ))}
               </div>

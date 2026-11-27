@@ -138,6 +138,7 @@ export const ENDPOINTS = {
   DASHBOARD: {
     STATS: '/dashboard/stats',
     SUMMARY: '/dashboard/summary',
+    OVERVIEW: '/dashboard/overview',
     RECENT_ORDERS: '/dashboard/recent-orders',
     REVENUE: '/dashboard/revenue',
     PRODUCTS: {
