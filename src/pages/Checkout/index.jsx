@@ -37,7 +37,6 @@ const Checkout = () => {
   const cartItems = isBuyNow ? [buyNowItem] : reduxItems;
   const [orderCompleted, setOrderCompleted] = useState(null);
   const orderCompletedRef = useRef(false);
-  const razorpayPendingOrderRef = useRef(null);
 
   useEffect(() => {
     if (cartItems.length === 0 && !orderCompletedRef.current) {
@@ -403,24 +402,33 @@ const Checkout = () => {
     setCurrentStep(3);
   };
 
-  // Complete Order Handler (Razorpay or COD)
-  const createConfirmedOrder = async (orderData, paymentId = null) => {
-    const response = await axiosInstance.post(ENDPOINTS.ORDERS.CREATE, {
-      ...checkoutItems(isBuyNow, orderData.items),
-      orderNumber: orderData.orderId,
-      totalAmount: orderData.totalAmount,
-      subtotal: orderData.subtotal,
-      discountAmount: orderData.discountAmount,
-      shippingFee: orderData.shippingFee,
-      taxPercentage: orderData.taxPercentage,
-      taxAmount: orderData.taxAmount,
-      shippingAddress: orderData.shippingAddress,
-      paymentMethod: orderData.paymentMethod,
-      couponCode: orderData.couponCode,
-      ...(paymentId ? { paymentId } : {}),
-    });
+  // Checkout body shared by COD (POST /orders) and Razorpay (POST /payments/razorpay/create-order)
+  const checkoutBody = (orderData) => ({
+    ...checkoutItems(isBuyNow, orderData.items),
+    orderNumber: orderData.orderId,
+    totalAmount: orderData.totalAmount,
+    subtotal: orderData.subtotal,
+    discountAmount: orderData.discountAmount,
+    shippingFee: orderData.shippingFee,
+    taxPercentage: orderData.taxPercentage,
+    taxAmount: orderData.taxAmount,
+    shippingAddress: orderData.shippingAddress,
+    paymentMethod: orderData.paymentMethod,
+    couponCode: orderData.couponCode,
+  });
+
+  // Cash on Delivery only: online orders are created by the server after the payment is verified.
+  const createConfirmedOrder = async (orderData) => {
+    const response = await axiosInstance.post(ENDPOINTS.ORDERS.CREATE, checkoutBody(orderData));
     const payload = unwrapApiData(response);
     return payload?.order || payload || {};
+  };
+
+  const showPriceMismatch = (error) => {
+    if (error.errors?.code !== 'PRICE_MISMATCH' || !error.errors.pricing) return false;
+    setServerPricing({ key: pricingKey, pricing: error.errors.pricing });
+    setPaymentError({ title: 'Order Total Updated', message: 'The server recalculated your total. Review the updated amount and place the order again.', code: 'PRICE_MISMATCH' });
+    return true;
   };
 
   const handleCompleteOrder = async () => {
@@ -469,14 +477,8 @@ const Checkout = () => {
 
     if (paymentMethod === 'razorpay') {
       try {
-        const pendingOrder = razorpayPendingOrderRef.current || await createConfirmedOrder(orderData);
-        if (!pendingOrder?.id) {
-          throw new Error('The store order could not be created. Please retry.');
-        }
-        razorpayPendingOrderRef.current = pendingOrder;
-        const createResponse = await axiosInstance.post(ENDPOINTS.PAYMENTS.RAZORPAY_CREATE_ORDER, {
-          orderId: pendingOrder.id,
-        });
+        // No store order exists yet: the server creates it only after the payment is verified.
+        const createResponse = await axiosInstance.post(ENDPOINTS.PAYMENTS.RAZORPAY_CREATE_ORDER, checkoutBody(orderData));
         const createPayload = unwrapApiData(createResponse);
         const orderInfo = createPayload?.order || createPayload;
         const razorpayOrderId = orderInfo?.orderId || orderInfo?.id;
@@ -501,7 +503,6 @@ const Checkout = () => {
           handler: async (response) => {
             try {
               const verificationResponse = await axiosInstance.post(ENDPOINTS.PAYMENTS.RAZORPAY_VERIFY, {
-                orderId: pendingOrder.id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
@@ -511,18 +512,25 @@ const Checkout = () => {
                 throw new Error(verification?.message || 'Payment signature verification failed.');
               }
 
-              razorpayPendingOrderRef.current = null;
+              const paidOrder = verification?.order || {};
               await finishOrderSuccess(orderData, {
-                ...pendingOrder,
+                ...paidOrder,
                 paymentMethod: 'RAZORPAY',
                 paymentStatus: 'PAID',
-                payment: { ...pendingOrder.payment, method: 'RAZORPAY', status: 'SUCCEEDED' },
+                payment: { ...paidOrder.payment, method: 'RAZORPAY', status: 'SUCCEEDED' },
               }, response.razorpay_payment_id);
               toast.success(`Payment successful! Razorpay ID: ${response.razorpay_payment_id}`);
             } catch (error) {
-              const message = error.message || 'Payment verification failed. Please contact support before retrying.';
               setIsProcessing(false);
-              setPaymentError({ title: 'Payment Verification Failed', message, code: 'VERIFY_FAILED' });
+              if (error.errors?.code === 'PAYMENT_REFUNDED') {
+                // Paid, but the order could not be completed (e.g. sold out meanwhile); the server refunded it.
+                setPaymentError({ title: 'Order Not Placed', message: error.message, code: 'PAYMENT_REFUNDED', paymentId: response.razorpay_payment_id });
+                toast.error(error.message);
+                return;
+              }
+              // The payment webhook still creates the order if the money was captured.
+              const message = error.message || 'Payment verification failed. Please contact support before retrying.';
+              setPaymentError({ title: 'Payment Verification Failed', message: `${message} If money was deducted, your order will appear in My Orders shortly; please do not pay again.`, code: 'VERIFY_FAILED', paymentId: response.razorpay_payment_id });
               toast.error(message);
             }
           },
@@ -549,6 +557,7 @@ const Checkout = () => {
         razorpay.open();
       } catch (error) {
         setIsProcessing(false);
+        if (showPriceMismatch(error)) return;
         const message = error.message || 'Failed to initialize payment gateway';
         setPaymentError({ message, code: 'ORDER_INIT_FAILED' });
         toast.error(`Payment error: ${message}`);
@@ -562,11 +571,7 @@ const Checkout = () => {
       toast.success('Order placed successfully!');
     } catch (error) {
       setIsProcessing(false);
-      if (error.errors?.code === 'PRICE_MISMATCH' && error.errors.pricing) {
-        setServerPricing({ key: pricingKey, pricing: error.errors.pricing });
-        setPaymentError({ title: 'Order Total Updated', message: 'The server recalculated your total. Review the updated amount and place the order again.', code: 'PRICE_MISMATCH' });
-        return;
-      }
+      if (showPriceMismatch(error)) return;
       const message = error.message || 'The order could not be saved. Please retry.';
       setPaymentError({ title: 'Order Failed', message, code: 'ORDER_CREATE_FAILED' });
       toast.error(message);

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import Layout from '@components/layout/Layout';
-import StarRating from '@components/product/StarRating';
+import PriceSavingsBadge from '@components/product/PriceSavingsBadge';
 import Spinner from '@components/ui/Spinner';
 import { addToCart } from '@store/slices/cartSlice';
 import useRequireAuth from '@hooks/useRequireAuth';
@@ -14,86 +14,13 @@ import { ROUTES } from '@constants/routes';
 import { toast } from 'react-toastify';
 import { FiHeart, FiShoppingCart, FiZap } from 'react-icons/fi';
 import { getImageUrl } from '@utils/imageUrl';
+import { formatCurrency, getPriceSavings } from '@utils/formatters';
 import { trackEcommerce } from '@utils/analytics';
 import styles from './Product.module.css';
 import CustomizeEntry from './CustomizeEntry';
+import BulkOfferTeaser from './BulkOfferTeaser';
 import PhoneInput from '@components/ui/PhoneInput';
 import { DEFAULT_PHONE_COUNTRY, getPhoneError, normalizePhone, parseStoredPhone } from '@utils/phone';
-
-/* ── Fallback Master Products Dataset (for rich Catalogue fallback by slug) ── */
-const MASTER_PRODUCTS = [
-  {
-    id: 'cg-101',
-    name: 'Executive Kinetic Desk Gyro Sculpture',
-    slug: 'executive-kinetic-desk-gyro-sculpture',
-    categoryName: 'Corporate Gifts',
-    categorySlug: 'corporate-gifts',
-    subcategory: 'Executive Gifts',
-    badge: 'BEST SELLER',
-    rating: 4.8,
-    reviewsCount: 49,
-    salesCount: '250+ sold',
-    price: 1499,
-    comparePrice: 1999,
-    discount: '25% OFF',
-    inStock: true,
-    minOrder: 10,
-    shortDescription: 'Make a lasting first impression with our Executive Kinetic Desk Gyro Sculpture. Perfect for onboarding new executives and luxury corporate gifting.',
-    images: [
-      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&auto=format&fit=crop&q=80',
-    ],
-    highlights: [
-      'Perfect for executive desk decoration and employee onboarding',
-      'High-grade aircraft aluminum & stainless steel construction',
-      'Custom laser engraving available for corporate branding',
-      'Bulk pricing available for bulk corporate orders',
-    ],
-    specifications: {
-      material: 'Premium Aircraft Aluminum, Stainless Steel',
-      color: 'Matte Black with Gold Accents',
-      branding: 'Laser Engraving / Screen Printing',
-      usage: 'Executive Gifting, Desktop Accent',
-    },
-  },
-  {
-    id: 'cg-102',
-    name: '3D Wooden Mechanical Gear Clock Puzzle',
-    slug: '3d-wooden-mechanical-gear-clock-puzzle',
-    categoryName: 'Corporate Gifts',
-    categorySlug: 'corporate-gifts',
-    subcategory: 'Desk Accessories',
-    badge: 'TRENDING',
-    rating: 4.9,
-    reviewsCount: 81,
-    salesCount: '180+ sold',
-    price: 2199,
-    comparePrice: 2799,
-    discount: '21% OFF',
-    inStock: true,
-    minOrder: 5,
-    shortDescription: 'Exquisite handcrafted 3D wooden gear clock puzzle. Combines mechanical art with functional quartz timekeeping.',
-    images: [
-      'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80',
-    ],
-    highlights: [
-      'Laser-cut precision natural Linden plywood',
-      'Fully functional clock mechanism included',
-      'Engraved corporate logo plate option',
-    ],
-    specifications: {
-      material: 'Eco-Friendly Plywood & Quartz Mechanism',
-      color: 'Natural Wood Grain & Gold Details',
-      branding: 'Custom Engraved Nameplate',
-      usage: 'Office Decor, Team Building Gift',
-    },
-  },
-];
 
 const parseImagesArray = (imgs, fallbackImg) => {
   if (!imgs) return fallbackImg ? [fallbackImg] : [];
@@ -287,9 +214,6 @@ const Product = () => {
     name,
     price,
     comparePrice = product.comparePrice ? Number(product.comparePrice) : null,
-    discount = comparePrice && price && comparePrice > price ? `${Math.round(((comparePrice - price) / comparePrice) * 100)}% OFF` : null,
-    reviewsCount = product.reviewsCount ? Number(product.reviewsCount) : 0,
-    salesCount = product.salesCount || null,
     badge = product.featured ? 'FEATURED' : (product.tags ? String(product.tags).split(',')[0].trim() : null),
     description = product.description || '',
     category,
@@ -301,6 +225,8 @@ const Product = () => {
     minOrder = product.minOrder || 1,
     inStock = product.stock !== undefined ? Number(product.stock) > 0 : true,
   } = product;
+
+  const savings = getPriceSavings(price, comparePrice);
 
   const maxStock = product.stock !== undefined && product.stock !== null ? Number(product.stock) : 9999;
   const purchaseDisabled = maxStock <= 0 || adding;
@@ -738,28 +664,13 @@ const Product = () => {
               {/* Product Title */}
               <h1 className={styles.productTitle}>{name}</h1>
 
-              {/* Rating & Sold Bar */}
-              <div className={styles.ratingSoldRow}>
-                <div className={styles.starsRow}>
-                  <StarRating rating={5} size="sm" />
-                  <span className={styles.ratingNum}>5.0</span>
-                  <span className={styles.reviewsText}>({reviewsCount} reviews)</span>
-                </div>
-                {salesCount && (
-                  <>
-                    <span className={styles.dividerPipe}>|</span>
-                    <span className={styles.soldBadge}>{salesCount}</span>
-                  </>
-                )}
-              </div>
-
               {/* Pricing Box */}
               <div className={styles.pricingRow}>
-                <span className={styles.currentPrice}>₹{price?.toLocaleString('en-IN')}.00</span>
-                {comparePrice && <span className={styles.comparePrice}>₹{comparePrice?.toLocaleString('en-IN')}.00</span>}
-                {discount && <span className={styles.discountBadge}>{discount}</span>}
+                <span className={styles.currentPrice}>{formatCurrency(price)}</span>
+                {savings && <span className={styles.comparePrice}>{formatCurrency(comparePrice)}</span>}
+                {savings && <span className={styles.discountBadge}>{savings.percentage}% OFF</span>}
               </div>
-              <p className={styles.taxSubtext}>Inclusive of all taxes</p>
+              {savings && <PriceSavingsBadge amount={savings.amount} className={styles.savings} />}
 
               {/* Quantity Stepper & Stock Info */}
               <div className={styles.quantitySection}>
@@ -785,6 +696,13 @@ const Product = () => {
                   </span>
                 </div>
               </div>
+
+              {/* Bulk order offer: opens the bulk inquiry form in a popup (inquiry only, prices unchanged) */}
+              <BulkOfferTeaser
+                key={id || slug}
+                product={{ id, name, sku: product.sku || '' }}
+                user={user}
+              />
 
               {/* CTA Action Buttons */}
               <div className={styles.ctaButtonGroup}>

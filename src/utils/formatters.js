@@ -41,6 +41,25 @@ export const calcDiscount = (original, sale) =>
   Math.round(((original - sale) / original) * 100);
 
 /**
+ * Return catalogue savings only when both prices are valid and the compare
+ * price is genuinely higher. Cart/coupon discounts are intentionally separate.
+ */
+export const getPriceSavings = (sellingPrice, comparePrice) => {
+  const selling = Number(sellingPrice);
+  const compare = Number(comparePrice);
+
+  if (!Number.isFinite(selling) || !Number.isFinite(compare) || selling < 0 || compare <= selling) {
+    return null;
+  }
+
+  const amount = compare - selling;
+  return {
+    amount,
+    percentage: Math.round((amount / compare) * 100),
+  };
+};
+
+/**
  * Build a full image URL from a relative path
  */
 export const buildImageUrl = (path, cdnBase) =>

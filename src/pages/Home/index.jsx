@@ -5,6 +5,7 @@ import ShopByCategory from '@components/home/ShopByCategory';
 import TrustedBy from '@components/home/TrustedBy';
 import OurProcess from '@components/home/OurProcess';
 import BulkOrdersBanner from '@components/home/BulkOrdersBanner';
+import YouTubeShorts from '@components/home/YouTubeShorts';
 import styles from './Home.module.css';
 
 const Home = () => {
@@ -115,6 +116,9 @@ const Home = () => {
 
       {/* ── Our Process Section (4 Steps) ── */}
       <OurProcess />
+
+      {/* ── YouTube Shorts Carousel ── */}
+      <YouTubeShorts />
 
       {/* ── Bulk Orders Special Benefits Banner ── */}
       <BulkOrdersBanner />

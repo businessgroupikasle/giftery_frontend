@@ -31,11 +31,28 @@ const OrdersSection = ({ ordersList = [], handleDeleteOrder, onVisibleRecordsCha
     }
   }, [ordersList]);
 
-  const handleStatusChange = async (orderId, newStatus) => {
+  const handleStatusChange = async (orderId, newStatus, currentStatus) => {
     const uppercaseStatus = String(newStatus).toUpperCase();
     const displayStatus = newStatus.charAt(0).toUpperCase() + newStatus.slice(1).toLowerCase();
 
-    // 1. Update React local state
+    // Delivered is final: the server refuses any later change, so the UI does too.
+    if (String(currentStatus || '').toUpperCase() === 'DELIVERED') {
+      toast.error('This order has been delivered. Its status can no longer be changed.');
+      return;
+    }
+    if (uppercaseStatus === 'DELIVERED' && !window.confirm('Mark this order as Delivered? This cannot be changed later.')) {
+      return;
+    }
+
+    // 1. Save to the backend first; the screen only changes if the server accepted it
+    try {
+      await axiosInstance.patch(`/orders/${orderId}/status`, { status: uppercaseStatus });
+    } catch (err) {
+      toast.error(err?.message || 'Could not update the order status. Please try again.');
+      return;
+    }
+
+    // 2. Update React local state
     const updated = orders.map((o) => {
       const matchId = String(o.id || o.orderId);
       const targetId = String(orderId);
@@ -46,7 +63,7 @@ const OrdersSection = ({ ordersList = [], handleDeleteOrder, onVisibleRecordsCha
     });
     setOrders(updated);
 
-    // 2. Update persistent localStorage cache for instant synchronization
+    // 3. Update persistent localStorage cache for instant synchronization
     try {
       const stored = JSON.parse(localStorage.getItem('giftery_orders') || '[]');
       const updatedStored = stored.map((o) => {
@@ -60,19 +77,8 @@ const OrdersSection = ({ ordersList = [], handleDeleteOrder, onVisibleRecordsCha
       localStorage.setItem('giftery_orders', JSON.stringify(updatedStored));
     } catch (e) {}
 
-    // 3. Emit real-time live event so all components on all pages re-render immediately
+    // 4. Emit real-time live event so all components on all pages re-render immediately
     window.dispatchEvent(new Event('orders_updated'));
-
-    // 4. Update Backend PostgreSQL database
-    try {
-      await axiosInstance.patch(`/orders/${orderId}/status`, { status: uppercaseStatus });
-    } catch (err) {
-      try {
-        await axiosInstance.put(`/orders/${orderId}/status`, { status: uppercaseStatus });
-      } catch (putErr) {
-        console.warn('Backend order status update sync:', err.message);
-      }
-    }
 
     if (orderFilter !== 'ALL' && orderFilter !== uppercaseStatus) {
       setOrderFilter(uppercaseStatus);
@@ -279,7 +285,8 @@ const OrdersSection = ({ ordersList = [], handleDeleteOrder, onVisibleRecordsCha
                   <td>
                     <select
                       value={displaySelectValue}
-                      onChange={(e) => handleStatusChange(o.id || o.orderId, e.target.value)}
+                      onChange={(e) => handleStatusChange(o.id || o.orderId, e.target.value, currentStatusUpper)}
+                      disabled={currentStatusUpper === 'DELIVERED'}
                       className={`${styles.pillStatus} ${
                         currentStatusUpper === 'DELIVERED'
                           ? styles.pillDelivered
@@ -292,7 +299,8 @@ const OrdersSection = ({ ordersList = [], handleDeleteOrder, onVisibleRecordsCha
                       style={{
                         border: '1px solid transparent',
                         outline: 'none',
-                        cursor: 'pointer',
+                        cursor: currentStatusUpper === 'DELIVERED' ? 'not-allowed' : 'pointer',
+                        opacity: currentStatusUpper === 'DELIVERED' ? 0.85 : 1,
                         padding: '0.35rem 0.75rem',
                         borderRadius: '20px',
                         fontWeight: '700',
@@ -305,7 +313,7 @@ const OrdersSection = ({ ordersList = [], handleDeleteOrder, onVisibleRecordsCha
                         backgroundPosition: 'right 8px center',
                         paddingRight: '24px',
                       }}
-                      title="Click to change order status"
+                      title={currentStatusUpper === 'DELIVERED' ? 'Delivered orders are final and cannot be changed' : 'Click to change order status'}
                     >
                       <option value="Pending" style={{ background: '#ffffff', color: '#1e293b' }}>Pending</option>
                       <option value="Confirmed" style={{ background: '#ffffff', color: '#1e293b' }}>Confirmed</option>

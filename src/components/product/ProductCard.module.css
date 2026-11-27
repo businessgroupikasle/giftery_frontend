@@ -116,18 +116,9 @@
   color: #d97706;
 }
 
-.rating {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-.reviewCount {
-  font-size: 0.78rem;
-  color: #94a3b8;
-}
-
 .pricing {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 0.5rem;
   margin-top: auto;
@@ -142,6 +133,12 @@
   font-size: 0.82rem;
   color: #a1a1aa;
   text-decoration: line-through;
+}
+.savings {
+  color: #047857;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin: -0.2rem 0 0.5rem;
 }
 
 .actionsRow {
@@ -338,9 +335,6 @@
     font-size: 0.86rem;
     min-height: 2.3rem;
   }
-  .reviewCount {
-    font-size: 0.75rem;
-  }
   .price {
     font-size: 1.05rem;
   }
@@ -387,12 +381,6 @@
     font-size: 0.82rem;
     min-height: 2.1rem;
   }
-  .rating {
-    gap: 0.3rem;
-  }
-  .reviewCount {
-    font-size: 0.72rem;
-  }
   .price {
     font-size: 1rem;
   }
@@ -438,10 +426,6 @@
     width: 26px;
     height: 26px;
     font-size: 0.82rem;
-  }
-  .rating {
-    transform: scale(0.88);
-    transform-origin: left center;
   }
 }
 

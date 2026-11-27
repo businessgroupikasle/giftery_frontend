@@ -1,19 +1,14 @@
 import { useState, useMemo } from 'react';
 import { 
-  FiShoppingBag, 
-  FiClock, 
-  FiCheckCircle, 
-  FiUsers, 
   FiFileText, 
-  FiTrendingUp, 
   FiMoreVertical, 
   FiArchive, 
   FiXCircle, 
   FiUserPlus,
-  FiMessageSquare
 } from 'react-icons/fi';
 import { formatOrderId, formatEnquiryId, filterByDateRange, filterByStatus } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
+import OverviewKpiCards from './OverviewKpiCards';
 
 const DEFAULT_RECENT_ORDERS = [];
 
@@ -30,6 +25,7 @@ const DashboardOverview = ({
   backendStats = null,
   dateFilter = 'Last 30 Days',
   statusFilter = 'All',
+  refreshKey = 0,
 }) => {
   const [salesTimeframe, setSalesTimeframe] = useState('Weekly');
   const [catTimeframe, setCatTimeframe] = useState('This Week');
@@ -210,98 +206,8 @@ const DashboardOverview = ({
         </div>
       )}
 
-      {/* ── ROW 1: 6 KPI METRICS CARDS ── */}
-      <div className={styles.kpiGrid}>
-        {/* Card 1: Total Revenue */}
-        <div className={styles.kpiCard} onClick={() => handleTabChange('reports')} style={{ cursor: 'pointer' }} title="View Store Reports & Analytics">
-          <div className={styles.kpiHeader}>
-            <div className={`${styles.kpiIconCircle} ${styles.bgPurple}`}>
-              <FiShoppingBag />
-            </div>
-            <span className={styles.kpiTitle}>Total Revenue</span>
-          </div>
-          <h2 className={styles.kpiValue}>₹{metrics.totalRevenue.toLocaleString('en-IN')}</h2>
-          <div className={styles.kpiFooter}>
-            <span className={styles.trendGreen}><FiTrendingUp /> 18.6%</span>
-            <span className={styles.kpiSubtext}>vs previous period</span>
-          </div>
-        </div>
-
-        {/* Card 2: Total Orders */}
-        <div className={styles.kpiCard} onClick={() => handleTabChange('orders')} style={{ cursor: 'pointer' }} title="View All Orders">
-          <div className={styles.kpiHeader}>
-            <div className={`${styles.kpiIconCircle} ${styles.bgBlue}`}>
-              <FiShoppingBag />
-            </div>
-            <span className={styles.kpiTitle}>Total Orders</span>
-          </div>
-          <h2 className={styles.kpiValue}>{metrics.totalOrders.toLocaleString('en-IN')}</h2>
-          <div className={styles.kpiFooter}>
-            <span className={styles.trendGreen}><FiTrendingUp /> 12.4%</span>
-            <span className={styles.kpiSubtext}>vs previous period</span>
-          </div>
-        </div>
-
-        {/* Card 3: Pending Orders */}
-        <div className={styles.kpiCard} onClick={() => handleTabChange('orders')} style={{ cursor: 'pointer' }} title="Manage Pending Orders">
-          <div className={styles.kpiHeader}>
-            <div className={`${styles.kpiIconCircle} ${styles.bgOrange}`}>
-              <FiClock />
-            </div>
-            <span className={styles.kpiTitle}>Pending Orders</span>
-          </div>
-          <h2 className={styles.kpiValue}>{metrics.pendingOrders.toLocaleString('en-IN')}</h2>
-          <div className={styles.kpiFooter}>
-            <span className={styles.trendRed}><FiTrendingUp /> 8.2%</span>
-            <span className={styles.kpiSubtext}>vs previous period</span>
-          </div>
-        </div>
-
-        {/* Card 4: Completed Orders */}
-        <div className={styles.kpiCard} onClick={() => handleTabChange('orders')} style={{ cursor: 'pointer' }} title="View Completed Orders">
-          <div className={styles.kpiHeader}>
-            <div className={`${styles.kpiIconCircle} ${styles.bgGreen}`}>
-              <FiCheckCircle />
-            </div>
-            <span className={styles.kpiTitle}>Completed Orders</span>
-          </div>
-          <h2 className={styles.kpiValue}>{metrics.completedOrders.toLocaleString('en-IN')}</h2>
-          <div className={styles.kpiFooter}>
-            <span className={styles.trendGreen}><FiTrendingUp /> 14.8%</span>
-            <span className={styles.kpiSubtext}>vs previous period</span>
-          </div>
-        </div>
-
-        {/* Card 5: Total Customers */}
-        <div className={styles.kpiCard} onClick={() => handleTabChange('customers')} style={{ cursor: 'pointer' }} title="View Customer Database">
-          <div className={styles.kpiHeader}>
-            <div className={`${styles.kpiIconCircle} ${styles.bgIndigo}`}>
-              <FiUsers />
-            </div>
-            <span className={styles.kpiTitle}>Total Customers</span>
-          </div>
-          <h2 className={styles.kpiValue}>{metrics.totalCustomers.toLocaleString('en-IN')}</h2>
-          <div className={styles.kpiFooter}>
-            <span className={styles.trendGreen}><FiTrendingUp /> 9.5%</span>
-            <span className={styles.kpiSubtext}>vs previous period</span>
-          </div>
-        </div>
-
-        {/* Card 6: New Enquiries */}
-        <div className={styles.kpiCard} onClick={() => handleTabChange('enquiries')} style={{ cursor: 'pointer' }} title="View New Customer Enquiries">
-          <div className={styles.kpiHeader}>
-            <div className={`${styles.kpiIconCircle} ${styles.bgTeal || styles.bgPurple}`}>
-              <FiMessageSquare />
-            </div>
-            <span className={styles.kpiTitle}>New Enquiries</span>
-          </div>
-          <h2 className={styles.kpiValue}>{metrics.newEnquiries.toLocaleString('en-IN')}</h2>
-          <div className={styles.kpiFooter}>
-            <span className={styles.trendGreen}><FiTrendingUp /> Live</span>
-            <span className={styles.kpiSubtext}>Customer Messages</span>
-          </div>
-        </div>
-      </div>
+      {/* ── ROW 1: LIVE KPI CARDS — one per sidebar section, from GET /dashboard/summary ── */}
+      <OverviewKpiCards handleTabChange={handleTabChange} dateFilter={dateFilter} refreshKey={refreshKey} />
 
       {/* ── ROW 2: CHARTS GRID (3 COLUMNS) ── */}
       <div className={styles.chartsGrid}>

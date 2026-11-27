@@ -916,24 +916,6 @@
   color: #d97706;
 }
 
-.cardRatingRow {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-bottom: 0.5rem;
-  font-size: 0.78rem;
-}
-
-.stars {
-  color: #f59e0b;
-  letter-spacing: 0.05em;
-}
-
-.reviewsCount {
-  color: #94a3b8;
-  font-size: 0.78rem;
-}
-
 .cardPriceRow {
   display: flex;
   align-items: baseline;

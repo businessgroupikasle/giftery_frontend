@@ -841,8 +841,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 395px;
-  padding: 5rem 0;
+  padding: 2.75rem 0;
   background-image:
     linear-gradient(rgba(7, 9, 13, 0.76), rgba(7, 9, 13, 0.84)),
     url('/images/corporate_gifting_banner1.webp');
@@ -867,13 +866,13 @@
   font-size: 2.35rem;
   font-weight: 800;
   color: #ffffff;
-  margin-bottom: 1rem;
+  margin-bottom: 0.6rem;
 }
 
 .ctaDesc {
   font-size: 1.1rem;
   color: #9ca3af;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .ctaBtn {
@@ -885,7 +884,8 @@
   font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: 1.5px;
-  padding: 1.1rem 2.5rem;
+  min-height: 44px;
+  padding: 0.8rem 2rem;
   border-radius: 10px;
   text-decoration: none;
   transition: all 0.3s ease;
@@ -981,8 +981,7 @@
   .ctaSection {
     position: relative;
     overflow: hidden;
-    padding: 3rem 1rem;
-    min-height: 340px;
+    padding: 1.75rem 1rem;
     background-image:
       linear-gradient(rgba(7, 9, 13, 0.78), rgba(7, 9, 13, 0.88)),
       url('/images/corporate_gifting_banner.webp');
@@ -995,13 +994,13 @@
   }
   .ctaTitle {
     max-width: 280px;
-    margin: 0 auto 0.75rem;
+    margin: 0 auto 0.5rem;
     font-size: 1.6rem;
     line-height: 1.3;
   }
   .ctaDesc {
     max-width: 320px;
-    margin: 0 auto 1.5rem;
+    margin: 0 auto 1rem;
     font-size: 0.78rem;
     line-height: 1.5;
   }
@@ -1114,8 +1113,7 @@
 
 @media (max-width: 480px) {
   .ctaSection {
-    min-height: 310px;
-    padding: 2.5rem 1rem;
+    padding: 1.5rem 1rem;
     background-position: 58% center;
   }
   .ctaTitle {
@@ -1125,7 +1123,6 @@
   }
   .ctaDesc {
     max-width: 280px;
-    margin-bottom: 1.25rem;
     font-size: 0.7rem;
   }
   .ctaBtn {

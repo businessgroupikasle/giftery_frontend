@@ -5,8 +5,7 @@ import { addToCart } from '@store/slices/cartSlice';
 import { selectIsWishlisted } from '@store/slices/wishlistSlice';
 import useWishlist from '@hooks/useWishlist';
 import useRequireAuth from '@hooks/useRequireAuth';
-import StarRating from './StarRating';
-import { formatCurrency } from '@utils/formatters';
+import { formatCurrency, getPriceSavings } from '@utils/formatters';
 import { getProductThumbnail } from '@utils/imageUrl';
 import { ROUTES } from '@constants/routes';
 import { toast } from 'react-toastify';
@@ -21,18 +20,10 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
   const requireAuth = useRequireAuth();
 
   const {
-    id, name, slug, price, comparePrice, rating,
+    id, name, slug, price, comparePrice,
   } = product;
 
-  const ratingSeed = String(id || slug || name || 'product')
-    .split('')
-    .reduce((total, character) => total + character.charCodeAt(0), 0);
-  const fallbackRatings = [3.5, 4, 4.5, 5];
-  const numericRating = Number(rating);
-  const displayRating = Number.isFinite(numericRating) && numericRating > 0
-    ? Math.min(5, numericRating)
-    : fallbackRatings[ratingSeed % fallbackRatings.length];
-  const discount = comparePrice ? Math.round(((comparePrice - price) / comparePrice) * 100) : null;
+  const savings = getPriceSavings(price, comparePrice);
   const isWishlisted = useSelector(selectIsWishlisted(id));
   
   const image = getProductThumbnail(product);
@@ -86,7 +77,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
             onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/product-placeholder.svg'; }}
           />
         </Link>
-        {discount && <span className={styles.badge}>-{discount}%</span>}
+        {savings && <span className={styles.badge}>{savings.percentage}% OFF</span>}
 
       </div>
 
@@ -111,14 +102,13 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
       <div className={styles.body}>
         <Link to={productUrl} state={productLinkState} className={styles.name}>{name}</Link>
 
-        <div className={styles.rating}>
-          <StarRating rating={displayRating} size="sm" />
-        </div>
-
         <div className={styles.pricing}>
           <span className={styles.price}>{formatCurrency(price)}</span>
-          {comparePrice && <span className={styles.comparePrice}>{formatCurrency(comparePrice)}</span>}
+          {savings && <span className={styles.comparePrice}>{formatCurrency(comparePrice)}</span>}
         </div>
+        {savings && (
+          <div className={styles.savings}>You Save {formatCurrency(savings.amount)}</div>
+        )}
 
         {/* Action Buttons: Add to Cart + Buy Now on Single Line */}
         <div className={styles.actionsRow}>

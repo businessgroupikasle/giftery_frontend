@@ -1,0 +1,203 @@
+/* ── Compact offer inside the product card ── */
+.teaser {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.25rem 0;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(229, 193, 88, 0.45);
+  background:
+    radial-gradient(circle at 95% 10%, rgba(229, 193, 88, 0.22) 0, rgba(229, 193, 88, 0) 50%),
+    linear-gradient(120deg, #111317 0%, #1e2330 65%, #2a2416 100%);
+  color: #ffffff;
+}
+
+.badge {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f7d58b 0%, #e5c158 40%, #d99b26 100%);
+  color: #111317;
+  box-shadow: 0 0 0 4px rgba(229, 193, 88, 0.18);
+}
+
+.badgeValue {
+  font-size: 1.3rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.badgeOff {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.eyebrow {
+  display: block;
+  color: #f7d58b;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+
+.headline {
+  margin: 0.15rem 0 0.1rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.headline strong {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.2rem;
+  color: #e5c158;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: #cbd5e1;
+}
+
+.openBtn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 42px;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #e5c158, #d99b26);
+  color: #111318;
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.openBtn:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.openBtn:focus-visible {
+  outline: 3px solid #f7d58b;
+  outline-offset: 2px;
+}
+
+/* ── Popup with the full offer banner + form ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  /* Same layer as the site's catalogue popup, above the floating WhatsApp/download buttons (9990). */
+  z-index: 10000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4vh 1rem;
+  background: rgba(15, 23, 42, 0.72);
+  overflow-y: auto;
+}
+
+.overlay[hidden] {
+  display: none;
+}
+
+.dialog {
+  position: relative;
+  width: min(100%, 820px);
+  margin: auto 0;
+}
+
+/* The inquiry section normally has page spacing; inside the popup it fills the dialog. */
+.dialog > section {
+  margin: 0;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 1;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.closeBtn:hover,
+.closeBtn:focus-visible {
+  background: #d99b26;
+  border-color: #d99b26;
+  color: #111317;
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .teaser {
+    flex-wrap: wrap;
+  }
+
+  .openBtn {
+    flex-basis: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .teaser {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.85rem;
+  }
+
+  .badge {
+    width: 54px;
+    height: 54px;
+  }
+
+  .badgeValue {
+    font-size: 1.1rem;
+  }
+
+  /* Share the first row with the badge and wrap text inside it. */
+  .copy {
+    flex: 1 1 0;
+  }
+
+  .openBtn {
+    flex-basis: 100%;
+    justify-content: center;
+  }
+
+  .overlay {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .closeBtn {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+}

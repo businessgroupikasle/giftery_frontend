@@ -18,6 +18,7 @@ import ProductsSection from './components/ProductsSection';
 import CategoriesSection from './components/CategoriesSection';
 import OrdersSection from './components/OrdersSection';
 import CustomizationsSection from './components/CustomizationsSection';
+import BulkOrdersSection from './components/BulkOrdersSection';
 import CorporateQuotesSection from './components/CorporateQuotesSection';
 import CustomersSection from './components/CustomersSection';
 import EnquiriesSection from './components/EnquiriesSection';
@@ -106,6 +107,7 @@ const Dashboard = () => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [summaryRefreshKey, setSummaryRefreshKey] = useState(0);
   const filterWrapperRef = useRef(null);
 
   useEffect(() => {
@@ -631,6 +633,7 @@ const Dashboard = () => {
 
   const fetchAllDashboardData = async () => {
     setIsRefreshing(true);
+    setSummaryRefreshKey((key) => key + 1);
     try {
       await Promise.allSettled([
         fetchDashboardStats(),
@@ -691,8 +694,6 @@ const Dashboard = () => {
       customizationConfig: null,
       shippingReturns: '',
       tags: '',
-      rating: '4.8',
-      reviewsCount: '128',
       price: '',
       comparePrice: '',
       stock: '0',
@@ -766,8 +767,6 @@ const Dashboard = () => {
       customizationConfig: product.customizationConfig || null,
       shippingReturns: product.shippingReturns || '',
       tags: Array.isArray(product.tags) ? product.tags.join(', ') : (product.tags || ''),
-      rating: product.rating?.toString() || '4.8',
-      reviewsCount: product.reviewsCount?.toString() || '128',
       price: product.price?.toString() || '',
       comparePrice: product.comparePrice?.toString() || '',
       stock: product.stock?.toString() || '0',
@@ -828,6 +827,16 @@ const Dashboard = () => {
       toast.error('Name, Price, and Category are required');
       return;
     }
+    const sellingPrice = Number(productForm.price);
+    const comparePrice = productForm.comparePrice === '' ? null : Number(productForm.comparePrice);
+    if (!Number.isFinite(sellingPrice) || sellingPrice < 0) {
+      toast.error('Selling Price must be a valid non-negative amount');
+      return;
+    }
+    if (comparePrice !== null && (!Number.isFinite(comparePrice) || comparePrice < sellingPrice)) {
+      toast.error('Compare Price cannot be lower than Selling Price');
+      return;
+    }
     setSavingProduct(true);
     const parseFormImages = (imgs) => {
       if (!imgs) return [];
@@ -874,10 +883,8 @@ const Dashboard = () => {
       ...(productForm.customizationConfig ? { customizationConfig: productForm.customizationConfig } : {}),
       shippingReturns: productForm.shippingReturns || undefined,
       tags: tagsArr,
-      rating: parseFloat(productForm.rating) || 4.8,
-      reviewsCount: parseInt(productForm.reviewsCount, 10) || 128,
-      price: parseFloat(productForm.price),
-      comparePrice: productForm.comparePrice ? parseFloat(productForm.comparePrice) : null,
+      price: sellingPrice,
+      comparePrice,
       stock: parseInt(productForm.stock, 10) || 0,
       images: imagesArr,
       sku: productForm.sku ? productForm.sku.trim() : undefined,
@@ -1396,6 +1403,7 @@ const Dashboard = () => {
                 {activeTab === 'corporate-quotes' && 'Corporate Gift Quote Requests'}
                 {activeTab === 'customers' && 'Customers & Registered Users'}
                 {activeTab === 'enquiries' && 'Customer Enquiries & Contact Messages'}
+                {activeTab === 'bulk-orders' && 'Bulk Order Inquiries'}
                 {activeTab === 'appointments' && 'Experience Studio Appointments'}
                 {activeTab === 'catalogue-requests' && 'Catalogue Download Requests'}
                 {activeTab === 'coupons' && 'Coupons & Promotional Offers'}
@@ -1539,6 +1547,7 @@ const Dashboard = () => {
               backendStats={backendStats}
               dateFilter={selectedFilter}
               statusFilter={selectedStatus}
+              refreshKey={summaryRefreshKey}
             />
           )}
 
@@ -1609,6 +1618,8 @@ const Dashboard = () => {
               onVisibleRecordsChange={setVisibleEnquiries}
             />
           )}
+
+          {activeTab === 'bulk-orders' && <BulkOrdersSection />}
 
           {activeTab === 'catalogue-requests' && (
             <CatalogueRequestsSection

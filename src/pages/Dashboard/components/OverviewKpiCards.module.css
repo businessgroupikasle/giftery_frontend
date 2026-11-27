@@ -1,0 +1,74 @@
+.wrapper {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* The sidebar has 12 data sections: 6 per row on wide screens (inherits the grid's breakpoints below). */
+.grid {
+  align-items: stretch;
+}
+
+/* Cards are buttons (keyboard-reachable); reset native button styling. */
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.card:focus-visible {
+  outline: 3px solid #d99b26;
+  outline-offset: 2px;
+}
+
+.details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.6rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.attention {
+  color: #b45309;
+}
+
+.scope {
+  margin-top: auto;
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
+
+.errorBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.errorBar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #fca5a5;
+  background: #ffffff;
+  color: #991b1b;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}

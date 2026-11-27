@@ -1,0 +1,423 @@
+.section {
+  margin: 0 0 2rem;
+  scroll-margin-top: 90px;
+}
+
+/* ── 10% offer banner ── */
+.offerBanner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  padding: 1.75rem 2rem;
+  border-radius: 18px 18px 0 0;
+  background:
+    radial-gradient(circle at 92% 20%, rgba(229, 193, 88, 0.22) 0, rgba(229, 193, 88, 0) 45%),
+    linear-gradient(120deg, #111317 0%, #1e2330 60%, #2a2416 100%);
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.offerBanner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(229, 193, 88, 0.35);
+  border-bottom: none;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.offerBadge {
+  flex: 0 0 auto;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f7d58b 0%, #e5c158 40%, #d99b26 100%);
+  color: #111317;
+  box-shadow: 0 0 0 6px rgba(229, 193, 88, 0.18), 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.offerBadgeValue {
+  font-size: 2.3rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.offerBadgeOff {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+
+.offerCopy {
+  min-width: 0;
+}
+
+.offerEyebrow {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(229, 193, 88, 0.15);
+  border: 1px solid rgba(229, 193, 88, 0.45);
+  color: #f7d58b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.offerHeadline {
+  margin: 0.55rem 0 0.25rem;
+  font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: 0.5px;
+}
+
+.offerHeadline strong {
+  font-family: 'Playfair Display', Georgia, serif;
+  color: #e5c158;
+}
+
+.offerLead {
+  margin: 0 0 0.35rem;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.offerMinimum {
+  display: inline-block;
+  margin: 0.1rem 0 0.5rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 6px;
+  background: #e5c158;
+  color: #111317;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.offerText {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+.offerNote {
+  margin: 0;
+  padding: 0.75rem 2rem;
+  background: #fff7ed;
+  border: 1px solid #f5deb0;
+  border-top: none;
+  color: #92400e;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+/* ── Form card ── */
+.formCard {
+  padding: 1.75rem 2rem 1.5rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-top: none;
+  border-radius: 0 0 18px 18px;
+  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.05);
+}
+
+.formTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.formTitle svg {
+  color: #d99b26;
+}
+
+.form {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.productGrid,
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+.productGrid {
+  grid-template-columns: 2fr 1fr 1fr;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+  min-width: 0;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.label em {
+  font-style: normal;
+  color: #dc2626;
+}
+
+.label small {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 42px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #94a3b8;
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: #dfa843;
+  box-shadow: 0 0 0 3px rgba(223, 168, 67, 0.15);
+}
+
+.field input[aria-invalid='true'],
+.field textarea[aria-invalid='true'] {
+  border-color: #dc2626;
+}
+
+.field input[aria-invalid='true']:focus,
+.field textarea[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.field input:disabled,
+.field textarea:disabled {
+  background: #f8fafc;
+  cursor: wait;
+}
+
+.field input.readOnly {
+  background: #f8fafc;
+  color: #334155;
+  font-weight: 600;
+  cursor: default;
+}
+
+.field input.readOnly:focus {
+  border-color: #cbd5e1;
+  box-shadow: none;
+}
+
+.fieldHint {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.fieldError {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.errorBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.86rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.errorBox svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.submitBtn {
+  justify-self: start;
+  min-height: 48px;
+  padding: 0 2rem;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #e5c158, #d99b26);
+  color: #111318;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.submitBtn:hover:not(:disabled) {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.submitBtn:focus-visible {
+  outline: 3px solid #111317;
+  outline-offset: 2px;
+}
+
+.submitBtn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.formFootnote {
+  margin: -0.35rem 0 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+/* ── Success ── */
+.successBox {
+  display: flex;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  outline: none;
+}
+
+.successIcon {
+  flex-shrink: 0;
+  font-size: 1.6rem;
+  color: #059669;
+}
+
+.successMessage {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #065f46;
+}
+
+.successMeta {
+  margin: 0 0 0.85rem;
+  font-size: 0.85rem;
+  color: #047857;
+}
+
+.secondaryBtn {
+  min-height: 38px;
+  padding: 0 1rem;
+  border-radius: 8px;
+  border: 1px solid #059669;
+  background: #ffffff;
+  color: #047857;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondaryBtn:hover,
+.secondaryBtn:focus-visible {
+  background: #059669;
+  color: #ffffff;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .productGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .productGrid > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .offerBanner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.35rem 1.1rem;
+    border-radius: 14px 14px 0 0;
+  }
+
+  .offerBadge {
+    width: 84px;
+    height: 84px;
+  }
+
+  .offerBadgeValue {
+    font-size: 1.75rem;
+  }
+
+  .offerBadgeOff {
+    font-size: 0.7rem;
+  }
+
+  .offerNote {
+    padding: 0.7rem 1.1rem;
+    font-size: 0.75rem;
+  }
+
+  .formCard {
+    padding: 1.25rem 1.1rem;
+    border-radius: 0 0 14px 14px;
+  }
+
+  .productGrid,
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .submitBtn {
+    justify-self: stretch;
+  }
+}

@@ -9,13 +9,15 @@ const product = {
   comparePrice: 1500,
   stock: 3,
   minOrder: 1,
+  rating: 4.8,
+  reviewsCount: 128,
   description: 'A premium corporate gift collection.',
   images: ['/placeholder-product.png'],
   category: { id: 'cat-1', name: 'Corporate Gifts', slug: 'corporate-gifts' },
 };
 
 test.describe('Product purchase functionality', () => {
-  test('renders live product data and stock state', async ({ page }) => {
+  test('renders live product data and stock state without fake reviews', async ({ page }) => {
     await mockApi(page, { product });
     await page.goto(`/product/${product.slug}`);
 
@@ -23,6 +25,8 @@ test.describe('Product purchase functionality', () => {
     await expect(page.getByText(/3 In Stock/i)).toBeVisible();
     await expect(page.getByRole('button', { name: 'ADD TO CART' })).toBeEnabled();
     await expect(page.getByRole('button', { name: 'BUY NOW' })).toBeEnabled();
+    await expect(page.locator('[aria-label*="out of 5 stars"]')).toHaveCount(0);
+    await expect(page.getByText(/128 reviews|\breviews\b|\b5\.0\b/i)).toHaveCount(0);
   });
 
   test('redirects an unauthenticated add-to-cart attempt to login', async ({ page }) => {

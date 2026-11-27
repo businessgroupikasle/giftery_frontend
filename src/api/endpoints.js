@@ -137,6 +137,7 @@ export const ENDPOINTS = {
   // ── Dashboard (Admin) ─────────────────────────────────────
   DASHBOARD: {
     STATS: '/dashboard/stats',
+    SUMMARY: '/dashboard/summary',
     RECENT_ORDERS: '/dashboard/recent-orders',
     REVENUE: '/dashboard/revenue',
     PRODUCTS: {
@@ -185,6 +186,9 @@ export const ENDPOINTS = {
   // ── Enquiries & Uploads ────────────────────────────────────
   ENQUIRIES: {
     SUBMIT: '/enquiries',
+    BULK_ORDER: '/enquiries/bulk-order',
+    BULK_ORDERS: '/enquiries/bulk-orders',
+    BULK_ORDER_STATUS: (id) => `/enquiries/bulk-orders/${encodeURIComponent(id)}/status`,
     LIST: '/enquiries',
     UPDATE_STATUS: (id) => `/enquiries/${id}/status`,
     DELETE: (id) => `/enquiries/${id}`,

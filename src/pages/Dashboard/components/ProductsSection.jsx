@@ -6,6 +6,7 @@ import axiosInstance from '@api/axiosInstance';
 import { ENDPOINTS } from '@api/endpoints';
 import { toast } from 'react-toastify';
 import { getImageUrl, getProductThumbnail } from '@utils/imageUrl';
+import { formatCurrency, getPriceSavings } from '@utils/formatters';
 import styles from '../Dashboard.module.css';
 
 const parseImages = (imgs) => {
@@ -150,6 +151,11 @@ const ProductsSection = ({
     return filteredProducts.slice(start, start + pageSize);
   }, [filteredProducts, currentPage, pageSize]);
   const loading = loadingProducts;
+  const formSavings = getPriceSavings(productForm?.price, productForm?.comparePrice);
+  const comparePriceIsInvalid = productForm?.comparePrice !== ''
+    && Number.isFinite(Number(productForm?.price))
+    && Number.isFinite(Number(productForm?.comparePrice))
+    && Number(productForm.comparePrice) < Number(productForm.price);
 
 
   const handleCloseModal = () => {
@@ -534,7 +540,7 @@ const ProductsSection = ({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#334155', marginBottom: '0.35rem' }}>
-                    Price (₹) *
+                    Selling Price (₹) *
                   </label>
                   <input
                     type="number"
@@ -561,8 +567,14 @@ const ProductsSection = ({
                     min="0"
                     step="0.01"
                     placeholder="1299"
+                    aria-invalid={comparePriceIsInvalid}
                     style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.85rem', color: '#0f172a', background: '#ffffff', boxSizing: 'border-box' }}
                   />
+                  {comparePriceIsInvalid && (
+                    <div role="alert" style={{ color: '#dc2626', fontSize: '0.72rem', marginTop: '0.3rem' }}>
+                      Must be at least the Selling Price.
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -580,6 +592,14 @@ const ProductsSection = ({
                   />
                 </div>
               </div>
+
+              {formSavings && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', padding: '0.75rem 0.9rem', borderRadius: '8px', background: '#ecfdf5', color: '#047857', fontSize: '0.8rem', fontWeight: 700 }}>
+                  <span>{formSavings.percentage}% OFF</span>
+                  <span>You Save {formatCurrency(formSavings.amount)}</span>
+                  <span style={{ color: '#64748b', fontWeight: 500 }}>Calculated automatically</span>
+                </div>
+              )}
 
               {/* Row 3: Main Category & Subcategory */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

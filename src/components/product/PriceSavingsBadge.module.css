@@ -1,0 +1,21 @@
+.badge {
+  display: inline-block;
+  align-self: flex-start;
+  box-sizing: border-box;
+  max-inline-size: 100%;
+  padding: 0.3rem 0.55rem;
+  border-radius: 6px;
+  background: #065f46;
+  color: #d1fae5;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.badge strong {
+  color: #ffffff;
+  font-size: 1.1em;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}

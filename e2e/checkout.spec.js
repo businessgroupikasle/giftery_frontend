@@ -76,7 +76,7 @@ test.describe('Checkout validation and order integrity', () => {
     await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('giftery_cart_state'))?.items)).toEqual([]);
   });
 
-  test('a payment gateway failure keeps the customer signed in and reuses the order on retry', async ({ page }) => {
+  test('a payment gateway failure keeps the customer signed in and creates no store order', async ({ page }) => {
     await seedAuthenticatedUser(page);
     await seedCart(page, [item]);
     // Online orders stay in the cart until payment is verified; only COD clears it straight away.
@@ -100,7 +100,7 @@ test.describe('Checkout validation and order integrity', () => {
     await expect(pay).toBeEnabled();
     await pay.click();
     await expect.poll(() => attempts).toBe(2);
-    expect(requests.orders, 'retrying must not create a second store order').toHaveLength(1);
+    expect(requests.orders, 'an online payment never creates a store order before the money is captured').toHaveLength(0);
   });
 
   test('keeps the cart when backend order creation fails', async ({ page }) => {
